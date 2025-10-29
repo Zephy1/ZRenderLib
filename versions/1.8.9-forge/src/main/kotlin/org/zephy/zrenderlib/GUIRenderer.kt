@@ -1,8 +1,7 @@
-package org.zephy.zrenderlib.legacy
+package org.zephy.zrenderlib
 
 import gg.essential.universal.UMinecraft
 import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats
 import org.lwjgl.opengl.GL11
 import java.util.*
 import kotlin.math.PI
@@ -125,7 +124,7 @@ object GUIRenderer {
             .disableTexture2D()
             .enableLineSmooth()
 
-            .begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION)
+            .begin(GL11.GL_QUADS, VertexFormat.POSITION)
             .colorizeRGBA(color)
             .pos(pos[0], pos[3], 0f)
             .pos(pos[2], pos[3], 0f)
@@ -207,7 +206,7 @@ object GUIRenderer {
             .disableTexture2D()
             .enableLineSmooth()
 
-            .begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION)
+            .begin(GL11.GL_QUADS, VertexFormat.POSITION)
             .colorizeRGBA(color)
             .pos(startX + i, startY + j, 0f)
             .pos(endX + i, endY + j, 0f)
@@ -356,7 +355,7 @@ object GUIRenderer {
             .translate(xPosition + xRotationOffset, yPosition + yRotationOffset, 0f)
             .rotate(rotationDegrees % 360, 0f, 0f, 1f)
             .translate(-xPosition + -xRotationOffset, -yPosition + -yRotationOffset, 0f)
-            .begin(GL11.GL_TRIANGLE_STRIP, DefaultVertexFormats.POSITION)
+            .begin(GL11.GL_TRIANGLE_STRIP, VertexFormat.POSITION)
             .colorizeRGBA(color)
 
         for (i in 0..edges) {
@@ -569,12 +568,12 @@ object GUIRenderer {
             .bindTexture(image.getTexture().getGlTextureId())
             .enableTexture2D()
 
-            .begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX)
+            .begin(GL11.GL_QUADS, VertexFormat.POSITION_TEX)
             .colorizeRGBA(color)
-            .pos(xPosition, yPosition + drawHeight, 0f, false).tex(0f, 1f)
-            .pos(xPosition + drawWidth, yPosition + drawHeight, 0f, false).tex(1f, 1f)
-            .pos(xPosition + drawWidth, yPosition, 0f, false).tex(1f, 0f)
-            .pos(xPosition, yPosition, 0f, false).tex(0f, 0f)
+            .pos(xPosition, yPosition + drawHeight, 0f).tex(0f, 1f)
+            .pos(xPosition + drawWidth, yPosition + drawHeight, 0f).tex(1f, 1f)
+            .pos(xPosition + drawWidth, yPosition, 0f).tex(1f, 0f)
+            .pos(xPosition, yPosition, 0f).tex(0f, 0f)
             .draw()
 
             .resetColor()
@@ -582,24 +581,6 @@ object GUIRenderer {
             .disableTexture2D()
             .popMatrix()
     }
-
-//    internal fun withMatrix(stack: MatrixStack?, partialTicks: Float = GUIRenderer.partialTicks, block: () -> Unit) {
-//        GUIRenderer.partialTicks = partialTicks
-//        RenderUtils.matrixPushCounter = 0
-//
-//        try {
-//            if (stack != null) RenderUtils.pushMatrix(UMatrixStack(stack))
-//            block()
-//        } finally {
-//            if (stack != null) RenderUtils.popMatrix()
-//        }
-//
-//        if (RenderUtils.matrixPushCounter > 0) {
-//            println("Warning: Render function missing a call to RenderUtils.popMatrix()")
-//        } else if (RenderUtils.matrixPushCounter < 0) {
-//            println("Warning: Render function has too many calls to RenderUtils.popMatrix()")
-//        }
-//    }
 
     class ScreenWrapper {
         fun getWidth(): Int = ScaledResolution(UMinecraft.getMinecraft()).scaledWidth

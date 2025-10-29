@@ -1,12 +1,75 @@
-package org.zephy.zrenderlib.legacy
+package org.zephy.zrenderlib
 
-import gg.essential.universal.UMinecraft
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats
-import org.lwjgl.opengl.GL11;
-import kotlin.math.sin
+//#if MC == 10809 || MC >= 12100
+import net.minecraft.client.MinecraftClient
 import kotlin.math.cos
+import kotlin.math.sin
+
+//#if MC < 12100
+//$$import net.minecraft.client.renderer.vertex.DefaultVertexFormats
+//$$import org.lwjgl.opengl.GL11;
+//#else
+import net.minecraft.client.font.TextRenderer
+import net.minecraft.client.render.LightmapTextureManager
+import net.minecraft.text.Text
+import net.minecraft.util.math.Vec3d
+import org.joml.Matrix4f
+import org.joml.Vector3f
+import org.lwjgl.opengl.GL11
+import java.awt.Color
+//#endif
 
 object WorldRenderer {
+    private class TrigCache(segments: Int) {
+        val cosTheta = FloatArray(segments * 2 + 1)
+        val sinTheta = FloatArray(segments * 2 + 1)
+        val cosPhi = FloatArray(segments + 1)
+        val sinPhi = FloatArray(segments + 1)
+
+        init {
+            val thetaStep = 2.0 * Math.PI / (segments * 2)
+            for (i in 0..(segments * 2)) {
+                val angle = thetaStep * i
+                cosTheta[i] = cos(angle).toFloat()
+                sinTheta[i] = sin(angle).toFloat()
+            }
+
+            val phiStep = Math.PI / segments
+            for (i in 0..segments) {
+                val angle = phiStep * i
+                cosPhi[i] = cos(angle).toFloat()
+                sinPhi[i] = sin(angle).toFloat()
+            }
+        }
+    }
+
+    private val trigCaches = mutableMapOf<Int, TrigCache>()
+
+    private fun getTrigCache(segments: Int): TrigCache {
+        return trigCaches.getOrPut(segments) { TrigCache(segments) }
+    }
+
+    private val tempVector = Vector3f()
+    private val tempNormal = Vector3f()
+
+    private fun Vector3f.setAndNormalize(x: Float, y: Float, z: Float): Vector3f {
+        return this.set(x, y, z).normalize()
+    }
+
+    //#if MC >= 12100
+    @JvmStatic
+    fun getLineRenderLayer(disableDepth: Boolean) = if (disableDepth) RenderLayers.LINES_ESP() else RenderLayers.LINES()
+
+    @JvmStatic
+    fun getQuadRenderLayer(disableDepth: Boolean) = if (disableDepth) RenderLayers.QUADS_ESP() else RenderLayers.QUADS()
+
+    @JvmStatic
+    fun getTriangleStripRenderLayer(disableDepth: Boolean) = if (disableDepth) RenderLayers.TRIANGLE_STRIP_ESP() else RenderLayers.TRIANGLE_STRIP()
+
+    @JvmStatic
+    fun getTriangleRenderLayer(disableDepth: Boolean) = if (disableDepth) RenderLayers.TRIANGLES_ESP() else RenderLayers.TRIANGLES()
+    //#endif
+
     /**
      * Renders floating lines of text in the world
      *
@@ -23,19 +86,89 @@ object WorldRenderer {
      * @param centered whether to center each text line (Doesn't work with newline characters)
      * @param textShadow whether to draw a shadow behind the text
      * @param disableDepth whether to render the text through blocks
-     * @param maxWidth useless in legacy, included for modern parity
+     * @param maxWidth the maximum width of the text before it wraps
      */
     @JvmStatic
     @JvmOverloads
-    fun drawStringRGBA(
-        text: String,
+    fun drawStringRGBA(text: String, xPosition: Float, yPosition: Float, zPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, scale: Float = 1f, renderBackground: Boolean = false, centered: Boolean = false, textShadow: Boolean = true, disableDepth: Boolean = false, maxWidth: Int = 512) {
+        drawString(text, xPosition, yPosition, zPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
+    }
+
+    /**
+     * Renders floating lines of text in the world
+     *
+     * @param text the text as a string
+     * @param xPosition the X-coordinate
+     * @param yPosition the Y-coordinate
+     * @param zPosition the Z-coordinate
+     * @param color the color as a [Long] value in RGBA format
+     * @param scale the text scale
+     * @param renderBackground whether to draw a transparent background
+     * @param centered whether to center each text line (Doesn't work with newline characters)
+     * @param textShadow whether to draw a shadow behind the text
+     * @param disableDepth whether to render the text through blocks
+     * @param maxWidth the maximum width of the text before it wraps
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun drawString(text: String, xPosition: Float, yPosition: Float, zPosition: Float, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, scale: Float = 1f, renderBackground: Boolean = false, centered: Boolean = false, textShadow: Boolean = true, disableDepth: Boolean = false, maxWidth: Int = 512) {
+        //#if MC < 12100
+        //$$drawString_Legacy(text, xPosition, yPosition, zPosition, color, scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
+        //#else
+        drawString_Modern(Text.of(text), xPosition, yPosition, zPosition, color, scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
+        //#endif
+    }
+
+    /**
+     * Renders floating lines of text in the world
+     *
+     * @param text the text as a [Text] object
+     * @param xPosition the X-coordinate
+     * @param yPosition the Y-coordinate
+     * @param zPosition the Z-coordinate
+     * @param red the red component of the color (0-255)
+     * @param green the green component of the color (0-255)
+     * @param blue the blue component of the color (0-255)
+     * @param alpha the alpha component of the color (0-255)
+     * @param scale the text scale
+     * @param renderBackground whether to draw a transparent background
+     * @param centered whether to center each text line (Doesn't work with newline characters)
+     * @param textShadow whether to draw a shadow behind the text
+     * @param disableDepth whether to render the text through blocks
+     * @param maxWidth the maximum width of the text before it wraps
+     */
+
+    //#if MC >= 12100
+    @JvmStatic
+    @JvmOverloads
+    fun drawStringRGBA(text: Text, xPosition: Float, yPosition: Float, zPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, scale: Float = 1f, renderBackground: Boolean = false, centered: Boolean = false, textShadow: Boolean = true, disableDepth: Boolean = false, maxWidth: Int = 512) {
+        drawString_Modern(text, xPosition, yPosition, zPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
+    }
+    //#endif
+
+    /**
+     * Renders floating lines of text in the world
+     *
+     * @param text the text as a [Text] object
+     * @param xPosition the X-coordinate
+     * @param yPosition the Y-coordinate
+     * @param zPosition the Z-coordinate
+     * @param color the color as a [Long] value in RGBA format
+     * @param scale the text scale
+     * @param renderBackground whether to draw a transparent background
+     * @param centered whether to center each text line (Doesn't work with newline characters)
+     * @param textShadow whether to draw a shadow behind the text
+     * @param disableDepth whether to render the text through blocks
+     * @param maxWidth the maximum width of the text before it wraps
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun drawString_Modern(
+        text: Text,
         xPosition: Float,
         yPosition: Float,
         zPosition: Float,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
+        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         scale: Float = 1f,
         renderBackground: Boolean = false,
         centered: Boolean = false,
@@ -43,9 +176,55 @@ object WorldRenderer {
         disableDepth: Boolean = false,
         maxWidth: Int = 512,
     ) {
-        drawString(text, xPosition, yPosition, zPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
-    }
+        val (lines, width, height) = RenderUtils.splitText(text, maxWidth)
+        val fontRenderer = MinecraftClient.getInstance().textRenderer
+        val camera = Client.getMinecraft().gameRenderer.camera
+        val cameraPos = camera.pos
+        val vertexConsumers = MinecraftClient.getInstance().bufferBuilders.entityVertexConsumers
 
+        val matrix = Matrix4f()
+        val adjustedScale = (scale * 0.05).toFloat()
+        val xShift = -width / 2
+        val yShift = -height / 2
+        var yOffset = 0
+        val backgroundColorInt = if (renderBackground) {
+            Color(0, 0, 0, 150).rgb
+        } else {
+            Color(0, 0, 0, 0).rgb
+        }
+
+        for (line in lines) {
+            matrix
+                .translate(
+                    (xPosition - cameraPos.getX()).toFloat(),
+                    (yPosition - cameraPos.getY() + yOffset * adjustedScale).toFloat(),
+                    (zPosition - cameraPos.getZ()).toFloat(),
+                )
+                .rotate(Client.getMinecraft().gameRenderer.camera.rotation)
+                .scale(adjustedScale, -adjustedScale, adjustedScale)
+
+            val centerShift = if (centered) {
+                xShift + (fontRenderer.getWidth(line) / 2f)
+            } else {
+                0f
+            }
+
+            fontRenderer.draw(
+                line,
+                xShift - centerShift,
+                yShift + yOffset,
+                RenderUtils.ARGBColor.fromLongRGBA(color).getLong().toInt(),
+                textShadow,
+                matrix,
+                vertexConsumers,
+                if (disableDepth) TextRenderer.TextLayerType.SEE_THROUGH else TextRenderer.TextLayerType.NORMAL,
+                backgroundColorInt,
+                LightmapTextureManager.MAX_LIGHT_COORDINATE,
+            )
+
+            yOffset += fontRenderer.fontHeight + 1
+        }
+    }
     /**
      * Renders floating lines of text in the world
      *
@@ -63,7 +242,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawString(
+    fun drawString_Legacy(
         text: String,
         xPosition: Float,
         yPosition: Float,
@@ -76,65 +255,65 @@ object WorldRenderer {
         disableDepth: Boolean = false,
         maxWidth: Int = 512,
     ) {
-        val fontRenderer = RenderUtils.getFontRenderer()
-        val renderManager = RenderUtils.renderManager
-
-        val x = xPosition - renderManager.viewerPosX
-        val y = yPosition - renderManager.viewerPosY
-        val z = zPosition - renderManager.viewerPosZ
-        val xMultiplier = if (RenderUtils.mc.gameSettings.thirdPersonView == 2) -1 else 1
-        val adjustedScale = (scale * 0.05).toFloat()
-
-        RenderUtils
-            .pushMatrix()
-            .colorize_01(1f, 1f, 1f, 0.5f)
-            .disableCull()
-        GL11.glNormal3f(0f, 1f, 0f)
-        if (disableDepth) RenderUtils.disableDepth()
-        RenderUtils
-            .translate(x, y, z)
-            .rotate(-RenderUtils.renderManager.playerViewY, 0f, 1f, 0f)
-            .rotate(
-                RenderUtils.renderManager.playerViewX * xMultiplier,
-                1f,
-                0f,
-                0f,
-            )
-            .scale(-adjustedScale, -adjustedScale, adjustedScale)
-            .disableLighting()
-            .depthMask(false)
-            .enableBlend()
-            .tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0)
-
-        val textWidth = fontRenderer.getStringWidth(text)
-        val j = textWidth / 2f
-        if (renderBackground) {
-            RenderUtils
-                .disableTexture2D()
-                .begin(7, DefaultVertexFormats.POSITION_COLOR)
-                .colorize_01(0.0f, 0.0f, 0.0f, 0.25f)
-                .pos((-j - 1).toDouble(), (-1).toDouble(), 0.0)
-                .pos((-j - 1).toDouble(), 8.toDouble(), 0.0)
-                .pos((j + 1).toDouble(), 8.toDouble(), 0.0)
-                .pos((j + 1).toDouble(), (-1).toDouble(), 0.0)
-                .draw()
-                .enableTexture2D()
-        }
-
-        fontRenderer.drawString(
-            text,
-            if (centered) -j else 0f,
-            0f,
-            RenderUtils.ARGBColor.fromLongRGBA(color).getLong().toInt(),
-            textShadow
-        )
-        RenderUtils
-            .colorize_01(1f, 1f, 1f, 1f)
-            .depthMask(true)
-            .enableBlend()
-            .enableCull()
-            .popMatrix()
-        if (disableDepth) RenderUtils.enableDepth()
+//        val fontRenderer = RenderUtils.getTextRenderer()
+//        val renderManager = RenderUtils.renderManager
+//
+//        val x = xPosition - renderManager.viewerPosX
+//        val y = yPosition - renderManager.viewerPosY
+//        val z = zPosition - renderManager.viewerPosZ
+//        val xMultiplier = if (RenderUtils.mc.gameSettings.thirdPersonView == 2) -1 else 1
+//        val adjustedScale = (scale * 0.05).toFloat()
+//
+//        RenderUtils
+//            .pushMatrix()
+//            .colorize_01(1f, 1f, 1f, 0.5f)
+//            .disableCull()
+//        GL11.glNormal3f(0f, 1f, 0f)
+//        if (disableDepth) RenderUtils.disableDepth()
+//        RenderUtils
+//            .translate(x, y, z)
+//            .rotate(-RenderUtils.renderManager.playerViewY, 0f, 1f, 0f)
+//            .rotate(
+//                RenderUtils.renderManager.playerViewX * xMultiplier,
+//                1f,
+//                0f,
+//                0f,
+//            )
+//            .scale(-adjustedScale, -adjustedScale, adjustedScale)
+//            .disableLighting()
+//            .depthMask(false)
+//            .enableBlend()
+//            .tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0)
+//
+//        val textWidth = RenderUtils.getStringWidth(text)
+//        val j = textWidth / 2f
+//        if (renderBackground) {
+//            RenderUtils
+//                .disableTexture2D()
+//                .begin(7, DefaultVertexFormats.POSITION_COLOR)
+//                .colorize_01(0.0f, 0.0f, 0.0f, 0.25f)
+//                .pos((-j - 1).toDouble(), (-1).toDouble(), 0.0)
+//                .pos((-j - 1).toDouble(), 8.toDouble(), 0.0)
+//                .pos((j + 1).toDouble(), 8.toDouble(), 0.0)
+//                .pos((j + 1).toDouble(), (-1).toDouble(), 0.0)
+//                .draw()
+//                .enableTexture2D()
+//        }
+//
+//        fontRenderer.drawString(
+//            text,
+//            if (centered) -j else 0f,
+//            0f,
+//            RenderUtils.ARGBColor.fromLongRGBA(color).getLong().toInt(),
+//            textShadow
+//        )
+//        RenderUtils
+//            .colorize_01(1f, 1f, 1f, 1f)
+//            .depthMask(true)
+//            .enableBlend()
+//            .enableCull()
+//            .popMatrix()
+//        if (disableDepth) RenderUtils.enableDepth()
     }
 
     /**
@@ -155,20 +334,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawLineRGBA(
-        startX: Float,
-        startY: Float,
-        startZ: Float,
-        endX: Float,
-        endY: Float,
-        endZ: Float,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawLineRGBA(startX: Float, startY: Float, startZ: Float, endX: Float, endY: Float, endZ: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawLine(startX, startY, startZ, endX, endY, endZ, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, lineThickness)
     }
 
@@ -198,30 +364,17 @@ object WorldRenderer {
         disableDepth: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        val cameraPos = RenderUtils.getCameraPos()
-
-        RenderUtils.pushMatrix()
-        if (disableDepth) RenderUtils.disableDepth()
-        RenderUtils.lineWidth(lineThickness)
-            .disableCull()
-            .enableBlend()
-            .blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-            .depthMask(false)
-            .disableTexture2D()
-            .tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0)
-            .translate(-cameraPos.x, -cameraPos.y, -cameraPos.z)
-
-            .begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION)
+        val renderLayer = getLineRenderLayer(disableDepth)
+        tempNormal.setAndNormalize(endX - startX, endY - startY, endZ - startZ)
+        RenderUtils
+            .pushMatrix()
+            .disableDepth()
+            .lineWidth(lineThickness)
+            .begin(renderLayer)
             .colorizeRGBA(color)
-            .pos(startX, startY, startZ)
-            .pos(endX, endY, endZ)
+            .pos(startX, startY, startZ).normal(tempNormal.x, tempNormal.y, tempNormal.z)
+            .pos(endX, endY, endZ).normal(tempNormal.x, tempNormal.y, tempNormal.z)
             .draw()
-
-            .resetColor()
-            .enableCull()
-            .disableBlend()
-            .depthMask(true)
-            .enableTexture2D()
             .resetLineWidth()
             .enableDepth()
             .popMatrix()
@@ -243,18 +396,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleWireframeCubeRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        size: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawSimpleWireframeCubeRGBA(xPosition: Float, yPosition: Float, zPosition: Float, size: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawBox(xPosition, yPosition, zPosition, size, size, size, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe = true, lineThickness)
     }
 
@@ -271,15 +413,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleWireframeCube(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        size: Float = 1f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawSimpleWireframeCube(xPosition: Float, yPosition: Float, zPosition: Float, size: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawBox(xPosition, yPosition, zPosition, size, size, size, color, disableDepth, wireframe = true, lineThickness)
     }
 
@@ -301,20 +435,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawWireframeBoxRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        width: Float = 1f,
-        height: Float = 1f,
-        depth: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawWireframeBoxRGBA(xPosition: Float, yPosition: Float, zPosition: Float, width: Float = 1f, height: Float = 1f, depth: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawBox(xPosition, yPosition, zPosition, width, height, depth, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe = true, lineThickness)
     }
 
@@ -333,17 +454,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawWireframeBox(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        width: Float = 1f,
-        height: Float = 1f,
-        depth: Float = 1f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawWireframeBox(xPosition: Float, yPosition: Float, zPosition: Float, width: Float = 1f, height: Float = 1f, depth: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawBox(xPosition, yPosition, zPosition, width, height, depth, color, disableDepth, wireframe = true, lineThickness)
     }
 
@@ -362,17 +473,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleSolidCubeRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        size: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSimpleSolidCubeRGBA(xPosition: Float, yPosition: Float, zPosition: Float, size: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, disableDepth: Boolean = false) {
         drawBox(xPosition, yPosition, zPosition, size, size, size, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe = false)
     }
 
@@ -388,14 +489,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleSolidCube(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        size: Float = 1f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSimpleSolidCube(xPosition: Float, yPosition: Float, zPosition: Float, size: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, disableDepth: Boolean = false) {
         drawBox(xPosition, yPosition, zPosition, size, size, size, color, disableDepth, wireframe = false)
     }
 
@@ -416,19 +510,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSolidBoxRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        width: Float = 1f,
-        height: Float = 1f,
-        depth: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSolidBoxRGBA(xPosition: Float, yPosition: Float, zPosition: Float, width: Float = 1f, height: Float = 1f, depth: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, disableDepth: Boolean = false) {
         drawBox(xPosition, yPosition, zPosition, width, height, depth, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe = false)
     }
 
@@ -446,16 +528,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSolidBox(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        width: Float = 1f,
-        height: Float = 1f,
-        depth: Float = 1f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSolidBox(xPosition: Float, yPosition: Float, zPosition: Float, width: Float = 1f, height: Float = 1f, depth: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, disableDepth: Boolean = false) {
         drawBox(xPosition, yPosition, zPosition, width, height, depth, color, disableDepth, wireframe = false)
     }
 
@@ -478,21 +551,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawBoxRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        width: Float = 1f,
-        height: Float = 1f,
-        depth: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        disableDepth: Boolean = false,
-        wireframe: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawBoxRGBA(xPosition: Float, yPosition: Float, zPosition: Float, width: Float = 1f, height: Float = 1f, depth: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, disableDepth: Boolean = false, wireframe: Boolean = false, lineThickness: Float = 1f) {
         drawBox(xPosition, yPosition, zPosition, width, height, depth, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe, lineThickness)
     }
 
@@ -524,61 +583,83 @@ object WorldRenderer {
         wireframe: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        val drawMode = if (wireframe) GL11.GL_LINE_STRIP else GL11.GL_QUADS
-        val cameraPos = RenderUtils.getCameraPos()
+        val renderLayer = when {
+            !wireframe -> getTriangleStripRenderLayer(disableDepth)
+            else -> getLineRenderLayer(disableDepth)
+        }
 
-        RenderUtils.pushMatrix()
-        if (disableDepth) RenderUtils.disableDepth()
+        val hw = width / 2f
+        val hh = height / 2f
+        val hd = depth / 2f
+
+        val x0 = xPosition - hw
+        val x1 = xPosition + hw
+        val y0 = yPosition - hh
+        val y1 = yPosition + hh
+        val z0 = zPosition - hd
+        val z1 = zPosition + hd
+
+        val vertexes = when {
+            wireframe -> listOf(
+                Vector3f(x0, y0, z0),
+                Vector3f(x1, y0, z0),
+                Vector3f(x1, y1, z0),
+                Vector3f(x0, y1, z0),
+                Vector3f(x1, y1, z0),
+                Vector3f(x1, y1, z1),
+                Vector3f(x0, y1, z1),
+                Vector3f(x1, y1, z1),
+                Vector3f(x1, y0, z1),
+                Vector3f(x0, y0, z1),
+                Vector3f(x0, y1, z1),
+                Vector3f(x0, y1, z0),
+                Vector3f(x0, y0, z0),
+                Vector3f(x0, y0, z1),
+                Vector3f(x1, y0, z1),
+                Vector3f(x1, y0, z0),
+            )
+            else -> listOf(
+                Vector3f(x0, y0, z0),
+                Vector3f(x1, y0, z0),
+                Vector3f(x0, y1, z0),
+                Vector3f(x1, y1, z0),
+                Vector3f(x1, y1, z1),
+                Vector3f(x1, y0, z0),
+                Vector3f(x1, y0, z1),
+                Vector3f(x0, y0, z0),
+                Vector3f(x0, y0, z1),
+                Vector3f(x0, y1, z0),
+                Vector3f(x0, y1, z1),
+                Vector3f(x1, y1, z1),
+                Vector3f(x0, y0, z1),
+                Vector3f(x1, y0, z1),
+            )
+        }
+
         RenderUtils
-            .lineWidth(lineThickness)
-            .disableCull()
+            .pushMatrix()
             .enableBlend()
-            .blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-            .depthMask(false)
-            .disableTexture2D()
-            .tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0)
-            .translate(xPosition - width / 2 - cameraPos.x, yPosition - cameraPos.y - 0.5f, zPosition - depth / 2 - cameraPos.z)
-
-            .begin(drawMode, DefaultVertexFormats.POSITION)
+            .lineWidth(lineThickness)
+            .begin(renderLayer)
             .colorizeRGBA(color)
-            .pos(0f, 0f, 0f)
-            .pos(width, 0f, 0f)
-            .pos(width, height, 0f)
-            .pos(0f, height, 0f)
 
-            .pos(0f, height, depth)
-            .pos(0f, 0f, depth)
-            .pos(width, 0f, depth)
-            .pos(width, height, depth)
+        for (i in 0 until vertexes.size - if (wireframe) 1 else 0) {
+            val p1 = vertexes[i]
+            RenderUtils.pos(p1.x, p1.y, p1.z)
+            if (wireframe) {
+                val p2 = vertexes[i + 1]
+                tempNormal.setAndNormalize(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z)
+                RenderUtils
+                    .normal(tempNormal.x, tempNormal.y, tempNormal.z)
+                    .pos(p2.x, p2.y, p2.z)
+                    .normal(tempNormal.x, tempNormal.y, tempNormal.z)
+            }
+        }
 
-            .pos(0f, height, depth)
-            .pos(0f, 0f, depth)
-            .pos(0f, 0f, 0f)
-            .pos(0f, height, 0f)
-
-            .pos(width, height, 0f)
-            .pos(width, 0f, 0f)
-            .pos(width, 0f, depth)
-            .pos(width, height, depth)
-
-            .pos(0f, height, depth)
-            .pos(0f, height, 0f)
-            .pos(width, height, 0f)
-            .pos(width, height, depth)
-
-            .pos(width, 0f, depth)
-            .pos(0f, 0f, depth)
-            .pos(0f, 0f, 0f)
-            .pos(width, 0f, 0f)
+        RenderUtils
             .draw()
-
-            .resetColor()
-            .enableCull()
             .disableBlend()
-            .depthMask(true)
-            .enableTexture2D()
             .resetLineWidth()
-            .enableDepth()
             .popMatrix()
     }
 
@@ -598,18 +679,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleSolidSphereRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        radius: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        segments: Int = 32,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSimpleSolidSphereRGBA(xPosition: Float, yPosition: Float, zPosition: Float, radius: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, segments: Int = 32, disableDepth: Boolean = false) {
         drawSphere(xPosition, yPosition, zPosition, radius, radius, radius, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
     }
 
@@ -626,15 +696,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleSolidSphere(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        radius: Float = 1f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        segments: Int = 32,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSimpleSolidSphere(xPosition: Float, yPosition: Float, zPosition: Float, radius: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, segments: Int = 32, disableDepth: Boolean = false) {
         drawSphere(xPosition, yPosition, zPosition, radius, radius, radius, color, segments, disableDepth, false)
     }
 
@@ -656,20 +718,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSolidSphereRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        xScale: Float = 1f,
-        yScale: Float = 1f,
-        zScale: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        segments: Int = 32,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSolidSphereRGBA(xPosition: Float, yPosition: Float, zPosition: Float, xScale: Float = 1f, yScale: Float = 1f, zScale: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, segments: Int = 32, disableDepth: Boolean = false) {
         drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
     }
 
@@ -688,17 +737,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSolidSphere(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        xScale: Float = 1f,
-        yScale: Float = 1f,
-        zScale: Float = 1f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        segments: Int = 32,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSolidSphere(xPosition: Float, yPosition: Float, zPosition: Float, xScale: Float = 1f, yScale: Float = 1f, zScale: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, segments: Int = 32, disableDepth: Boolean = false) {
         drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, color, segments, disableDepth, false)
     }
 
@@ -719,19 +758,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleWireframeSphereRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        radius: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        segments: Int = 32,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawSimpleWireframeSphereRGBA(xPosition: Float, yPosition: Float, zPosition: Float, radius: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, segments: Int = 32, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawSphere(xPosition, yPosition, zPosition, radius, radius, radius, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
     }
 
@@ -749,16 +776,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleWireframeSphere(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        radius: Float = 1f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        segments: Int = 32,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawSimpleWireframeSphere(xPosition: Float, yPosition: Float, zPosition: Float, radius: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, segments: Int = 32, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawSphere(xPosition, yPosition, zPosition, radius, radius, radius, color, segments, disableDepth, true, lineThickness)
     }
 
@@ -781,21 +799,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawWireframeSphereRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        xScale: Float = 1f,
-        yScale: Float = 1f,
-        zScale: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        segments: Int = 32,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawWireframeSphereRGBA(xPosition: Float, yPosition: Float, zPosition: Float, xScale: Float = 1f, yScale: Float = 1f, zScale: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, segments: Int = 32, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
     }
 
@@ -815,18 +819,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawWireframeSphere(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        xScale: Float = 1f,
-        yScale: Float = 1f,
-        zScale: Float = 1f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        segments: Int = 32,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawWireframeSphere(xPosition: Float, yPosition: Float, zPosition: Float, xScale: Float = 1f, yScale: Float = 1f, zScale: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, segments: Int = 32, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, color, segments, disableDepth, true, lineThickness)
     }
 
@@ -850,22 +843,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSphereRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        xScale: Float = 1f,
-        yScale: Float = 1f,
-        zScale: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        segments: Int = 32,
-        disableDepth: Boolean = false,
-        wireframe: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawSphereRGBA(xPosition: Float, yPosition: Float, zPosition: Float, xScale: Float = 1f, yScale: Float = 1f, zScale: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, segments: Int = 32, disableDepth: Boolean = false, wireframe: Boolean = false, lineThickness: Float = 1f) {
         drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
     }
 
@@ -899,56 +877,118 @@ object WorldRenderer {
         wireframe: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        val drawMode = if (wireframe) GL11.GL_LINE_STRIP else GL11.GL_QUADS
-        val cameraPos = RenderUtils.getCameraPos()
+        val renderLayer = when {
+            !wireframe -> getQuadRenderLayer(disableDepth)
+            else -> getLineRenderLayer(disableDepth)
+        }
+        val cache = getTrigCache(segments)
 
-        RenderUtils.pushMatrix()
-        if (disableDepth) RenderUtils.disableDepth()
         RenderUtils
-            .lineWidth(lineThickness)
-            .disableCull()
+            .pushMatrix()
             .enableBlend()
-            .blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-            .depthMask(false)
-            .disableTexture2D()
-            .begin(drawMode, DefaultVertexFormats.POSITION)
+            .lineWidth(lineThickness)
+            .begin(renderLayer)
             .colorizeRGBA(color)
-            .translate(xPosition - cameraPos.x, yPosition - cameraPos.y, zPosition - cameraPos.z)
 
-        for (phi in 0 until segments) {
+        if (!wireframe) {
+            for (phi in 0 until segments) {
+                val sinPhi1 = cache.sinPhi[phi]
+                val cosPhi1 = cache.cosPhi[phi]
+                val sinPhi2 = cache.sinPhi[phi + 1]
+                val cosPhi2 = cache.cosPhi[phi + 1]
+
+                for (theta in 0 until (segments * 2)) {
+                    val cosTheta1 = cache.cosTheta[theta]
+                    val sinTheta1 = cache.sinTheta[theta]
+                    val cosTheta2 = cache.cosTheta[theta + 1]
+                    val sinTheta2 = cache.sinTheta[theta + 1]
+
+                    val x1 = xPosition + xScale * sinPhi1 * cosTheta1
+                    val y1 = yPosition + yScale * cosPhi1
+                    val z1 = zPosition + zScale * sinPhi1 * sinTheta1
+
+                    val x2 = xPosition + xScale * sinPhi2 * cosTheta1
+                    val y2 = yPosition + yScale * cosPhi2
+                    val z2 = zPosition + zScale * sinPhi2 * sinTheta1
+
+                    val x3 = xPosition + xScale * sinPhi2 * cosTheta2
+                    val y3 = yPosition + yScale * cosPhi2
+                    val z3 = zPosition + zScale * sinPhi2 * sinTheta2
+
+                    val x4 = xPosition + xScale * sinPhi1 * cosTheta2
+                    val y4 = yPosition + yScale * cosPhi1
+                    val z4 = zPosition + zScale * sinPhi1 * sinTheta2
+
+                    tempNormal.setAndNormalize(x1 - xPosition, y1 - yPosition, z1 - zPosition)
+                    RenderUtils.pos(x1, y1, z1).normal(tempNormal.x, tempNormal.y, tempNormal.z)
+
+                    tempNormal.setAndNormalize(x2 - xPosition, y2 - yPosition, z2 - zPosition)
+                    RenderUtils.pos(x2, y2, z2).normal(tempNormal.x, tempNormal.y, tempNormal.z)
+
+                    tempNormal.setAndNormalize(x3 - xPosition, y3 - yPosition, z3 - zPosition)
+                    RenderUtils.pos(x3, y3, z3).normal(tempNormal.x, tempNormal.y, tempNormal.z)
+
+                    tempNormal.setAndNormalize(x4 - xPosition, y4 - yPosition, z4 - zPosition)
+                    RenderUtils.pos(x4, y4, z4).normal(tempNormal.x, tempNormal.y, tempNormal.z)
+                }
+            }
+        } else {
+            for (phi in 1 until segments) {
+                val sinPhi = cache.sinPhi[phi]
+                val cosPhi = cache.cosPhi[phi]
+                val y = yPosition + yScale * cosPhi
+
+                for (theta in 0 until (segments * 2)) {
+                    val cosTheta1 = cache.cosTheta[theta]
+                    val sinTheta1 = cache.sinTheta[theta]
+                    val cosTheta2 = cache.cosTheta[theta + 1]
+                    val sinTheta2 = cache.sinTheta[theta + 1]
+
+                    val x1 = xPosition + xScale * sinPhi * cosTheta1
+                    val z1 = zPosition + zScale * sinPhi * sinTheta1
+
+                    val x2 = xPosition + xScale * sinPhi * cosTheta2
+                    val z2 = zPosition + zScale * sinPhi * sinTheta2
+
+                    tempNormal.setAndNormalize(x1 - xPosition, y - yPosition, z1 - zPosition)
+                    RenderUtils.pos(x1, y, z1).normal(tempNormal.x, tempNormal.y, tempNormal.z)
+
+                    tempNormal.setAndNormalize(x2 - xPosition, y - yPosition, z2 - zPosition)
+                    RenderUtils.pos(x2, y, z2).normal(tempNormal.x, tempNormal.y, tempNormal.z)
+                }
+            }
+
             for (theta in 0 until (segments * 2)) {
-                val x1 = (xScale * sin(Math.PI * phi / segments) * cos(2.0 * Math.PI * theta / (segments * 2))).toFloat()
-                val y1 = (yScale * cos(Math.PI * phi / segments)).toFloat()
-                val z1 = (zScale * sin(Math.PI * phi / segments) * sin(2.0 * Math.PI * theta / (segments * 2))).toFloat()
+                val cosTheta = cache.cosTheta[theta]
+                val sinTheta = cache.sinTheta[theta]
 
-                val x2 = (xScale * sin(Math.PI * (phi + 1) / segments) * cos(2.0 * Math.PI * theta / (segments * 2))).toFloat()
-                val y2 = (yScale * cos(Math.PI * (phi + 1) / segments)).toFloat()
-                val z2 = (zScale * sin(Math.PI * (phi + 1) / segments) * sin(2.0 * Math.PI * theta / (segments * 2))).toFloat()
+                for (phi in 0 until segments) {
+                    val sinPhi1 = cache.sinPhi[phi]
+                    val cosPhi1 = cache.cosPhi[phi]
+                    val sinPhi2 = cache.sinPhi[phi + 1]
+                    val cosPhi2 = cache.cosPhi[phi + 1]
 
-                val x3 = (xScale * sin(Math.PI * (phi + 1) / segments) * cos(2.0 * Math.PI * (theta + 1) / (segments * 2))).toFloat()
-                val y3 = (yScale * cos(Math.PI * (phi + 1) / segments)).toFloat()
-                val z3 = (zScale * sin(Math.PI * (phi + 1) / segments) * sin(2.0 * Math.PI * (theta + 1) / (segments * 2))).toFloat()
+                    val x1 = xPosition + xScale * sinPhi1 * cosTheta
+                    val y1 = yPosition + yScale * cosPhi1
+                    val z1 = zPosition + zScale * sinPhi1 * sinTheta
 
-                val x4 = (xScale * sin(Math.PI * phi / segments) * cos(2.0 * Math.PI * (theta + 1) / (segments * 2))).toFloat()
-                val y4 = (yScale * cos(Math.PI * phi / segments)).toFloat()
-                val z4 = (zScale * sin(Math.PI * phi / segments) * sin(2.0 * Math.PI * (theta + 1) / (segments * 2))).toFloat()
+                    val x2 = xPosition + xScale * sinPhi2 * cosTheta
+                    val y2 = yPosition + yScale * cosPhi2
+                    val z2 = zPosition + zScale * sinPhi2 * sinTheta
 
-                RenderUtils
-                    .pos(x1, y1, z1)
-                    .pos(x2, y2, z2)
-                    .pos(x3, y3, z3)
-                    .pos(x4, y4, z4)
+                    tempNormal.setAndNormalize(x1 - xPosition, y1 - yPosition, z1 - zPosition)
+                    RenderUtils.pos(x1, y1, z1).normal(tempNormal.x, tempNormal.y, tempNormal.z)
+
+                    tempNormal.setAndNormalize(x2 - xPosition, y2 - yPosition, z2 - zPosition)
+                    RenderUtils.pos(x2, y2, z2).normal(tempNormal.x, tempNormal.y, tempNormal.z)
+                }
             }
         }
 
         RenderUtils
             .draw()
-            .enableCull()
             .disableBlend()
-            .depthMask(true)
-            .enableTexture2D()
             .resetLineWidth()
-            .enableDepth()
             .popMatrix()
     }
 
@@ -969,19 +1009,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSolidConeRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        radius: Float = 1f,
-        height: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        segments: Int = 64,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSolidConeRGBA(xPosition: Float, yPosition: Float, zPosition: Float, radius: Float = 1f, height: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, segments: Int = 64, disableDepth: Boolean = false) {
         drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
     }
 
@@ -999,16 +1027,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSolidCone(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        radius: Float = 1f,
-        height: Float = 1f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        segments: Int = 64,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSolidCone(xPosition: Float, yPosition: Float, zPosition: Float, radius: Float = 1f, height: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, segments: Int = 64, disableDepth: Boolean = false) {
         drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, color, segments, disableDepth, false)
     }
 
@@ -1030,20 +1049,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawWireframeConeRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        radius: Float = 1f,
-        height: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        segments: Int = 64,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawWireframeConeRGBA(xPosition: Float, yPosition: Float, zPosition: Float, radius: Float = 1f, height: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, segments: Int = 64, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
     }
 
@@ -1062,17 +1068,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawWireframeCone(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        radius: Float = 1f,
-        height: Float = 1f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        segments: Int = 64,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawWireframeCone(xPosition: Float, yPosition: Float, zPosition: Float, radius: Float = 1f, height: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, segments: Int = 64, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, color, segments, disableDepth, true, lineThickness)
     }
 
@@ -1095,21 +1091,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawConeRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        radius: Float = 1f,
-        height: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        segments: Int = 64,
-        disableDepth: Boolean = false,
-        wireframe: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawConeRGBA(xPosition: Float, yPosition: Float, zPosition: Float, radius: Float = 1f, height: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, segments: Int = 64, disableDepth: Boolean = false, wireframe: Boolean = false, lineThickness: Float = 1f) {
         drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
     }
 
@@ -1129,18 +1111,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawCone(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        radius: Float = 1f,
-        height: Float = 1f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        segments: Int = 64,
-        disableDepth: Boolean = false,
-        wireframe: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawCone(xPosition: Float, yPosition: Float, zPosition: Float, radius: Float = 1f, height: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, segments: Int = 64, disableDepth: Boolean = false, wireframe: Boolean = false, lineThickness: Float = 1f) {
         drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, color, segments, disableDepth, wireframe, lineThickness)
     }
 
@@ -1161,19 +1132,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleSolidCylinderRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        radius: Float = 1f,
-        height: Float = 2f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        segments: Int = 64,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSimpleSolidCylinderRGBA(xPosition: Float, yPosition: Float, zPosition: Float, radius: Float = 1f, height: Float = 2f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, segments: Int = 64, disableDepth: Boolean = false) {
         drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
     }
 
@@ -1191,16 +1150,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleSolidCylinder(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        radius: Float = 1f,
-        height: Float = 2f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        segments: Int = 64,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSimpleSolidCylinder(xPosition: Float, yPosition: Float, zPosition: Float, radius: Float = 1f, height: Float = 2f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, segments: Int = 64, disableDepth: Boolean = false) {
         drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, color, segments, disableDepth, false)
     }
 
@@ -1222,20 +1172,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSolidCylinderRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        topRadius: Float = 1f,
-        bottomRadius: Float = 1f,
-        height: Float = 2f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        segments: Int = 64,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSolidCylinderRGBA(xPosition: Float, yPosition: Float, zPosition: Float, topRadius: Float = 1f, bottomRadius: Float = 1f, height: Float = 2f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, segments: Int = 64, disableDepth: Boolean = false) {
         drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
     }
 
@@ -1254,17 +1191,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSolidCylinder(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        topRadius: Float = 1f,
-        bottomRadius: Float = 1f,
-        height: Float = 2f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        segments: Int = 64,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSolidCylinder(xPosition: Float, yPosition: Float, zPosition: Float, topRadius: Float = 1f, bottomRadius: Float = 1f, height: Float = 2f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, segments: Int = 64, disableDepth: Boolean = false) {
         drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, color, segments, disableDepth, false)
     }
 
@@ -1286,20 +1213,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleWireframeCylinderRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        radius: Float = 1f,
-        height: Float = 2f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        segments: Int = 64,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawSimpleWireframeCylinderRGBA(xPosition: Float, yPosition: Float, zPosition: Float, radius: Float = 1f, height: Float = 2f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, segments: Int = 64, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
     }
 
@@ -1318,17 +1232,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleWireframeCylinder(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        radius: Float = 1f,
-        height: Float = 2f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        segments: Int = 64,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawSimpleWireframeCylinder(xPosition: Float, yPosition: Float, zPosition: Float, radius: Float = 1f, height: Float = 2f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, segments: Int = 64, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, color, segments, disableDepth, true, lineThickness)
     }
 
@@ -1351,21 +1255,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawWireframeCylinderRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        topRadius: Float = 1f,
-        bottomRadius: Float = 1f,
-        height: Float = 2f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        segments: Int = 64,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawWireframeCylinderRGBA(xPosition: Float, yPosition: Float, zPosition: Float, topRadius: Float = 1f, bottomRadius: Float = 1f, height: Float = 2f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, segments: Int = 64, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
     }
 
@@ -1385,18 +1275,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawWireframeCylinder(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        topRadius: Float = 1f,
-        bottomRadius: Float = 1f,
-        height: Float = 2f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        segments: Int = 64,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawWireframeCylinder(xPosition: Float, yPosition: Float, zPosition: Float, topRadius: Float = 1f, bottomRadius: Float = 1f, height: Float = 2f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, segments: Int = 64, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, color, segments, disableDepth, true, lineThickness)
     }
 
@@ -1419,21 +1298,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleCylinderRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        radius: Float = 1f,
-        height: Float = 2f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        segments: Int = 64,
-        disableDepth: Boolean = false,
-        wireframe: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawSimpleCylinderRGBA(xPosition: Float, yPosition: Float, zPosition: Float, radius: Float = 1f, height: Float = 2f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, segments: Int = 64, disableDepth: Boolean = false, wireframe: Boolean = false, lineThickness: Float = 1f) {
         drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
     }
 
@@ -1456,21 +1321,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleCylinder(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        radius: Float = 1f,
-        height: Float = 2f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        segments: Int = 64,
-        disableDepth: Boolean = false,
-        wireframe: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawSimpleCylinder(xPosition: Float, yPosition: Float, zPosition: Float, radius: Float = 1f, height: Float = 2f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, segments: Int = 64, disableDepth: Boolean = false, wireframe: Boolean = false, lineThickness: Float = 1f) {
         drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
     }
 
@@ -1494,22 +1345,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawCylinderRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        topRadius: Float = 1f,
-        bottomRadius: Float = 1f,
-        height: Float = 2f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        segments: Int = 64,
-        disableDepth: Boolean = false,
-        wireframe: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawCylinderRGBA(xPosition: Float, yPosition: Float, zPosition: Float, topRadius: Float = 1f, bottomRadius: Float = 1f, height: Float = 2f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, segments: Int = 64, disableDepth: Boolean = false, wireframe: Boolean = false, lineThickness: Float = 1f) {
         drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
     }
 
@@ -1543,20 +1379,23 @@ object WorldRenderer {
         wireframe: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        val drawMode = if (wireframe) GL11.GL_LINE_STRIP else GL11.GL_QUADS
-        val cameraPos = RenderUtils.getCameraPos()
-        val angleStep = 2f * Math.PI / segments
-        val topY = yPosition + height
+        val renderLayer = when {
+            !wireframe -> getQuadRenderLayer(disableDepth)
+            else -> getLineRenderLayer(disableDepth)
+        }
 
         val bottomX = FloatArray(segments + 1)
+        val bottomY = yPosition
         val bottomZ = FloatArray(segments + 1)
         val topX = FloatArray(segments + 1)
+        val topY = bottomY + height
         val topZ = FloatArray(segments + 1)
 
+        val cache = getTrigCache(segments)
         for (i in 0..segments) {
-            val angle = angleStep * i
-            val cosA = cos(angle).toFloat()
-            val sinA = sin(angle).toFloat()
+            val thetaIndex = (i * 2) % (segments * 2)
+            val cosA = cache.cosTheta[thetaIndex]
+            val sinA = cache.sinTheta[thetaIndex]
 
             bottomX[i] = xPosition + bottomRadius * cosA
             bottomZ[i] = zPosition + bottomRadius * sinA
@@ -1564,75 +1403,67 @@ object WorldRenderer {
             topZ[i] = zPosition + topRadius * sinA
         }
 
-        RenderUtils.pushMatrix()
-        if (disableDepth) RenderUtils.disableDepth()
         RenderUtils
-            .lineWidth(lineThickness)
-            .disableCull()
+            .pushMatrix()
             .enableBlend()
-            .blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-            .depthMask(false)
-            .disableTexture2D()
-            .translate(
-                xPosition - cameraPos.x,
-                yPosition - cameraPos.y,
-                zPosition - cameraPos.z
-            )
-            .begin(drawMode, DefaultVertexFormats.POSITION)
+            .lineWidth(lineThickness)
+            .begin(renderLayer)
             .colorizeRGBA(color)
 
         for (i in 0 until segments) {
             val next = (i + 1) % segments
 
             if (wireframe) {
-                RenderUtils
-                    .pos(bottomX[i], yPosition, bottomZ[i])
-                    .pos(topX[i], topY, topZ[i])
-                    .pos(topX[next], topY, topZ[next])
-                    .pos(bottomX[next], yPosition, bottomZ[next])
+                tempNormal.setAndNormalize(bottomX[i] - xPosition, 0f, bottomZ[i] - zPosition)
+                RenderUtils.pos(bottomX[i], bottomY, bottomZ[i]).normal(tempNormal.x, tempNormal.y, tempNormal.z)
+
+                tempNormal.setAndNormalize(topX[i] - xPosition, 0f, topZ[i] - zPosition)
+                RenderUtils.pos(topX[i], topY, topZ[i]).normal(tempNormal.x, tempNormal.y, tempNormal.z)
+
+                tempNormal.setAndNormalize(topX[next] - xPosition, 0f, topZ[next] - zPosition)
+                RenderUtils.pos(topX[next], topY, topZ[next]).normal(tempNormal.x, tempNormal.y, tempNormal.z)
+
+                tempNormal.setAndNormalize(bottomX[next] - xPosition, 0f, bottomZ[next] - zPosition)
+                RenderUtils.pos(bottomX[next], bottomY, bottomZ[next]).normal(tempNormal.x, tempNormal.y, tempNormal.z)
             } else {
                 RenderUtils
-                    .pos(bottomX[i], yPosition, bottomZ[i])
-                    .pos(bottomX[next], yPosition, bottomZ[next])
+                    .pos(bottomX[i], bottomY, bottomZ[i])
+                    .pos(bottomX[next], bottomY, bottomZ[next])
                     .pos(topX[next], topY, topZ[next])
                     .pos(topX[i], topY, topZ[i])
             }
         }
 
         val caps = listOf(
-            Triple(yPosition, bottomX, bottomZ),
+            Triple(bottomY, bottomX, bottomZ),
             Triple(topY, topX, topZ)
         )
+        val normalsY = listOf(-1f, 1f)
         for (index in caps.indices) {
             val (y, xRing, zRing) = caps[index]
+            val normalY = normalsY[index]
 
             for (i in 0 until segments) {
                 val next = (i + 1) % segments
-
-                if (wireframe) {
-                    RenderUtils
-                        .pos(xPosition, y, zPosition)
-                        .pos(xRing[i], y, zRing[i])
-                        .pos(xRing[next], y, zRing[next])
-                } else {
                 RenderUtils
-                    .pos(xPosition, y, zPosition)
-                    .pos(xRing[next], y, zRing[next])
-                    .pos(xRing[i], y, zRing[i])
-                    .pos(xPosition, y, zPosition)
-                }
+                    .pos(xPosition, y, zPosition).normal(0f, normalY, 0f)
+                    .pos(xRing[next], y, zRing[next]).normal(0f, normalY, 0f)
+                    .pos(xRing[i], y, zRing[i]).normal(0f, normalY, 0f)
+                    .pos(xPosition, y, zPosition).normal(0f, normalY, 0f)
             }
-            RenderUtils.pos(xPosition, y, zPosition)
+
+            for (i in 0 until segments) {
+                val next = (i + 1) % segments
+                RenderUtils
+                    .pos(xRing[i], y, zRing[i]).normal(0f, normalY, 0f)
+                    .pos(xRing[next], y, zRing[next]).normal(0f, normalY, 0f)
+            }
         }
 
         RenderUtils
             .draw()
-            .enableCull()
             .disableBlend()
-            .depthMask(true)
-            .enableTexture2D()
             .resetLineWidth()
-            .enableDepth()
             .popMatrix()
     }
 
@@ -1651,17 +1482,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleSolidPyramidRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        size: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSimpleSolidPyramidRGBA(xPosition: Float, yPosition: Float, zPosition: Float, size: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, disableDepth: Boolean = false) {
         drawPyramid(xPosition, yPosition, zPosition, size, size, size, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, false)
     }
 
@@ -1677,14 +1498,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleSolidPyramid(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        size: Float = 1f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSimpleSolidPyramid(xPosition: Float, yPosition: Float, zPosition: Float, size: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, disableDepth: Boolean = false) {
         drawPyramid(xPosition, yPosition, zPosition, size, size, size, color, disableDepth, false)
     }
 
@@ -1705,19 +1519,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSolidPyramidRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        xScale: Float = 1f,
-        yScale: Float = 1f,
-        zScale: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSolidPyramidRGBA(xPosition: Float, yPosition: Float, zPosition: Float, xScale: Float = 1f, yScale: Float = 1f, zScale: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, disableDepth: Boolean = false) {
         drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, false)
     }
 
@@ -1735,16 +1537,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSolidPyramid(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        xScale: Float = 1f,
-        yScale: Float = 1f,
-        zScale: Float = 1f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        disableDepth: Boolean = false,
-    ) {
+    fun drawSolidPyramid(xPosition: Float, yPosition: Float, zPosition: Float, xScale: Float = 1f, yScale: Float = 1f, zScale: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, disableDepth: Boolean = false) {
         drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, color, disableDepth, false)
     }
 
@@ -1764,18 +1557,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleWireframePyramidRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        size: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawSimpleWireframePyramidRGBA(xPosition: Float, yPosition: Float, zPosition: Float, size: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawPyramid(xPosition, yPosition, zPosition, size, size, size, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, true)
     }
 
@@ -1792,15 +1574,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleWireframePyramid(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        size: Float = 1f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawSimpleWireframePyramid(xPosition: Float, yPosition: Float, zPosition: Float, size: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawPyramid(xPosition, yPosition, zPosition, size, size, size, color, disableDepth, true)
     }
 
@@ -1822,20 +1596,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawWireframePyramidRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        xScale: Float = 1f,
-        yScale: Float = 1f,
-        zScale: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawWireframePyramidRGBA(xPosition: Float, yPosition: Float, zPosition: Float, xScale: Float = 1f, yScale: Float = 1f, zScale: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, true)
     }
 
@@ -1854,17 +1615,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawWireframePyramid(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        xScale: Float = 1f,
-        yScale: Float = 1f,
-        zScale: Float = 1f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawWireframePyramid(xPosition: Float, yPosition: Float, zPosition: Float, xScale: Float = 1f, yScale: Float = 1f, zScale: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, disableDepth: Boolean = false, lineThickness: Float = 1f) {
         drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, color, disableDepth, true)
     }
 
@@ -1887,21 +1638,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawPyramidRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        xScale: Float = 1f,
-        yScale: Float = 1f,
-        zScale: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        disableDepth: Boolean = false,
-        wireframe: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
+    fun drawPyramidRGBA(xPosition: Float, yPosition: Float, zPosition: Float, xScale: Float = 1f, yScale: Float = 1f, zScale: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, disableDepth: Boolean = false, wireframe: Boolean = false, lineThickness: Float = 1f) {
         drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe)
     }
 
@@ -1933,46 +1670,43 @@ object WorldRenderer {
         wireframe: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        val drawMode = if (wireframe) GL11.GL_LINE_STRIP else GL11.GL_TRIANGLES
-        val cameraPos = RenderUtils.getCameraPos()
+        val renderLayer = when {
+            !wireframe -> getTriangleRenderLayer(disableDepth)
+            else -> getLineRenderLayer(disableDepth)
+        }
 
         val halfX = xScale / 2f
         val halfZ = zScale / 2f
 
-        val x0 = -halfX
-        val x1 = halfX
-        val z0 = -halfZ
-        val z1 = halfZ
+        val x0 = xPosition - halfX
+        val x1 = xPosition + halfX
+        val z0 = zPosition - halfZ
+        val z1 = zPosition + halfZ
 
-        val yBase = 0f
-        val yTip = yScale
+        val yBase = yPosition
+        val yTip = yPosition + yScale
 
-        val tipX = 0f
+        val tipX = xPosition
         val tipY = yTip
-        val tipZ = 0f
+        val tipZ = zPosition
 
         fun triangle(ax: Float, ay: Float, az: Float, bx: Float, by: Float, bz: Float, cx: Float, cy: Float, cz: Float) {
+            tempNormal.setAndNormalize(
+                (bx - ax) * (cy - ay) - (cx - ax) * (by - ay),
+                (bz - az) * (cy - ay) - (cz - az) * (by - ay),
+                (cx - ax) * (by - ay) - (bx - ax) * (cy - ay),
+            )
             RenderUtils
-                .pos(ax, ay, az)
-                .pos(bx, by, bz)
-                .pos(cx, cy, cz)
+                .pos(ax, ay, az).normal(tempNormal.x, tempNormal.y, tempNormal.z)
+                .pos(bx, by, bz).normal(tempNormal.x, tempNormal.y, tempNormal.z)
+                .pos(cx, cy, cz).normal(tempNormal.x, tempNormal.y, tempNormal.z)
         }
 
-        RenderUtils.pushMatrix()
-        if (disableDepth) RenderUtils.disableDepth()
         RenderUtils
-            .lineWidth(lineThickness)
-            .disableCull()
+            .pushMatrix()
             .enableBlend()
-            .blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-            .depthMask(false)
-            .disableTexture2D()
-            .translate(
-                xPosition - cameraPos.x,
-                yPosition - cameraPos.y,
-                zPosition - cameraPos.z
-            )
-            .begin(drawMode, DefaultVertexFormats.POSITION)
+            .lineWidth(lineThickness)
+            .begin(renderLayer)
             .colorizeRGBA(color)
 
         triangle(tipX, tipY, tipZ, x0, yBase, z0, x1, yBase, z0)
@@ -1985,34 +1719,21 @@ object WorldRenderer {
 
         RenderUtils
             .draw()
-            .enableCull()
             .disableBlend()
-            .depthMask(true)
-            .enableTexture2D()
             .resetLineWidth()
-            .enableDepth()
             .popMatrix()
     }
 
     @JvmStatic
     @JvmOverloads
-    fun drawTracerRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
-        drawTracer(xPosition, yPosition, zPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, lineThickness)
+    fun drawTracerRGBA(partialTicks: Float, xPosition: Float, yPosition: Float, zPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, disableDepth: Boolean = false, lineThickness: Float = 1f) {
+        drawTracer(partialTicks, xPosition, yPosition, zPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, lineThickness)
     }
 
     @JvmStatic
     @JvmOverloads
     fun drawTracer(
+        partialTicks: Float,
         xPosition: Float,
         yPosition: Float,
         zPosition: Float,
@@ -2020,39 +1741,19 @@ object WorldRenderer {
         disableDepth: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        val drawMode = GL11.GL_LINE_STRIP
+        val mc = Client.getMinecraft()
+        mc.player?.let { player ->
+            val x1: Double = player.lastX + (player.x - player.lastX) * partialTicks
+            val y1: Double = player.getEyeHeight(player.pose) + player.lastY + (player.y - player.lastY) * partialTicks
+            val z1: Double = player.lastZ + (player.z - player.lastZ) * partialTicks
 
-        val mc = UMinecraft.getMinecraft()
-        mc.thePlayer?.let { player ->
-            val newXPosition = xPosition - player.posX
-            val newYPosition = yPosition - player.posY
-            val newZPosition = zPosition - player.posZ
+            val vec2 = Vec3d(0.0, 0.0, 75.0)
+                .rotateX(-Math.toRadians(mc.gameRenderer.camera.pitch.toDouble()).toFloat())
+                .rotateY(-Math.toRadians(mc.gameRenderer.camera.yaw.toDouble()).toFloat())
+                .add(x1, y1, z1)
 
-            RenderUtils.pushMatrix()
-            if (disableDepth) RenderUtils.disableDepth()
-            RenderUtils
-                .lineWidth(lineThickness)
-                .disableCull()
-                .enableBlend()
-                .blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-                .depthMask(false)
-                .disableTexture2D()
-                .enableLineSmooth()
-
-                .begin(drawMode, DefaultVertexFormats.POSITION)
-                .colorizeRGBA(color)
-                .pos(newXPosition, newYPosition, newZPosition)
-                .pos(0f, player.getEyeHeight(), 0f)
-                .draw()
-
-                .enableCull()
-                .disableBlend()
-                .depthMask(true)
-                .enableTexture2D()
-                .disableLineSmooth()
-                .resetLineWidth()
-                .enableDepth()
-                .popMatrix()
+            drawLine(vec2.x.toFloat(), vec2.y.toFloat(), vec2.z.toFloat(), xPosition, yPosition, zPosition, color, disableDepth, lineThickness)
         }
     }
 }
+//#endif

@@ -1,4 +1,4 @@
-package org.zephy.zrenderlib.modern
+package org.zephy.zrenderlib
 
 //#if MC>12100
 import net.minecraft.client.render.RenderLayer

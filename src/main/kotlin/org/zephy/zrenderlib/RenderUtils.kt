@@ -1,6 +1,19 @@
-package org.zephy.zrenderlib.modern
+package org.zephy.zrenderlib
 
-//#if MC>12100
+//#if MC == 10809 || MC >= 12100
+import kotlin.math.abs
+import java.awt.Color
+import org.lwjgl.opengl.GL11
+import kotlin.math.PI
+import kotlin.math.sin
+
+//#if MC < 12100
+//$$import net.minecraft.client.renderer.GlStateManager
+//$$import net.minecraft.client.renderer.Tessellator
+//$$import net.minecraft.client.renderer.entity.RenderManager
+//$$import javax.vecmath.Vector3d
+//$$import java.nio.FloatBuffer
+//#else
 import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.platform.DepthTestFunction
 import com.mojang.blaze3d.platform.DestFactor
@@ -13,30 +26,42 @@ import net.minecraft.client.render.RenderLayer
 import net.minecraft.text.OrderedText
 import net.minecraft.text.Text
 import org.joml.Quaternionf
-import org.lwjgl.opengl.GL11
-import java.awt.Color
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.sin
+//#endif
 
 //#if MC>=12106
 //$$import com.mojang.blaze3d.textures.GpuTextureView
 //#endif
 
 object RenderUtils {
-    // WorldRenderer
-    private val NEWLINE_REGEX = """\n|\r\n?""".toRegex()
+    @JvmStatic
+    //#if MC < 12100
+    //$$fun getTextRenderer() = Client.getMinecraft().fontRendererObj
+    //#else
+    fun getTextRenderer() = Client.getMinecraft().textRenderer
+    //#endif
+
+    @JvmField
+    var colorized: Long? = null
+
+    @JvmField
+    var vertexColor: Color? = null
+
     private var firstVertex = true
     private var began = false
 
-    @JvmStatic
-    fun getFontRenderer() = Client.getMinecraft().textRenderer
+    //#if MC < 12100
+    //$$@JvmStatic val renderManager: RenderManager = Client.getMinecraft().renderManager
+    //$$@JvmStatic val tessellator: Tessellator = Tessellator.getInstance()
+    //$$@JvmStatic val worldRenderer: net.minecraft.client.renderer.WorldRenderer? = tessellator.worldRenderer
+    //$$@JvmStatic fun getCameraPos(): Vector3d {
+    //$$    return Vector3d(
+    //$$        renderManager.viewerPosX,
+    //$$        renderManager.viewerPosY,
+    //$$        renderManager.viewerPosZ
+    //$$    )
+    //$$}
+    //#else
     private val ucWorldRenderer = UGraphics.getFromTessellator()
-
-    // GUIRenderer
-    @JvmField var colorized: Long? = null
-
-    @JvmField var vertexColor: Color? = null
 
     internal lateinit var matrixStack: UMatrixStack
     private val matrixStackStack = ArrayDeque<UMatrixStack>()
@@ -46,66 +71,7 @@ object RenderUtils {
     fun setMatrixStack(stack: UMatrixStack) = apply {
         matrixStack = stack
     }
-
-//    private var matrixStackReflectionField: Field? = null
-//    private var matrixStackReflectionInstance: Any? = null
-//    init {
-//        try {
-//            var clazz = Class.forName("com.chattriggers.ctjs.api.render.RenderUtils")
-//            var instance = clazz.getField("INSTANCE").get(null)
-//            if (instance == null) {
-//                clazz = Class.forName("com.chattriggers.ctjs.api.render.Renderer")
-//                instance = clazz.getField("INSTANCE").get(null)
-//            }
-//
-//            var field = clazz.getDeclaredField("matrixStack")
-//            field.isAccessible = true
-//
-//            matrixStackReflectionField = field
-//            matrixStackReflectionInstance = instance
-//        } catch (e: Exception) {
-//            e.printStackTrace()
-//        }
-//    }
-//
-//    fun getMatrixStack(): UMatrixStack? {
-//        return try {
-//            matrixStackReflectionField?.get(matrixStackReflectionInstance) as? UMatrixStack
-//        } catch (e: Exception) {
-//            e.printStackTrace()
-//            null
-//        }
-//    }
-
-//    private var partialTicksReflectionField: Field? = null
-//    private var partialTicksReflectionInstance: Any? = null
-//    init {
-//        try {
-//            var clazz = Class.forName("com.chattriggers.ctjs.api.render.GUIRenderer")
-//            var instance = clazz.getField("INSTANCE").get(null)
-//            if (instance == null) {
-//                clazz = Class.forName("com.chattriggers.ctjs.api.render.Renderer")
-//                instance = clazz.getField("INSTANCE").get(null)
-//            }
-//
-//            var field = clazz.getDeclaredField("partialTicks")
-//            field.isAccessible = true
-//
-//            partialTicksReflectionField = field
-//            partialTicksReflectionInstance = instance
-//        } catch (e: Exception) {
-//            e.printStackTrace()
-//        }
-//    }
-//
-//    fun getPartialTicks(): Float {
-//        try {
-//            return partialTicksReflectionField?.get(partialTicksReflectionInstance) as Float
-//        } catch (e: Exception) {
-//            e.printStackTrace()
-//        }
-//        return 0f
-//    }
+    //#endif
 
     @JvmField val BLACK = RGBAColor(0, 0, 0, 255).getLong()
 
@@ -160,53 +126,30 @@ object RenderUtils {
     }
 
     @JvmStatic
-    fun _beginRenderLayer(renderLayer: RenderLayer = RenderLayers.QUADS()) = apply {
-        ucWorldRenderer.beginRenderLayer(renderLayer)
-    }
-    @JvmStatic
-    fun _endVertex() = apply {
-        ucWorldRenderer.endVertex()
-    }
+    //#if MC < 12100
+    //$$fun getStringWidth(text: String) = getTextRenderer().getStringWidth(addColor(text))
+    //#else
+    fun getStringWidth(text: String) = getTextRenderer().getWidth(addColor(text))
+    //#endif
 
+    private fun _begin() = apply {
+        pushMatrix()
+        colorized = null
+        vertexColor = null
+        firstVertex = true
+        began = true
+    }
     /**
      * Begin drawing with the world renderer
      *
      * @param renderLayer The [RenderLayer] to use
      * @return [RenderUtils] to allow for method chaining
      */
+    //#if MC >= 12100
     @JvmStatic
     fun begin(renderLayer: RenderLayer = RenderLayers.QUADS()) = apply {
-        pushMatrix().blendFunc(
-            BlendFunction(
-                SourceFactor.SRC_ALPHA,
-                DestFactor.ONE_MINUS_SRC_ALPHA,
-                SourceFactor.ONE,
-                DestFactor.ZERO
-            )
-        )
-
-        colorized = null
-        _beginRenderLayer(renderLayer)
-
-        firstVertex = true
-        began = true
-    }
-
-    /**
-     * Begin drawing with the world renderer
-     *
-     * @param drawMode The [DrawMode] to use
-     * @param vertexFormat The [VertexFormat] to use
-     * @return [RenderUtils] to allow for method chaining
-     */
-    @JvmStatic
-    fun begin(
-        drawMode: DrawMode = DrawMode.QUADS,
-        vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR,
-    ) = apply {
-        RenderLayers.getRenderLayer(drawMode, vertexFormat)?.let { renderLayer ->
-            begin(renderLayer)
-        }
+        _begin()
+        ucWorldRenderer.beginRenderLayer(renderLayer)
     }
 
     /**
@@ -225,6 +168,50 @@ object RenderUtils {
     ) = apply {
         begin(PipelineBuilder.begin(drawMode, vertexFormat, snippet).layer())
     }
+    //#endif
+
+    /**
+     * Begin drawing with the world renderer
+     *
+     * @param drawMode The [DrawMode] to use
+     * @param vertexFormat The [VertexFormat] to use
+     * @return [RenderUtils] to allow for method chaining
+     */
+    @JvmStatic
+    fun begin(
+        //#if MC < 12100
+        //$$drawMode: Int = GL11.GL_QUADS,
+        //#else
+        drawMode: DrawMode = DrawMode.QUADS,
+        //#endif
+        vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR,
+    ) = apply {
+        //#if MC < 12100
+        //$$_begin()
+        //$$worldRenderer?.let {
+        //$$    it.begin(drawMode, vertexFormat.toMC())
+        //$$}
+        //#else
+        RenderLayers.getRenderLayer(drawMode, vertexFormat)?.let { renderLayer ->
+            begin(renderLayer)
+        }
+        //#endif
+    }
+
+    /**
+     * Finalizes vertices and draws the world renderer.
+     */
+    @JvmStatic
+    fun draw() = apply {
+        if (!began) return this
+        began = false
+
+        //#if MC < 12100
+        //$$tessellator.draw()
+        //#else
+        ucWorldRenderer.drawDirect()
+        //#endif
+    }
 
     /**
      * Sets a new vertex in the world renderer.
@@ -236,19 +223,25 @@ object RenderUtils {
      */
     @JvmStatic
     fun pos(x: Float, y: Float, z: Float) = apply {
-        if (!began) {
-            begin()
-        }
-        if (!firstVertex) {
-            _endVertex()
-        }
+        pos(x.toDouble(), y.toDouble(), z.toDouble())
+    }
+    @JvmStatic
+    fun pos(x: Double, y: Double, z: Double) = apply {
+        if (!began) begin()
+
+        //#if MC < 12100
+        //$$if (!firstVertex) worldRenderer?.endVertex()
+        //$$worldRenderer?.pos(x, y, z)
+        //#else
+        if (!firstVertex) ucWorldRenderer.endVertex()
         val camera = Client.getMinecraft().gameRenderer.camera.pos
-        ucWorldRenderer.pos(matrixStack, x.toDouble() - camera.x, y.toDouble() - camera.y, z.toDouble() - camera.z)
+        ucWorldRenderer.pos(matrixStack, x - camera.x, y - camera.y, z - camera.z)
+        //#endif
+
+        firstVertex = false
         vertexColor?.let {
             color(vertexColor!!)
         }
-
-        firstVertex = false
     }
 
     /**
@@ -259,28 +252,41 @@ object RenderUtils {
      * @param z the z position
      * @return [RenderUtils] to allow for method chaining
      */
+
+    //#if MC >= 12100
     @JvmStatic
     @JvmOverloads
     fun cameraPos(x: Float, y: Float, z: Float = 0f) = apply {
+        cameraPos(x.toDouble(), y.toDouble(), z.toDouble())
+    }
+    @JvmStatic
+    @JvmOverloads
+    fun cameraPos(x: Double, y: Double, z: Double = 0.0) = apply {
         val camera = Client.getMinecraft().gameRenderer.camera.pos
-        pos(x + camera.x.toFloat(), y + camera.y.toFloat(), z + camera.z.toFloat())
+        pos(x + camera.x, y + camera.y, z + camera.z)
     }
 
     @JvmStatic
     fun worldPos(x: Float, y: Float, z: Float) = apply {
-        if (!began) {
-            begin()
-        }
-        if (!firstVertex) {
-            _endVertex()
-        }
-        ucWorldRenderer.pos(matrixStack, x.toDouble(), y.toDouble(), z.toDouble())
+        worldPos(x.toDouble(), y.toDouble(), z.toDouble())
+    }
+    @JvmStatic
+    fun worldPos(x: Double, y: Double, z: Double) = apply {
+        if (!began) begin()
+        if (!firstVertex) ucWorldRenderer.endVertex()
+        firstVertex = false
+
+        //#if MC < 12100
+        //$$worldRenderer?.pos(x, y, z)
+        //#else
+        ucWorldRenderer.pos(matrixStack, x, y, z)
+        //#endif
+
         vertexColor?.let {
             color(vertexColor!!)
         }
-
-        firstVertex = false
     }
+    //#endif
 
     /**
      * Sets the texture location on the last defined vertex.
@@ -291,7 +297,15 @@ object RenderUtils {
      */
     @JvmStatic
     fun tex(u: Float, v: Float) = apply {
-        ucWorldRenderer.tex(u.toDouble(), v.toDouble())
+        tex(u.toDouble(), v.toDouble())
+    }
+    @JvmStatic
+    fun tex(u: Double, v: Double) = apply {
+        //#if MC < 12100
+        //$$worldRenderer?.tex(u, v)
+        //#else
+        ucWorldRenderer.tex(u, v)
+        //#endif
     }
 
     /**
@@ -306,7 +320,11 @@ object RenderUtils {
     @JvmStatic
     @JvmOverloads
     fun color(r: Float, g: Float, b: Float, a: Float = 1f) = apply {
+        //#if MC < 12100
+        //$$worldRenderer?.color(r, g, b, a)
+        //#else
         ucWorldRenderer.color(r, g, b, a)
+        //#endif
     }
 
     /**
@@ -327,7 +345,7 @@ object RenderUtils {
     /**
      * Sets the color for the last defined vertex.
      *
-     * @param color the color value, can use [getColor] to get this
+     * @param color the color value in Long format
      * @return [RenderUtils] to allow for method chaining
      */
     @JvmStatic
@@ -355,7 +373,15 @@ object RenderUtils {
      */
     @JvmStatic
     fun normal(x: Float, y: Float, z: Float) = apply {
+        //#if MC < 12100
+        //$$worldRenderer?.normal(x, y, z)
+        //#else
         ucWorldRenderer.norm(matrixStack, x, y, z)
+        //#endif
+    }
+    @JvmStatic
+    fun normal(x: Double, y: Double, z: Double) = apply {
+        normal(x.toFloat(), y.toFloat(), z.toFloat())
     }
 
     /**
@@ -367,7 +393,11 @@ object RenderUtils {
      */
     @JvmStatic
     fun overlay(u: Int, v: Int) = apply {
+        //#if MC < 12100
+        //$$tex(u.toDouble(), v.toDouble())
+        //#else
         ucWorldRenderer.overlay(u, v)
+        //#endif
     }
 
     /**
@@ -379,7 +409,11 @@ object RenderUtils {
      */
     @JvmStatic
     fun light(u: Int, v: Int) = apply {
+        //#if MC < 12100
+        //$$worldRenderer?.lightmap(u, v)
+        //#else
         ucWorldRenderer.light(u, v)
+        //#endif
     }
 
     /**
@@ -390,7 +424,11 @@ object RenderUtils {
      */
     @JvmStatic
     fun lineWidth(width: Float) = apply {
+        //#if MC < 12100
+        //$$GL11.glLineWidth(width)
+        //#else
         RenderSystem.lineWidth(width)
+        //#endif
     }
 
     @JvmStatic
@@ -398,70 +436,158 @@ object RenderUtils {
         lineWidth(1f)
     }
 
-    /**
-     * Finalizes vertices and draws the world renderer.
-     */
-    @JvmStatic
-    fun draw() = apply {
-        if (!began) return this
-        began = false
-
-        ucWorldRenderer.endVertex()
-        ucWorldRenderer.drawDirect()
-
-        colorize_01(1f, 1f, 1f, 1f)
-            .disableBlend()
-            .popMatrix()
-    }
-
     @JvmStatic
     fun enableCull() = apply {
+        //#if MC < 12100
+        //$$GlStateManager.enableCull()
+        //#else
         PipelineBuilder.enableCull()
+        //#endif
     }
 
     @JvmStatic
     fun disableCull() = apply {
+        //#if MC < 12100
+        //$$GlStateManager.disableCull()
+        //#else
         PipelineBuilder.disableCull()
+        //#endif
     }
 
     @JvmStatic
     fun enableLighting() = apply {
+        //#if MC < 12100
+        //$$GlStateManager.enableLighting()
+        //#else
         UGraphics.enableLighting()
+        //#endif
     }
 
     @JvmStatic
     fun disableLighting() = apply {
+        //#if MC < 12100
+        //$$GlStateManager.disableLighting()
+        //#else
         UGraphics.disableLighting()
+        //#endif
     }
 
     @JvmStatic
     fun enableDepth() = apply {
+        //#if MC < 12100
+        //$$GlStateManager.enableDepth()
+        //#else
         PipelineBuilder.enableDepth()
+        //#endif
     }
 
     @JvmStatic
     fun disableDepth() = apply {
+        //#if MC < 12100
+        //$$GlStateManager.disableDepth()
+        //#else
         PipelineBuilder.disableDepth()
+        //#endif
+    }
+
+    //#if MC >= 12100
+    @JvmStatic
+    fun getDepthTestFunctionFromInt(value: Int): DepthTestFunction {
+        return when (value) {
+//            0x200 -> !! // GL_NEVER
+            0x201 -> DepthTestFunction.LESS_DEPTH_TEST // GL_LESS
+            0x202 -> DepthTestFunction.EQUAL_DEPTH_TEST // GL_EQUAL
+            0x203 -> DepthTestFunction.LEQUAL_DEPTH_TEST // GL_LEQUAL
+            0x204 -> DepthTestFunction.GREATER_DEPTH_TEST // GL_GREATER
+//            0x205 -> !! // GL_NOTEQUAL
+//            0x206 -> !! // GL_GEQUAL
+            0x207 -> DepthTestFunction.NO_DEPTH_TEST // GL_ALWAYS
+            else -> throw IllegalArgumentException("Invalid depth test function value: $value")
+        }
     }
 
     @JvmStatic
     fun depthFunc(function: DepthTestFunction) = apply {
         PipelineBuilder.setDepthTestFunction(function)
     }
+    //#endif
+
+    @JvmStatic
+    fun depthFunc(depthFunc: Int) = apply {
+        //#if MC < 12100
+        //$$GlStateManager.depthFunc(depthFunc)
+        //#else
+        depthFunc(getDepthTestFunctionFromInt(depthFunc))
+        //#endif
+    }
+
+    @JvmStatic
+    fun depthMask(mask: Boolean) = apply {
+        //#if MC < 12100
+        //$$GlStateManager.depthMask(mask)
+        //#endif
+    }
+
+    @JvmStatic
+    fun enableTexture2D() = apply {
+        //#if MC < 12100
+        //$$GlStateManager.enableTexture2D()
+        //#endif
+    }
+    @JvmStatic
+    fun disableTexture2D() = apply {
+        //#if MC < 12100
+        //$$GlStateManager.disableTexture2D()
+        //#endif
+    }
+
+    @JvmStatic
+    fun enableLineSmooth() = apply {
+        //#if MC < 12100
+        //$$GL11.glEnable(GL11.GL_LINE_SMOOTH)
+        //#endif
+    }
+    @JvmStatic
+    fun disableLineSmooth() = apply {
+        //#if MC < 12100
+        //$$GL11.glDisable(GL11.GL_LINE_SMOOTH)
+        //#endif
+    }
 
     @JvmStatic
     fun enableBlend() = apply {
+        //#if MC < 12100
+        //$$GlStateManager.enableBlend()
+        //#else
         PipelineBuilder.enableBlend()
+        //#endif
+    }
+    @JvmStatic
+    fun disableBlend() = apply {
+        //#if MC < 12100
+        //$$GlStateManager.disableBlend()
+        //#else
+        PipelineBuilder.disableBlend()
+        //#endif
     }
 
     @JvmStatic
-    fun disableBlend() = apply {
-        PipelineBuilder.disableBlend()
+    fun blendFunc(srcFactor: Int, dstFactor: Int) = apply {
+        //#if MC < 12100
+        //$$GlStateManager.blendFunc(srcFactor, dstFactor)
+        //#else
+        blendFunc(getSourceFactorFromInt(srcFactor), getDestFactorFromInt(dstFactor))
+        //#endif
     }
 
+    //#if MC >= 12100
     @JvmStatic
     fun blendFunc(function: BlendFunction) = apply {
         PipelineBuilder.setBlendFunction(function)
+    }
+    @JvmStatic
+    fun blendFunc(srcFactor: SourceFactor, dstFactor: DestFactor) = apply {
+        PipelineBuilder.setBlendFunction(BlendFunction(srcFactor, dstFactor))
     }
 
     @JvmStatic
@@ -485,7 +611,6 @@ object RenderUtils {
             else -> throw IllegalArgumentException("Invalid source factor value: $value")
         }
     }
-
     @JvmStatic
     fun getDestFactorFromInt(value: Int): DestFactor {
         return when (value) {
@@ -507,22 +632,6 @@ object RenderUtils {
             else -> throw IllegalArgumentException("Invalid source factor value: $value")
         }
     }
-
-    @JvmStatic
-    fun tryBlendFuncSeparate(
-        sourceFactor: Int,
-        destFactor: Int,
-        sourceFactorAlpha: Int,
-        destFactorAlpha: Int,
-    ) = apply {
-        val srcFactor = getSourceFactorFromInt(sourceFactor)
-        val dstFactor = getDestFactorFromInt(destFactor)
-        val srcFactorAlpha = getSourceFactorFromInt(sourceFactorAlpha)
-        val dstFactorAlpha = getDestFactorFromInt(destFactorAlpha)
-
-        blendFunc(BlendFunction(srcFactor, dstFactor, srcFactorAlpha, dstFactorAlpha))
-    }
-
     @JvmStatic
     fun tryBlendFuncSeparate(
         sourceFactor: SourceFactor,
@@ -532,18 +641,51 @@ object RenderUtils {
     ) = apply {
         blendFunc(BlendFunction(sourceFactor, destFactor, sourceFactorAlpha, destFactorAlpha))
     }
+    //#endif
 
     @JvmStatic
+    fun tryBlendFuncSeparate(
+        sourceFactor: Int,
+        destFactor: Int,
+        sourceFactorAlpha: Int,
+        destFactorAlpha: Int,
+    ) = apply {
+        //#if MC < 12100
+        //$$GlStateManager.tryBlendFuncSeparate(sourceFactor, destFactor, sourceFactorAlpha, destFactorAlpha)
+        //#else
+        tryBlendFuncSeparate(
+            getSourceFactorFromInt(sourceFactor),
+            getDestFactorFromInt(destFactor),
+            getSourceFactorFromInt(sourceFactorAlpha),
+            getDestFactorFromInt(destFactorAlpha)
+        )
+        //#endif
+    }
+
+    @JvmStatic
+    //#if MC < 12100
+    //$$fun bindTexture(textureId: Int) = apply {
+    //$$    GlStateManager.bindTexture(textureId)
+    //$$}
+    //#else
     @JvmOverloads
     fun bindTexture(textureImage: Image, textureIndex: Int = 0) = apply {
         UGraphics.bindTexture(textureIndex, textureImage.getTexture()?.image?.imageId()?.toInt() ?: 0)
     }
+    //#endif
 
     @JvmStatic
+    //#if MC < 12100
+    //$$fun deleteTexture(textureId: Int) = apply {
+    //$$    GlStateManager.deleteTexture(textureId)
+    //$$}
+    //#else
     fun deleteTexture(texture: Image) = apply {
         GL11.glDeleteTextures(texture.getTexture()?.image?.imageId()?.toInt() ?: 0)
     }
+    //#endif
 
+    //#if MC >= 12100
     @JvmStatic
     //#if MC>=12106
     //$$fun setShaderTexture(textureIndex: Int, texture: GpuTextureView?) = apply {
@@ -552,7 +694,9 @@ object RenderUtils {
         //#endif
         RenderSystem.setShaderTexture(textureIndex, texture)
     }
+    //#endif
 
+    //#if MC >= 12100
     @JvmStatic
     fun setShaderTexture(textureIndex: Int, textureImage: Image) = apply {
         val gpuTexture = textureImage.getTexture()
@@ -564,44 +708,94 @@ object RenderUtils {
             //#endif
         }
     }
+    //#endif
 
     @JvmStatic
+    //#if MC < 12100
+    //$$fun pushMatrix() = apply { GlStateManager.pushMatrix() }
+    //#else
     fun pushMatrix(stack: UMatrixStack = matrixStack) = apply {
         matrixPushCounter++
         matrixStackStack.addLast(stack)
         matrixStack = stack
         stack.push()
     }
+    //#endif
 
     @JvmStatic
     fun popMatrix() = apply {
+        //#if MC < 12100
+        //$$GlStateManager.popMatrix()
+        //#else
         matrixPushCounter--
         matrixStackStack.removeLast()
         matrixStack.pop()
+        //#endif
     }
 
     @JvmStatic
     @JvmOverloads
     fun translate(x: Float, y: Float, z: Float = 0.0F) = apply {
+        //#if MC < 12100
+        //$$translate(x.toDouble(), y.toDouble(), z.toDouble())
+        //#else
         matrixStack.translate(x, y, z)
+        //#endif
+    }
+    @JvmStatic
+    @JvmOverloads
+    fun translate(x: Double, y: Double, z: Double = 0.0) = apply {
+        //#if MC < 12100
+        //$$GlStateManager.translate(x, y, z)
+        //#else
+        translate(x.toFloat(), y.toFloat(), z.toFloat())
+        //#endif
     }
 
     @JvmStatic
     @JvmOverloads
-    fun scale(scaleX: Float, scaleY: Float = scaleX, scaleZ: Float = 1f) = apply {
+    fun scale(scaleX: Float, scaleY: Float = scaleX, scaleZ: Float = scaleX) = apply {
+        //#if MC < 12100
+        //$$scale(scaleX.toDouble(), scaleY.toDouble(), scaleZ.toDouble())
+        //#else
         matrixStack.scale(scaleX, scaleY, scaleZ)
+        //#endif
+    }
+    @JvmStatic
+    @JvmOverloads
+    fun scale(scaleX: Double, scaleY: Double = scaleX, scaleZ: Double = scaleX) = apply {
+        //#if MC < 12100
+        //$$GlStateManager.scale(scaleX, scaleY, scaleZ)
+        //#else
+        scale(scaleX.toFloat(), scaleY.toFloat(), scaleZ.toFloat())
+        //#endif
     }
 
     @JvmStatic
     @JvmOverloads
     fun rotate(angle: Float, x: Float = 0f, y: Float = 0f, z: Float = 1f) = apply {
+        //#if MC < 12100
+        //$$GlStateManager.rotate(angle, x, y, z)
+        //#else
         matrixStack.rotate(angle, x, y, z)
+        //#endif
+    }
+    @JvmStatic
+    @JvmOverloads
+    fun rotate(angle: Double, x: Double = 0.0, y: Double = 0.0, z: Double = 1.0) = apply {
+        rotate(angle.toFloat(), x.toFloat(), y.toFloat(), z.toFloat())
     }
 
     @JvmStatic
+    //#if MC < 12100
+    //$$fun multiply(floatBuffer: FloatBuffer) = apply {
+    //$$    GlStateManager.multMatrix(floatBuffer)
+    //#else
     fun multiply(quaternion: Quaternionf) = apply {
         matrixStack.multiply(quaternion)
+    //#endif
     }
+
 
     @JvmStatic
     fun colorizeRGBA(color: Long) = apply {
@@ -624,25 +818,33 @@ object RenderUtils {
         val alpha = (a * 255f).coerceIn(0f, 255f).toInt()
         colorized = RGBAColor(red, green, blue, alpha).getLong()
         vertexColor = Color(red, green, blue, alpha)
+
+        //#if MC <= 12100
+        //$$GlStateManager.color(r, g, b, a)
+        //#elseif MC <= 12105
+        RenderSystem.setShaderColor(
+            vertexColor!!.red / 255f,
+            vertexColor!!.green / 255f,
+            vertexColor!!.blue / 255f,
+            vertexColor!!.alpha / 255f,
+        )
+        //#endif
     }
 
     @JvmStatic
     fun colorize_255(r: Int, g: Int, b: Int, a: Int = 255) = apply {
-        RenderUtils.colorize_01(
+        colorize_01(
             r.coerceIn(0, 255) / 255f,
             g.coerceIn(0, 255) / 255f,
             b.coerceIn(0, 255) / 255f,
-            a.coerceIn(0, 255) / 255f
+            a.coerceIn(0, 255) / 255f,
         )
     }
 
     @JvmStatic
     fun resetColor() = apply {
-        RenderUtils.colorize_01(1f, 1f, 1f, 1f)
+        colorize_01(1f, 1f, 1f, 1f)
     }
-
-    @JvmStatic
-    fun getStringWidth(text: String) = getFontRenderer().getWidth(addColor(text))
 
     @JvmStatic
     @JvmOverloads
@@ -715,19 +917,21 @@ object RenderUtils {
         return message.toString().replace("(?<!\\\\)&(?![^0-9a-fk-or]|$)".toRegex(), "\u00a7")
     }
 
+    //#if MC >= 12100
     data class TextLines(val lines: List<OrderedText>, val width: Float, val height: Float)
 
     @JvmStatic
     fun splitText(text: Text, maxWidth: Int): TextLines {
-        val renderer = getFontRenderer()
+        val renderer = getTextRenderer()
         val wrappedLines = renderer.wrapLines(text, maxWidth)
 
         return TextLines(
             wrappedLines,
-            wrappedLines.maxOf { getFontRenderer().getWidth(it) }.toFloat(),
-            (getFontRenderer().fontHeight * wrappedLines.size + (wrappedLines.size - 1)).toFloat(),
+            wrappedLines.maxOf { getTextRenderer().getWidth(it) }.toFloat(),
+            (getTextRenderer().fontHeight * wrappedLines.size + (wrappedLines.size - 1)).toFloat(),
         )
     }
+    //#endif
 
     fun blendColorsRGBA(color1: Long, color2: Long): RGBAColor {
         return blendColorsRGBA(

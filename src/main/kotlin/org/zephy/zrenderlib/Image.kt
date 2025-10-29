@@ -1,22 +1,46 @@
-package org.zephy.zrenderlib.modern
+package org.zephy.zrenderlib
 
-//#if MC>12100
+//#if MC == 10809 || MC >= 12100
+import java.awt.image.BufferedImage
+import java.io.File
+import java.nio.ByteBuffer
+import javax.imageio.ImageIO
+
+//#if MC < 12100
+//$$import net.minecraftforge.client.event.RenderGameOverlayEvent
+//$$import net.minecraftforge.common.MinecraftForge
+//$$import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
+//$$import net.minecraft.client.renderer.texture.DynamicTexture
+//$$class Image(var image: BufferedImage?) {
+//$$    private lateinit var texture: DynamicTexture
+//$$    fun getTexture(): DynamicTexture {
+//$$        if (!::texture.isInitialized) {
+//$$            try {
+//$$                texture = DynamicTexture(image!!)
+//$$                image = null
+//$$            } catch (e: Exception) {
+//$$                println("Trying to bake texture in a non-rendering context.")
+//$$                throw e
+//$$            }
+//$$        }
+//$$        return texture
+//$$    }
+//$$    @SubscribeEvent
+//$$    fun onRender(event: RenderGameOverlayEvent.Pre) {
+//$$        if (image == null) return
+//$$        texture = DynamicTexture(image!!)
+//$$        image = null
+//$$        MinecraftForge.EVENT_BUS.unregister(this)
+//$$    }
+//#else
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Identifier
 import org.lwjgl.system.MemoryUtil
-import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
-import java.io.File
-import java.nio.ByteBuffer
 import java.util.UUID
-import javax.imageio.ImageIO
-
 class Image(var image: BufferedImage?) {
     private var texture: Texture? = null
-    private val textureWidth = image?.width ?: 0
-    private val textureHeight = image?.height ?: 0
-    private val aspectRatio = if (textureHeight != 0) textureHeight.toFloat() / textureWidth else 0f
     private var identifier: Identifier? = null
 
     init {
@@ -25,17 +49,28 @@ class Image(var image: BufferedImage?) {
         }
     }
 
-    fun getTextureWidth(): Int = textureWidth
-    fun getTextureHeight(): Int = textureHeight
     fun getIdentifier(): Identifier? = identifier
     fun getTexture(): NativeImageBackedTexture? = texture?.texture
+//#endif
+    private val textureWidth = image?.width ?: 0
+    private val textureHeight = image?.height ?: 0
+    private val aspectRatio = if (textureHeight != 0) textureHeight.toFloat() / textureWidth else 0f
+
+    fun getTextureWidth(): Int = textureWidth
+    fun getTextureHeight(): Int = textureHeight
+
+    //#if MC < 12100
+    //$$fun setTexture(tex: DynamicTexture) {
+    //#else
     fun setTexture(tex: Texture?) {
+    //#endif
         destroy()
         texture = tex
+        //#if MC >= 12100
         if (texture == null) return
-
         identifier = Identifier.of("zrenderlib", texture!!.uniqueName)
         Client.getMinecraft().textureManager.registerTexture(identifier!!, texture!!.texture)
+        //#endif
     }
 
     /**
@@ -43,14 +78,17 @@ class Image(var image: BufferedImage?) {
      * that way it can be garbage collected if not referenced in js code.
      */
     fun destroy() {
+        //#if MC < 12100
+        //$$texture.deleteGlTexture()
+        //#else
         if (identifier != null) {
             Client.getMinecraft().textureManager.destroyTexture(identifier!!)
         }
-
         texture?.texture?.close()
         texture?.buffer?.let(MemoryUtil::memFree)
-        texture = null
         identifier = null
+        texture = null
+        //#endif
         image = null
     }
 
@@ -80,7 +118,7 @@ class Image(var image: BufferedImage?) {
         red: Int = 255,
         green: Int = 255,
         blue: Int = 255,
-        alpha: Int = 255,
+        alpha: Int = 255
     ) = apply {
         draw(xPosition, yPosition, width, height, zOffset, RenderUtils.RGBAColor(red, green, blue, alpha).getLong())
     }
@@ -103,7 +141,9 @@ class Image(var image: BufferedImage?) {
         GUIRenderer.drawImage(this, xPosition, yPosition, drawWidth, drawHeight, zOffset, color)
     }
 
+    //#if MC >= 12100
     data class Texture(val texture: NativeImageBackedTexture, val buffer: ByteBuffer, val uniqueName: String)
+    //#endif
 
     companion object {
         /**
@@ -113,7 +153,6 @@ class Image(var image: BufferedImage?) {
         @JvmStatic
         fun fromFile(file: File): Image {
             val bufferedImage = ImageIO.read(file) ?: throw IllegalArgumentException("Could not read image file.")
-
             val newImage = Image(bufferedImage)
             return newImage
         }
@@ -125,6 +164,8 @@ class Image(var image: BufferedImage?) {
         @JvmStatic
         fun fromFile(file: String) = fromFile(File(file))
 
+
+        //#if MC >= 12100
         @JvmStatic
         fun bufferedImageToNativeTexture(image: BufferedImage): Texture {
             return ByteArrayOutputStream().use {
@@ -141,6 +182,7 @@ class Image(var image: BufferedImage?) {
                 )
             }
         }
+        //#endif
     }
 }
 //#endif

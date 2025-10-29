@@ -1,4 +1,4 @@
-package org.zephy.zrenderlib.modern
+package org.zephy.zrenderlib
 
 //#if MC>12100
 import net.minecraft.client.font.TextRenderer
@@ -122,7 +122,7 @@ object GUIRenderer {
             .enableBlend()
             .tryBlendFuncSeparate(770, 771, 1, 0)
 
-            .begin(RenderLayers.QUADS())
+            .begin(_root_ide_package_.org.zephy.zrenderlib.RenderLayers.QUADS())
             .colorizeRGBA(color)
             .translate(0f, 0f, zOffset)
             .cameraPos(x1, y2, 0f)
@@ -194,7 +194,7 @@ object GUIRenderer {
             .disableCull()
             .enableBlend()
             .tryBlendFuncSeparate(770, 771, 1, 0)
-            .begin(RenderLayers.TRIANGLE_FAN())
+            .begin(_root_ide_package_.org.zephy.zrenderlib.RenderLayers.TRIANGLE_FAN())
             .colorizeRGBA(color)
             .translate(0f, 0f, zOffset)
             .cameraPos(centerX, centerY, 0f)
@@ -455,7 +455,7 @@ object GUIRenderer {
 //            .cameraPos(x2, y2, 0f)
 //            .colorizeRGBA(bottomLeftColor)
 //            .cameraPos(x, y2, 0f)
-            .begin(RenderLayers.TRIANGLES())
+            .begin(_root_ide_package_.org.zephy.zrenderlib.RenderLayers.TRIANGLES())
 
             .colorizeRGBA(topLeftColor).cameraPos(x, y, 0f)
             .colorizeRGBA(topRightColor).cameraPos(x2, y, 0f)
@@ -534,7 +534,7 @@ object GUIRenderer {
             .enableBlend()
             .tryBlendFuncSeparate(770, 771, 1, 0)
 
-            .begin(RenderLayers.QUADS_ESP())
+            .begin(_root_ide_package_.org.zephy.zrenderlib.RenderLayers.QUADS_ESP())
             .colorizeRGBA(color)
             .cameraPos(startX + i, startY + j, 0f)
             .cameraPos(endX + i, endY + j, 0f)
@@ -946,7 +946,7 @@ object GUIRenderer {
         maxWidth: Int = 512,
         zOffset: Float = 0f,
     ) {
-        val fontRenderer = RenderUtils.getFontRenderer()
+        val fontRenderer = RenderUtils.getTextRenderer()
         val vertexConsumers = Client.getMinecraft().bufferBuilders.entityVertexConsumers
 
 //        val guiScale = mc.window.scaleFactor.toFloat() / 2f
