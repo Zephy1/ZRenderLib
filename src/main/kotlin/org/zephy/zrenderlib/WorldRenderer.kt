@@ -5,6 +5,9 @@ import net.minecraft.client.MinecraftClient
 import kotlin.math.cos
 import kotlin.math.sin
 
+!! fix this to be separate files again
+!! move trigcache to renderutils
+
 //#if MC < 12100
 //$$import net.minecraft.client.renderer.vertex.DefaultVertexFormats
 //$$import org.lwjgl.opengl.GL11;
@@ -44,14 +47,11 @@ object WorldRenderer {
     }
 
     private val trigCaches = mutableMapOf<Int, TrigCache>()
-
     private fun getTrigCache(segments: Int): TrigCache {
         return trigCaches.getOrPut(segments) { TrigCache(segments) }
     }
 
-    private val tempVector = Vector3f()
     private val tempNormal = Vector3f()
-
     private fun Vector3f.setAndNormalize(x: Float, y: Float, z: Float): Vector3f {
         return this.set(x, y, z).normalize()
     }
