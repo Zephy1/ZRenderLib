@@ -69,12 +69,6 @@ object Client : ClientModInitializer {
     fun getMinecraft(): MinecraftClient = MinecraftClient.getInstance()
     //#endif
 
-    /**
-     * Schedule's a task to run on Minecraft's main thread in [delay] ticks.
-     * Defaults to the next tick.
-     * @param delay The delay in ticks
-     * @param callback The task to run on the main thread
-     */
     @JvmStatic
     @JvmOverloads
     fun scheduleTask(delay: Int = 0, callback: () -> Unit) {

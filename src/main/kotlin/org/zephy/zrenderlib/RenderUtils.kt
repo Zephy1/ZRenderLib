@@ -182,12 +182,7 @@ object RenderUtils {
         firstVertex = true
         began = true
     }
-    /**
-     * Begin drawing with the world renderer
-     *
-     * @param renderLayer The [RenderLayer] to use
-     * @return [RenderUtils] to allow for method chaining
-     */
+
     //#if MC >= 12100
     @JvmStatic
     fun begin(renderLayer: RenderLayer = RenderLayers.QUADS()) = apply {
@@ -195,14 +190,6 @@ object RenderUtils {
         ucWorldRenderer.beginRenderLayer(renderLayer)
     }
 
-    /**
-     * Begin drawing with the world renderer
-     *
-     * @param drawMode The [DrawMode] to use
-     * @param vertexFormat The [VertexFormat] to use
-     * @param snippet The [RenderSnippet] to use
-     * @return [RenderUtils] to allow for method chaining
-     */
     @JvmStatic
     fun begin(
         drawMode: DrawMode = DrawMode.QUADS,
@@ -213,13 +200,6 @@ object RenderUtils {
     }
     //#endif
 
-    /**
-     * Begin drawing with the world renderer
-     *
-     * @param drawMode The [DrawMode] to use
-     * @param vertexFormat The [VertexFormat] to use
-     * @return [RenderUtils] to allow for method chaining
-     */
     @JvmStatic
     fun begin(
         //#if MC < 12100
@@ -241,9 +221,6 @@ object RenderUtils {
         //#endif
     }
 
-    /**
-     * Finalizes vertices and draws the world renderer.
-     */
     @JvmStatic
     fun draw() = apply {
         if (!began) return this
@@ -256,14 +233,6 @@ object RenderUtils {
         //#endif
     }
 
-    /**
-     * Sets a new vertex in the world renderer.
-     *
-     * @param x the x position
-     * @param y the y position
-     * @param z the z position
-     * @return [RenderUtils] to allow for method chaining
-     */
     @JvmStatic
     fun pos(x: Float, y: Float, z: Float) = apply {
         pos(x.toDouble(), y.toDouble(), z.toDouble())
@@ -286,15 +255,6 @@ object RenderUtils {
             color(vertexColor!!)
         }
     }
-
-    /**
-     * Sets a new vertex in the world renderer.
-     *
-     * @param x the x position
-     * @param y the y position
-     * @param z the z position
-     * @return [RenderUtils] to allow for method chaining
-     */
 
     //#if MC >= 12100
     @JvmStatic
@@ -331,13 +291,6 @@ object RenderUtils {
     }
     //#endif
 
-    /**
-     * Sets the texture location on the last defined vertex.
-     *
-     * @param u the u position in the texture
-     * @param v the v position in the texture
-     * @return [RenderUtils] to allow for method chaining
-     */
     @JvmStatic
     fun tex(u: Float, v: Float) = apply {
         tex(u.toDouble(), v.toDouble())
@@ -351,15 +304,6 @@ object RenderUtils {
         //#endif
     }
 
-    /**
-     * Sets the color for the last defined vertex.
-     *
-     * @param r the red value of the color, between 0 and 1
-     * @param g the green value of the color, between 0 and 1
-     * @param b the blue value of the color, between 0 and 1
-     * @param a the alpha value of the color, between 0 and 1
-     * @return [RenderUtils] to allow for method chaining
-     */
     @JvmStatic
     @JvmOverloads
     fun color(r: Float, g: Float, b: Float, a: Float = 1f) = apply {
@@ -370,27 +314,12 @@ object RenderUtils {
         //#endif
     }
 
-    /**
-     * Sets the color for the last defined vertex.
-     *
-     * @param r the red value of the color, between 0 and 255
-     * @param g the green value of the color, between 0 and 255
-     * @param b the blue value of the color, between 0 and 255
-     * @param a the alpha value of the color, between 0 and 255
-     * @return [RenderUtils] to allow for method chaining
-     */
     @JvmStatic
     @JvmOverloads
     fun color(r: Int, g: Int, b: Int, a: Int = 255) = apply {
         color(r / 255f, g / 255f, b / 255f, a / 255f)
     }
 
-    /**
-     * Sets the color for the last defined vertex.
-     *
-     * @param color the color value in Long format
-     * @return [RenderUtils] to allow for method chaining
-     */
     @JvmStatic
     fun color(color: Long) = apply {
         val awtColor = Color(color.toInt(), true)
@@ -406,14 +335,6 @@ object RenderUtils {
         color(color.red, color.green, color.blue, color.alpha)
     }
 
-    /**
-     * Sets the normal of the vertex. This is mostly used with [VertexFormat.LINES]
-     *
-     * @param x the x position of the normal vector
-     * @param y the y position of the normal vector
-     * @param z the z position of the normal vector
-     * @return [RenderUtils] to allow for method chaining
-     */
     @JvmStatic
     fun normal(x: Float, y: Float, z: Float) = apply {
         //#if MC < 12100
@@ -427,13 +348,6 @@ object RenderUtils {
         normal(x.toFloat(), y.toFloat(), z.toFloat())
     }
 
-    /**
-     * Sets the overlay location on the last defined vertex.
-     *
-     * @param u the u position in the overlay
-     * @param v the v position in the overlay
-     * @return [RenderUtils] to allow for method chaining
-     */
     @JvmStatic
     fun overlay(u: Int, v: Int) = apply {
         //#if MC < 12100
@@ -443,13 +357,6 @@ object RenderUtils {
         //#endif
     }
 
-    /**
-     * Sets the light location on the last defined vertex.
-     *
-     * @param u the u position in the light
-     * @param v the v position in the light
-     * @return [RenderUtils] to allow for method chaining
-     */
     @JvmStatic
     fun light(u: Int, v: Int) = apply {
         //#if MC < 12100
@@ -459,12 +366,6 @@ object RenderUtils {
         //#endif
     }
 
-    /**
-     * Sets the line width when rendering [DrawMode.LINES]
-     *
-     * @param width the width of the line
-     * @return [RenderUtils] to allow for method chaining
-     */
     @JvmStatic
     fun lineWidth(width: Float) = apply {
         //#if MC < 12100
@@ -904,23 +805,6 @@ object RenderUtils {
         return RGBAColor(r, g, b).getLong()
     }
 
-    /**
-     * Calculate the box render parameter by providing 2 coordinates
-     * @param {number} x1 - X Coordinates of first position
-     * @param {number} y1 - Y Coordinates of first position
-     * @param {number} z1 - Z Coordinates of first position
-     * @param {number} x2 - X Coordinates of second position
-     * @param {number} y2 - Y Coordinates of second position
-     * @param {number} z2 - Z Coordinates of second position
-     *
-     * @returns {Object} An object containing center coordinates and dimensions.
-     * - `cx`: The x-coordinate of the center of the box.
-     * - `cy`: The y-coordinate of the center of the box, taken as the lower of the two y-coordinates provided.
-     * - `cz`: The z-coordinate of the center of the box.
-     * - `wx`: The width of the box in the x-direction.
-     * - `h`: The height of the box.
-     * - `wz`: The width of the box in the z-direction.
-     */
     @JvmStatic
     fun calculateCenter(
         x1: Float,
@@ -948,12 +832,6 @@ object RenderUtils {
         }
     }
 
-    /**
-     * Replaces the easier to type '&' color codes with proper color codes in a string.
-     *
-     * @param message The string to add color codes to
-     * @return the formatted message
-     */
     @JvmStatic
     fun addColor(message: String?): String {
         return message.toString().replace("(?<!\\\\)&(?![^0-9a-fk-or]|$)".toRegex(), "\u00a7")

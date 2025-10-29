@@ -74,10 +74,6 @@ class Image(var image: BufferedImage?) {
         //#endif
     }
 
-    /**
-     * Clears the image from GPU memory and removes its references CT side
-     * that way it can be garbage collected if not referenced in js code.
-     */
     fun destroy() {
         //#if MC < 12100
         //$$texture.deleteGlTexture()
@@ -105,10 +101,6 @@ class Image(var image: BufferedImage?) {
         }
     }
 
-    /**
-     * Draws the image on screen
-     * @return The Image object to allow for method chaining
-     */
     @JvmOverloads
     fun drawRGBA(
         //#if MC >= 12100
@@ -132,10 +124,6 @@ class Image(var image: BufferedImage?) {
         )
     }
 
-    /**
-     * Draws the image on screen
-     * @return The Image object to allow for method chaining
-     */
     @JvmOverloads
     fun draw(
         //#if MC >= 12100
@@ -163,21 +151,12 @@ class Image(var image: BufferedImage?) {
     //#endif
 
     companion object {
-        /**
-         * Create an image object from a java.io.File object. Throws an exception
-         * if the file cannot be found.
-         */
         @JvmStatic
         fun fromFile(file: File): Image {
             val bufferedImage = ImageIO.read(file) ?: throw IllegalArgumentException("Could not read image file.")
             val newImage = Image(bufferedImage)
             return newImage
         }
-
-        /**
-         * Create an image object from a file path. Throws an exception
-         * if the file cannot be found.
-         */
         @JvmStatic
         fun fromFile(file: String) = fromFile(File(file))
 
