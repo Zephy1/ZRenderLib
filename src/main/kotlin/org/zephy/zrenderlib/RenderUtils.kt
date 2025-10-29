@@ -132,6 +132,21 @@ object RenderUtils {
     fun getStringWidth(text: String) = getTextRenderer().getWidth(addColor(text))
     //#endif
 
+    @JvmStatic
+    fun baseEndDraw() = apply {
+        pushMatrix()
+            .disableCull()
+            .enableBlend()
+            .tryBlendFuncSeparate(770, 771, 1, 0) !! fix this
+    }
+    @JvmStatic
+    fun baseStartDraw() = apply {
+        enableCull()
+            .disableBlend()
+            .resetColor()
+            .popMatrix()
+    }
+
     private fun _begin() = apply {
         pushMatrix()
         colorized = null
@@ -795,7 +810,6 @@ object RenderUtils {
         matrixStack.multiply(quaternion)
     //#endif
     }
-
 
     @JvmStatic
     fun colorizeRGBA(color: Long) = apply {
