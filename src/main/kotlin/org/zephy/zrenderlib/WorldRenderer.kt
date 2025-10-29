@@ -1,62 +1,17 @@
 package org.zephy.zrenderlib
 
-//#if MC == 10809 || MC >= 12100
-import net.minecraft.client.MinecraftClient
-import kotlin.math.cos
-import kotlin.math.sin
-
-!! fix this to be separate files again
-!! move trigcache to renderutils
-
-//#if MC < 12100
-//$$import net.minecraft.client.renderer.vertex.DefaultVertexFormats
-//$$import org.lwjgl.opengl.GL11;
-//#else
+//#if MC>12100
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.render.LightmapTextureManager
 import net.minecraft.text.Text
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
 import org.joml.Vector3f
-import org.lwjgl.opengl.GL11
 import java.awt.Color
-//#endif
+import org.zephy.zrenderlib.RenderUtils.tempNormal
+import org.zephy.zrenderlib.RenderUtils.setAndNormalize
 
 object WorldRenderer {
-    private class TrigCache(segments: Int) {
-        val cosTheta = FloatArray(segments * 2 + 1)
-        val sinTheta = FloatArray(segments * 2 + 1)
-        val cosPhi = FloatArray(segments + 1)
-        val sinPhi = FloatArray(segments + 1)
-
-        init {
-            val thetaStep = 2.0 * Math.PI / (segments * 2)
-            for (i in 0..(segments * 2)) {
-                val angle = thetaStep * i
-                cosTheta[i] = cos(angle).toFloat()
-                sinTheta[i] = sin(angle).toFloat()
-            }
-
-            val phiStep = Math.PI / segments
-            for (i in 0..segments) {
-                val angle = phiStep * i
-                cosPhi[i] = cos(angle).toFloat()
-                sinPhi[i] = sin(angle).toFloat()
-            }
-        }
-    }
-
-    private val trigCaches = mutableMapOf<Int, TrigCache>()
-    private fun getTrigCache(segments: Int): TrigCache {
-        return trigCaches.getOrPut(segments) { TrigCache(segments) }
-    }
-
-    private val tempNormal = Vector3f()
-    private fun Vector3f.setAndNormalize(x: Float, y: Float, z: Float): Vector3f {
-        return this.set(x, y, z).normalize()
-    }
-
-    //#if MC >= 12100
     @JvmStatic
     fun getLineRenderLayer(disableDepth: Boolean) = if (disableDepth) RenderLayers.LINES_ESP() else RenderLayers.LINES()
 
@@ -68,7 +23,6 @@ object WorldRenderer {
 
     @JvmStatic
     fun getTriangleRenderLayer(disableDepth: Boolean) = if (disableDepth) RenderLayers.TRIANGLES_ESP() else RenderLayers.TRIANGLES()
-    //#endif
 
     /**
      * Renders floating lines of text in the world
@@ -112,11 +66,7 @@ object WorldRenderer {
     @JvmStatic
     @JvmOverloads
     fun drawString(text: String, xPosition: Float, yPosition: Float, zPosition: Float, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, scale: Float = 1f, renderBackground: Boolean = false, centered: Boolean = false, textShadow: Boolean = true, disableDepth: Boolean = false, maxWidth: Int = 512) {
-        //#if MC < 12100
-        //$$drawString_Legacy(text, xPosition, yPosition, zPosition, color, scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
-        //#else
-        drawString_Modern(Text.of(text), xPosition, yPosition, zPosition, color, scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
-        //#endif
+        drawString(Text.of(text), xPosition, yPosition, zPosition, color, scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
     }
 
     /**
@@ -138,13 +88,11 @@ object WorldRenderer {
      * @param maxWidth the maximum width of the text before it wraps
      */
 
-    //#if MC >= 12100
     @JvmStatic
     @JvmOverloads
     fun drawStringRGBA(text: Text, xPosition: Float, yPosition: Float, zPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, scale: Float = 1f, renderBackground: Boolean = false, centered: Boolean = false, textShadow: Boolean = true, disableDepth: Boolean = false, maxWidth: Int = 512) {
-        drawString_Modern(text, xPosition, yPosition, zPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
+        drawString(text, xPosition, yPosition, zPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
     }
-    //#endif
 
     /**
      * Renders floating lines of text in the world
@@ -163,7 +111,7 @@ object WorldRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawString_Modern(
+    fun drawString(
         text: Text,
         xPosition: Float,
         yPosition: Float,
@@ -177,10 +125,10 @@ object WorldRenderer {
         maxWidth: Int = 512,
     ) {
         val (lines, width, height) = RenderUtils.splitText(text, maxWidth)
-        val fontRenderer = MinecraftClient.getInstance().textRenderer
+        val fontRenderer = RenderUtils.getTextRenderer()
         val camera = Client.getMinecraft().gameRenderer.camera
         val cameraPos = camera.pos
-        val vertexConsumers = MinecraftClient.getInstance().bufferBuilders.entityVertexConsumers
+        val vertexConsumers = Client.getMinecraft().bufferBuilders.entityVertexConsumers
 
         val matrix = Matrix4f()
         val adjustedScale = (scale * 0.05).toFloat()
@@ -224,96 +172,6 @@ object WorldRenderer {
 
             yOffset += fontRenderer.fontHeight + 1
         }
-    }
-    /**
-     * Renders floating lines of text in the world
-     *
-     * @param text the text as a string
-     * @param xPosition the X-coordinate
-     * @param yPosition the Y-coordinate
-     * @param zPosition the Z-coordinate
-     * @param color the color as a [Long] value in RGBA format
-     * @param scale the text scale
-     * @param renderBackground whether to draw a transparent background
-     * @param centered whether to center each text line (Doesn't work with newline characters)
-     * @param textShadow whether to draw a shadow behind the text
-     * @param disableDepth whether to render the text through blocks
-     * @param maxWidth useless in legacy, included for modern parity
-     */
-    @JvmStatic
-    @JvmOverloads
-    fun drawString_Legacy(
-        text: String,
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        scale: Float = 1f,
-        renderBackground: Boolean = false,
-        centered: Boolean = false,
-        textShadow: Boolean = true,
-        disableDepth: Boolean = false,
-        maxWidth: Int = 512,
-    ) {
-//        val fontRenderer = RenderUtils.getTextRenderer()
-//        val renderManager = RenderUtils.renderManager
-//
-//        val x = xPosition - renderManager.viewerPosX
-//        val y = yPosition - renderManager.viewerPosY
-//        val z = zPosition - renderManager.viewerPosZ
-//        val xMultiplier = if (RenderUtils.mc.gameSettings.thirdPersonView == 2) -1 else 1
-//        val adjustedScale = (scale * 0.05).toFloat()
-//
-//        RenderUtils
-//            .pushMatrix()
-//            .colorize_01(1f, 1f, 1f, 0.5f)
-//            .disableCull()
-//        GL11.glNormal3f(0f, 1f, 0f)
-//        if (disableDepth) RenderUtils.disableDepth()
-//        RenderUtils
-//            .translate(x, y, z)
-//            .rotate(-RenderUtils.renderManager.playerViewY, 0f, 1f, 0f)
-//            .rotate(
-//                RenderUtils.renderManager.playerViewX * xMultiplier,
-//                1f,
-//                0f,
-//                0f,
-//            )
-//            .scale(-adjustedScale, -adjustedScale, adjustedScale)
-//            .disableLighting()
-//            .depthMask(false)
-//            .enableBlend()
-//            .tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0)
-//
-//        val textWidth = RenderUtils.getStringWidth(text)
-//        val j = textWidth / 2f
-//        if (renderBackground) {
-//            RenderUtils
-//                .disableTexture2D()
-//                .begin(7, DefaultVertexFormats.POSITION_COLOR)
-//                .colorize_01(0.0f, 0.0f, 0.0f, 0.25f)
-//                .pos((-j - 1).toDouble(), (-1).toDouble(), 0.0)
-//                .pos((-j - 1).toDouble(), 8.toDouble(), 0.0)
-//                .pos((j + 1).toDouble(), 8.toDouble(), 0.0)
-//                .pos((j + 1).toDouble(), (-1).toDouble(), 0.0)
-//                .draw()
-//                .enableTexture2D()
-//        }
-//
-//        fontRenderer.drawString(
-//            text,
-//            if (centered) -j else 0f,
-//            0f,
-//            RenderUtils.ARGBColor.fromLongRGBA(color).getLong().toInt(),
-//            textShadow
-//        )
-//        RenderUtils
-//            .colorize_01(1f, 1f, 1f, 1f)
-//            .depthMask(true)
-//            .enableBlend()
-//            .enableCull()
-//            .popMatrix()
-//        if (disableDepth) RenderUtils.enableDepth()
     }
 
     /**
@@ -881,7 +739,7 @@ object WorldRenderer {
             !wireframe -> getQuadRenderLayer(disableDepth)
             else -> getLineRenderLayer(disableDepth)
         }
-        val cache = getTrigCache(segments)
+        val cache = RenderUtils.getTrigCache(segments)
 
         RenderUtils
             .pushMatrix()
@@ -1391,7 +1249,7 @@ object WorldRenderer {
         val topY = bottomY + height
         val topZ = FloatArray(segments + 1)
 
-        val cache = getTrigCache(segments)
+        val cache = RenderUtils.getTrigCache(segments)
         for (i in 0..segments) {
             val thetaIndex = (i * 2) % (segments * 2)
             val cosA = cache.cosTheta[thetaIndex]

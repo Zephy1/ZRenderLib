@@ -6,6 +6,7 @@ import java.awt.Color
 import org.lwjgl.opengl.GL11
 import kotlin.math.PI
 import kotlin.math.sin
+import kotlin.math.cos
 
 //#if MC < 12100
 //$$import net.minecraft.client.renderer.GlStateManager
@@ -13,6 +14,8 @@ import kotlin.math.sin
 //$$import net.minecraft.client.renderer.entity.RenderManager
 //$$import javax.vecmath.Vector3d
 //$$import java.nio.FloatBuffer
+//$$import net.minecraft.client.gui.ScaledResolution
+//$$import javax.vecmath.Vector3f
 //#else
 import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.platform.DepthTestFunction
@@ -26,6 +29,7 @@ import net.minecraft.client.render.RenderLayer
 import net.minecraft.text.OrderedText
 import net.minecraft.text.Text
 import org.joml.Quaternionf
+import org.joml.Vector3f
 //#endif
 
 //#if MC>=12106
@@ -33,6 +37,9 @@ import org.joml.Quaternionf
 //#endif
 
 object RenderUtils {
+    @JvmField
+    val screen = ScreenWrapper()
+
     @JvmStatic
     //#if MC < 12100
     //$$fun getTextRenderer() = Client.getMinecraft().fontRendererObj
@@ -133,18 +140,39 @@ object RenderUtils {
     //#endif
 
     @JvmStatic
-    fun baseEndDraw() = apply {
+    fun baseStartDraw() = apply {
         pushMatrix()
             .disableCull()
             .enableBlend()
-            .tryBlendFuncSeparate(770, 771, 1, 0) !! fix this
+            .tryBlendFuncSeparate(
+                770, // SRC_ALPHA
+                771, // ONE_MINUS_SRC_ALPHA
+                1, // ONE
+                0 // ZERO
+            )
     }
     @JvmStatic
-    fun baseStartDraw() = apply {
+    fun guiStartDraw() = apply {
+        baseStartDraw()
+            .depthMask(false)
+            .disableDepth()
+            .enableLineSmooth()
+    }
+
+    @JvmStatic
+    fun baseEndDraw() = apply {
         enableCull()
             .disableBlend()
             .resetColor()
             .popMatrix()
+    }
+    @JvmStatic
+    fun guiEndDraw() = apply {
+        baseEndDraw()
+            .depthMask(true)
+            .enableDepth()
+            .disableLineSmooth()
+            .resetLineWidth()
     }
 
     private fun _begin() = apply {
@@ -1099,6 +1127,116 @@ object RenderUtils {
                 return RGBAColor(r, g, b, a)
             }
         }
+    }
+
+    class TrigCache(segments: Int) {
+        val cosTheta = FloatArray(segments * 2 + 1)
+        val sinTheta = FloatArray(segments * 2 + 1)
+        val cosPhi = FloatArray(segments + 1)
+        val sinPhi = FloatArray(segments + 1)
+
+        init {
+            val thetaStep = 2.0 * Math.PI / (segments * 2)
+            for (i in 0..(segments * 2)) {
+                val angle = thetaStep * i
+                cosTheta[i] = cos(angle).toFloat()
+                sinTheta[i] = sin(angle).toFloat()
+            }
+
+            val phiStep = Math.PI / segments
+            for (i in 0..segments) {
+                val angle = phiStep * i
+                cosPhi[i] = cos(angle).toFloat()
+                sinPhi[i] = sin(angle).toFloat()
+            }
+        }
+    }
+
+    private val trigCaches = mutableMapOf<Int, TrigCache>()
+    fun getTrigCache(segments: Int): TrigCache {
+        return trigCaches.getOrPut(segments) { TrigCache(segments) }
+    }
+
+    val tempNormal = Vector3f()
+    fun Vector3f.setAndNormalize(x: Float, y: Float, z: Float): Vector3f {
+        //#if MC < 12100
+        //$$this.set(x, y, z)
+        //$$tempNormal.normalize()
+        //$$return tempNormal
+        //#else
+        return this.set(x, y, z).normalize()
+        //#endif
+    }
+
+    enum class FlattenRoundedRectCorner {
+        TOP_LEFT,
+        TOP_RIGHT,
+        BOTTOM_LEFT,
+        BOTTOM_RIGHT;
+    }
+
+    fun getGradientColors(gradientDirection: GradientDirection, startColor: Long, endColor: Long): GradientColors {
+        val startRGBA = RGBAColor.fromLongRGBA(startColor).getLong()
+        val endRGBA = RGBAColor.fromLongRGBA(endColor).getLong()
+        val blendedRGBA = blendColorsRGBA(startRGBA, endRGBA).getLong()
+        return when (gradientDirection) {
+            GradientDirection.TOP_TO_BOTTOM -> GradientColors(startRGBA, startRGBA, endRGBA, endRGBA)
+            GradientDirection.BOTTOM_TO_TOP -> GradientColors(endRGBA, endRGBA, startRGBA, startRGBA)
+            GradientDirection.LEFT_TO_RIGHT -> GradientColors(startRGBA, endRGBA, startRGBA, endRGBA)
+            GradientDirection.RIGHT_TO_LEFT -> GradientColors(endRGBA, startRGBA, endRGBA, startRGBA)
+            GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT -> GradientColors(
+                topLeft = startRGBA,
+                topRight = blendedRGBA,
+                bottomLeft = blendedRGBA,
+                bottomRight = endRGBA,
+            )
+            GradientDirection.TOP_RIGHT_TO_BOTTOM_LEFT -> GradientColors(
+                topLeft = blendedRGBA,
+                topRight = startRGBA,
+                bottomLeft = endRGBA,
+                bottomRight = blendedRGBA,
+            )
+            GradientDirection.BOTTOM_LEFT_TO_TOP_RIGHT -> GradientColors(
+                topLeft = blendedRGBA,
+                topRight = endRGBA,
+                bottomLeft = startRGBA,
+                bottomRight = blendedRGBA,
+            )
+            GradientDirection.BOTTOM_RIGHT_TO_TOP_LEFT -> GradientColors(
+                topLeft = endRGBA,
+                topRight = blendedRGBA,
+                bottomLeft = blendedRGBA,
+                bottomRight = startRGBA,
+            )
+        }
+    }
+    enum class GradientDirection {
+        TOP_TO_BOTTOM,
+        BOTTOM_TO_TOP,
+        LEFT_TO_RIGHT,
+        RIGHT_TO_LEFT,
+        TOP_LEFT_TO_BOTTOM_RIGHT,
+        TOP_RIGHT_TO_BOTTOM_LEFT,
+        BOTTOM_LEFT_TO_TOP_RIGHT,
+        BOTTOM_RIGHT_TO_TOP_LEFT;
+    }
+    data class GradientColors(
+        val topLeft: Long,
+        val topRight: Long,
+        val bottomLeft: Long,
+        val bottomRight: Long,
+    )
+
+    class ScreenWrapper {
+        //#if MC < 12100
+        //$$fun getWidth(): Int = ScaledResolution(Client.getMinecraft()).scaledWidth
+        //$$fun getHeight(): Int = ScaledResolution(Client.getMinecraft()).scaledHeight
+        //$$fun getScale(): Double = ScaledResolution(Client.getMinecraft()).scaleFactor.toDouble()
+        //#else
+        fun getWidth(): Int = Client.getMinecraft().window.scaledWidth
+        fun getHeight(): Int = Client.getMinecraft().window.scaledHeight
+        fun getScale(): Double = Client.getMinecraft().window.scaleFactor.toDouble()
+        //#endif
     }
 }
 //#endif

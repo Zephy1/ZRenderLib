@@ -2,6 +2,7 @@ package org.zephy.zrenderlib
 
 //#if MC>12100
 import net.minecraft.client.font.TextRenderer
+import net.minecraft.client.gui.DrawContext
 import net.minecraft.text.Text
 import java.awt.Color
 import kotlin.math.PI
@@ -10,9 +11,6 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 object GUIRenderer {
-    @JvmField
-    val screen = ScreenWrapper()
-
     /**
      * Draws a square to the screen
      *
@@ -86,14 +84,14 @@ object GUIRenderer {
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         zOffset: Float = 0f,
     ) {
-        !! fix with drawcontext
+//        !! fix with drawcontext
         val x1 = xPosition
         val x2 = xPosition + width
         val y1 = yPosition
         val y2 = yPosition + height
 
         RenderUtils
-            .baseStartDraw()
+            .guiStartDraw()
 
             .begin(RenderLayers.QUADS())
             .colorizeRGBA(color)
@@ -104,20 +102,13 @@ object GUIRenderer {
             .cameraPos(x1, y1, 0f)
             .draw()
 
-            .baseEndDraw()
-    }
-
-    enum class FlattenRoundedRectCorner {
-        TOP_LEFT,
-        TOP_RIGHT,
-        BOTTOM_LEFT,
-        BOTTOM_RIGHT;
+            .guiEndDraw()
     }
 
     @JvmStatic
     @JvmOverloads
-    fun drawRoundedRectRGBA(drawContext: DrawContext, xPosition: Float, yPosition: Float, width: Float, height: Float, radius: Float = 4f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, flatCorners: List<FlattenRoundedRectCorner> = emptyList(), zOffset: Float = 0f, segments: Int = 16) {
-        drawRoundedRect(drawContext, xPosition, yPosition, width, height, radius, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), flatCorners, zOffset, segments)
+    fun drawRoundedRectRGBA(drawContext: DrawContext, xPosition: Float, yPosition: Float, width: Float, height: Float, radius: Float = 4f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, flatCorners: List<RenderUtils.FlattenRoundedRectCorner> = emptyList(), segments: Int = 16, zOffset: Float = 0f) {
+        drawRoundedRect(drawContext, xPosition, yPosition, width, height, radius, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), flatCorners, segments, zOffset)
     }
 
     @JvmStatic
@@ -130,11 +121,11 @@ object GUIRenderer {
         height: Float = 1f,
         radius: Float = 4f,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        flatCorners: List<FlattenRoundedRectCorner> = emptyList(),
-        zOffset: Float = 0f,
+        flatCorners: List<RenderUtils.FlattenRoundedRectCorner> = emptyList(),
         segments: Int = 16,
+        zOffset: Float = 0f,
     ) {
-        !! fix with draw context
+//        !! fix with draw context
         val x1 = xPosition
         val y1 = yPosition
         val x2 = xPosition + width
@@ -146,7 +137,7 @@ object GUIRenderer {
         val flatCornersSet = flatCorners.toSet()
 
         RenderUtils
-            .baseStartDraw()
+            .guiStartDraw()
 
             .begin(RenderLayers.TRIANGLE_FAN())
             .colorizeRGBA(color)
@@ -154,40 +145,40 @@ object GUIRenderer {
             .cameraPos(centerX, centerY, 0f)
 
         RenderUtils.cameraPos(x2 - clampedRadius, y1, 0f)
-        if (FlattenRoundedRectCorner.TOP_RIGHT in flatCornersSet) {
+        if (RenderUtils.FlattenRoundedRectCorner.TOP_RIGHT in flatCornersSet) {
             RenderUtils.cameraPos(x2, y1, 0f)
         } else {
-            addCornerVertices(x2 - clampedRadius, y1 + clampedRadius, clampedRadius, 270f, 360f, segments)
+            addCornerVertices(drawContext, x2 - clampedRadius, y1 + clampedRadius, clampedRadius, 270f, 360f, segments)
             RenderUtils.cameraPos(x2, y1 + clampedRadius, 0f)
         }
 
         // right edge
         RenderUtils.cameraPos(x2, y2 - clampedRadius, 0f)
 
-        if (FlattenRoundedRectCorner.BOTTOM_RIGHT in flatCornersSet) {
+        if (RenderUtils.FlattenRoundedRectCorner.BOTTOM_RIGHT in flatCornersSet) {
             RenderUtils.cameraPos(x2, y2, 0f)
         } else {
-            addCornerVertices(x2 - clampedRadius, y2 - clampedRadius, clampedRadius, 0f, 90f, segments)
+            addCornerVertices(drawContext, x2 - clampedRadius, y2 - clampedRadius, clampedRadius, 0f, 90f, segments)
             RenderUtils.cameraPos(x2 - clampedRadius, y2, 0f)
         }
 
         // bottom edge
         RenderUtils.cameraPos(x1 + clampedRadius, y2, 0f)
 
-        if (FlattenRoundedRectCorner.BOTTOM_LEFT in flatCornersSet) {
+        if (RenderUtils.FlattenRoundedRectCorner.BOTTOM_LEFT in flatCornersSet) {
             RenderUtils.cameraPos(x1, y2, 0f)
         } else {
-            addCornerVertices(x1 + clampedRadius, y2 - clampedRadius, clampedRadius, 90f, 180f, segments)
+            addCornerVertices(drawContext, x1 + clampedRadius, y2 - clampedRadius, clampedRadius, 90f, 180f, segments)
             RenderUtils.cameraPos(x1, y2 - clampedRadius, 0f)
         }
 
         // left edge
         RenderUtils.cameraPos(x1, y1 + clampedRadius, 0f)
 
-        if (FlattenRoundedRectCorner.TOP_LEFT in flatCornersSet) {
+        if (RenderUtils.FlattenRoundedRectCorner.TOP_LEFT in flatCornersSet) {
             RenderUtils.cameraPos(x1, y1, 0f)
         } else {
-            addCornerVertices(x1 + clampedRadius, y1 + clampedRadius, clampedRadius, 180f, 270f, segments)
+            addCornerVertices(drawContext, x1 + clampedRadius, y1 + clampedRadius, clampedRadius, 180f, 270f, segments)
             RenderUtils.cameraPos(x1 + clampedRadius, y1, 0f)
         }
 
@@ -196,7 +187,7 @@ object GUIRenderer {
             .cameraPos(x2 - clampedRadius, y1, 0f)
 
             .draw()
-            .baseEndDraw()
+            .guiEndDraw()
     }
     private fun addCornerVertices(
         drawContext: DrawContext,
@@ -205,9 +196,9 @@ object GUIRenderer {
         radius: Float,
         startAngle: Float,
         endAngle: Float,
-        segments: Int
+        segments: Int,
     ) {
-        !! fix with draw context
+//        !! fix with draw context
         val angleStep = (endAngle - startAngle) / segments
         for (i in 1..segments) {
             val angle = Math.toRadians((startAngle + angleStep * i).toDouble())
@@ -216,59 +207,6 @@ object GUIRenderer {
             RenderUtils.cameraPos(x, y, 0f)
         }
     }
-
-    enum class GradientDirection {
-        TOP_TO_BOTTOM,
-        BOTTOM_TO_TOP,
-        LEFT_TO_RIGHT,
-        RIGHT_TO_LEFT,
-        TOP_LEFT_TO_BOTTOM_RIGHT,
-        TOP_RIGHT_TO_BOTTOM_LEFT,
-        BOTTOM_LEFT_TO_TOP_RIGHT,
-        BOTTOM_RIGHT_TO_TOP_LEFT;
-
-        fun getGradientColors(startColor: Long, endColor: Long): GradientColors {
-            val startRGBA = RenderUtils.RGBAColor.fromLongRGBA(startColor).getLong()
-            val endRGBA = RenderUtils.RGBAColor.fromLongRGBA(endColor).getLong()
-            val blendedRGBA = RenderUtils.blendColorsRGBA(startRGBA, endRGBA).getLong()
-            return when (this) {
-                TOP_TO_BOTTOM -> GradientColors(startRGBA, startRGBA, endRGBA, endRGBA)
-                BOTTOM_TO_TOP -> GradientColors(endRGBA, endRGBA, startRGBA, startRGBA)
-                LEFT_TO_RIGHT -> GradientColors(startRGBA, endRGBA, startRGBA, endRGBA)
-                RIGHT_TO_LEFT -> GradientColors(endRGBA, startRGBA, endRGBA, startRGBA)
-                TOP_LEFT_TO_BOTTOM_RIGHT -> GradientColors(
-                    topLeft = startRGBA,
-                    topRight = blendedRGBA,
-                    bottomLeft = blendedRGBA,
-                    bottomRight = endRGBA,
-                )
-                TOP_RIGHT_TO_BOTTOM_LEFT -> GradientColors(
-                    topLeft = blendedRGBA,
-                    topRight = startRGBA,
-                    bottomLeft = endRGBA,
-                    bottomRight = blendedRGBA,
-                )
-                BOTTOM_LEFT_TO_TOP_RIGHT -> GradientColors(
-                    topLeft = blendedRGBA,
-                    topRight = endRGBA,
-                    bottomLeft = startRGBA,
-                    bottomRight = blendedRGBA,
-                )
-                BOTTOM_RIGHT_TO_TOP_LEFT -> GradientColors(
-                    topLeft = endRGBA,
-                    topRight = blendedRGBA,
-                    bottomLeft = blendedRGBA,
-                    bottomRight = startRGBA,
-                )
-            }
-        }
-    }
-    data class GradientColors(
-        val topLeft: Long,
-        val topRight: Long,
-        val bottomLeft: Long,
-        val bottomRight: Long,
-    )
 
     /**
      * Draws a simple gradient rectangle with 2 colors
@@ -283,10 +221,10 @@ object GUIRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleGradient(drawContext: DrawContext, x: Float, y: Float, width: Float, height: Float, startColor: Color, endColor: Color, direction: GradientDirection = GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT) {
+    fun drawSimpleGradient(drawContext: DrawContext, x: Float, y: Float, width: Float, height: Float, startColor: Color, endColor: Color, direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT, zOffset: Float = 0f) {
         val startColorLong = RenderUtils.RGBAColor(startColor.red, startColor.green, startColor.blue, startColor.alpha).getLong()
         val endColorLong = RenderUtils.RGBAColor(endColor.red, endColor.green, endColor.blue, endColor.alpha).getLong()
-        drawSimpleGradient(drawContext, x, y, width, height, startColorLong, endColorLong, direction)
+        drawSimpleGradient(drawContext, x, y, width, height, startColorLong, endColorLong, direction, zOffset)
     }
 
     /**
@@ -308,10 +246,10 @@ object GUIRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleGradientRGBA(drawContext: DrawContext, x: Float, y: Float, width: Float, height: Float, startRed: Int = 255, startGreen: Int = 255, startBlue: Int = 255, startAlpha: Int = 255, endRed: Int = 0, endGreen: Int = 0, endBlue: Int = 0, endAlpha: Int = 255, direction: GradientDirection = GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT) {
+    fun drawSimpleGradientRGBA(drawContext: DrawContext, x: Float, y: Float, width: Float, height: Float, startRed: Int = 255, startGreen: Int = 255, startBlue: Int = 255, startAlpha: Int = 255, endRed: Int = 0, endGreen: Int = 0, endBlue: Int = 0, endAlpha: Int = 255, direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT, zOffset: Float = 0f) {
         val startColor = RenderUtils.RGBAColor(startRed, startGreen, startBlue, startAlpha).getLong()
         val endColor = RenderUtils.RGBAColor(endRed, endGreen, endBlue, endAlpha).getLong()
-        drawSimpleGradient(drawContext, x, y, width, height, startColor, endColor, direction)
+        drawSimpleGradient(drawContext, x, y, width, height, startColor, endColor, direction, zOffset)
     }
 
     /**
@@ -327,9 +265,9 @@ object GUIRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleGradient(drawContext: DrawContext, x: Float, y: Float, width: Float, height: Float, startColor: Long = RenderUtils.WHITE, endColor: Long = RenderUtils.BLACK, direction: GradientDirection = GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT) {
-        val gradientColors = direction.getGradientColors(startColor, endColor)
-        drawGradient(drawContext, x, y, width, height, gradientColors.topLeft, gradientColors.topRight, gradientColors.bottomLeft, gradientColors.bottomRight, direction)
+    fun drawSimpleGradient(drawContext: DrawContext, x: Float, y: Float, width: Float, height: Float, startColor: Long = RenderUtils.WHITE, endColor: Long = RenderUtils.BLACK, direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT, zOffset: Float = 0f) {
+        val gradientColors = RenderUtils.getGradientColors(direction, startColor, endColor)
+        drawGradient(drawContext, x, y, width, height, gradientColors.topLeft, gradientColors.topRight, gradientColors.bottomLeft, gradientColors.bottomRight, direction, zOffset)
     }
 
     /**
@@ -357,13 +295,14 @@ object GUIRenderer {
         topRightColor: Long = RenderUtils.WHITE,
         bottomLeftColor: Long = RenderUtils.BLACK,
         bottomRightColor: Long = RenderUtils.BLACK,
-        direction: GradientDirection = GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT
+        direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT,
+        zOffset: Float = 0f,
     ) {
-        !! fix with drawContext
+//        !! fix with drawContext
         val x2 = x + width
         val y2 = y + height
         RenderUtils
-            .baseStartDraw()
+            .guiStartDraw()
 
             .begin(RenderLayers.TRIANGLES())
             .colorizeRGBA(topLeftColor).cameraPos(x, y, 0f)
@@ -375,7 +314,7 @@ object GUIRenderer {
             .colorizeRGBA(bottomRightColor).cameraPos(x2, y2, 0f)
 
             .draw()
-            .baseEndDraw()
+            .guiEndDraw()
     }
 
     /**
@@ -393,8 +332,8 @@ object GUIRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawLineRGBA(drawContext: DrawContext, startX: Float, startY: Float, endX: Float, endY: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, lineThickness: Float = 1f) {
-        drawLine(drawContext, startX, startY, endX, endY, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), lineThickness)
+    fun drawLineRGBA(drawContext: DrawContext, startX: Float, startY: Float, endX: Float, endY: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, lineThickness: Float = 1f, zOffset: Float = 0f) {
+        drawLine(drawContext, startX, startY, endX, endY, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), lineThickness, zOffset)
     }
 
     /**
@@ -417,14 +356,15 @@ object GUIRenderer {
         endY: Float,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         lineThickness: Float = 1f,
+        zOffset: Float = 0f
     ) {
-        !! fix with drawContext
+//        !! fix with drawContext
         val theta = -atan2(endY - startY, endX - startX)
         val i = sin(theta) * (lineThickness / 2)
         val j = cos(theta) * (lineThickness / 2)
 
         RenderUtils
-            .baseStartDraw()
+            .guiStartDraw()
 
             .begin(RenderLayers.QUADS_ESP())
             .colorizeRGBA(color)
@@ -434,7 +374,7 @@ object GUIRenderer {
             .cameraPos(startX - i, startY - j, 0f)
 
             .draw()
-            .baseEndDraw()
+            .guiEndDraw()
     }
 
     /**
@@ -451,8 +391,8 @@ object GUIRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleCircleRGBA(drawContext: DrawContext, xPosition: Float, yPosition: Float, radius: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, edges: Int = 32) {
-        drawCircle(drawContext, xPosition, yPosition, radius, radius, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), edges, 0f, 0f, 0f)
+    fun drawSimpleCircleRGBA(drawContext: DrawContext, xPosition: Float, yPosition: Float, radius: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, edges: Int = 32, zOffset: Float = 0f) {
+        drawCircle(drawContext, xPosition, yPosition, radius, radius, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), edges, 0f, 0f, 0f, zOffset)
     }
 
     /**
@@ -466,8 +406,8 @@ object GUIRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleCircle(drawContext: DrawContext, xPosition: Float, yPosition: Float, radius: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, edges: Int = 32) {
-        drawCircle(drawContext, xPosition, yPosition, radius, radius, color, edges, 0f, 0f, 0f)
+    fun drawSimpleCircle(drawContext: DrawContext, xPosition: Float, yPosition: Float, radius: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, edges: Int = 32, zOffset: Float = 0f) {
+        drawCircle(drawContext, xPosition, yPosition, radius, radius, color, edges, 0f, 0f, 0f, zOffset)
     }
 
     /**
@@ -488,8 +428,8 @@ object GUIRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawCircleRGBA(drawContext: DrawContext, xPosition: Float, yPosition: Float, xScale: Float = 1f, yScale: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, edges: Int = 32, rotationDegrees: Float = 0f, xRotationOffset: Float = 0f, yRotationOffset: Float = 0f) {
-        drawCircle(drawContext, xPosition, yPosition, xScale, yScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), edges, rotationDegrees, xRotationOffset, yRotationOffset)
+    fun drawCircleRGBA(drawContext: DrawContext, xPosition: Float, yPosition: Float, xScale: Float = 1f, yScale: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, edges: Int = 32, rotationDegrees: Float = 0f, xRotationOffset: Float = 0f, yRotationOffset: Float = 0f, zOffset: Float = 0f) {
+        drawCircle(drawContext, xPosition, yPosition, xScale, yScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), edges, rotationDegrees, xRotationOffset, yRotationOffset, zOffset)
     }
 
     /**
@@ -518,8 +458,9 @@ object GUIRenderer {
         rotationDegrees: Float = 0f,
         xRotationOffset: Float = 0f,
         yRotationOffset: Float = 0f,
+        zOffset: Float = 0f,
     ) {
-        !! fix with drawContext
+//        !! fix with drawContext
         val theta = 2 * PI / edges
         val cos = cos(theta).toFloat()
         val sin = sin(theta).toFloat()
@@ -530,7 +471,7 @@ object GUIRenderer {
 
         // rotation from circle's center
         RenderUtils
-            .baseStartDraw()
+            .guiStartDraw()
             .translate(xPosition + xRotationOffset, yPosition + yRotationOffset, 0f)
             .rotate(rotationDegrees % 360, 0f, 0f, 1f)
             .translate(-xPosition + -xRotationOffset, -yPosition + -yRotationOffset, 0f)
@@ -550,7 +491,7 @@ object GUIRenderer {
 
         RenderUtils
             .draw()
-            .baseEndDraw()
+            .guiEndDraw()
     }
 
     /**
@@ -721,12 +662,9 @@ object GUIRenderer {
         maxWidth: Int = 512,
         zOffset: Float = 0f,
     ) {
-        !! fix with drawContext
+//        !! fix with drawContext
         val fontRenderer = RenderUtils.getTextRenderer()
         val vertexConsumers = Client.getMinecraft().bufferBuilders.entityVertexConsumers
-
-//        val guiScale = mc.window.scaleFactor.toFloat() / 2f
-//        val adjustedScale = textScale * guiScale * 0.5f
 
         val backgroundColorInt = if (renderBackground) {
             Color(0, 0, 0, 150).rgb
@@ -736,13 +674,7 @@ object GUIRenderer {
 
         RenderUtils
             .pushMatrix()
-//            .resetColor()
-//            .disableCull()
-//            .enableBlend()
-//            .tryBlendFuncSeparate(770, 771, 1, 0)
-//            .disableDepth()
             .translate(xPosition, yPosition, zOffset)
-//            .scale(adjustedScale, adjustedScale, 1f)
 
         val positionMatrix = RenderUtils.matrixStack.peek().model
         positionMatrix.scale(textScale, textScale, 1f)
@@ -798,8 +730,8 @@ object GUIRenderer {
      */
     @JvmStatic
     @JvmOverloads
-    fun drawImageRGBA(drawContext: DrawContext, image: Image, xPosition: Float, yPosition: Float, width: Float? = null, height: Float? = null, zOffset: Float = 0f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255) {
-        drawImage(drawContext, image, xPosition, yPosition, width, height, zOffset, RenderUtils.RGBAColor(red, green, blue, alpha).getLong())
+    fun drawImageRGBA(drawContext: DrawContext, image: Image, xPosition: Float, yPosition: Float, width: Float? = null, height: Float? = null, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, zOffset: Float = 0f) {
+        drawImage(drawContext, image, xPosition, yPosition, width, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), zOffset)
     }
 
     /**
@@ -820,10 +752,10 @@ object GUIRenderer {
         yPosition: Float,
         width: Float? = null,
         height: Float? = null,
-        zOffset: Float = 0f,
         color: Long = RenderUtils.WHITE,
+        zOffset: Float = 0f
     ) {
-        !! fix with drawContext
+//        !! fix with drawContext
         val texture = image.getTexture() ?: throw IllegalStateException("Image is null.")
 
         val identifier = image.getIdentifier()
@@ -848,14 +780,6 @@ object GUIRenderer {
 
             .resetColor()
             .popMatrix()
-    }
-
-    class ScreenWrapper {
-        fun getWidth(): Int = Client.getMinecraft().window.scaledWidth
-
-        fun getHeight(): Int = Client.getMinecraft().window.scaledHeight
-
-        fun getScale(): Double = Client.getMinecraft().window.scaleFactor.toDouble()
     }
 }
 //#endif

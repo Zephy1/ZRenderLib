@@ -1,105 +1,32 @@
 package org.zephy.zrenderlib
 
-import gg.essential.universal.UMinecraft
-import net.minecraft.client.gui.ScaledResolution
 import org.lwjgl.opengl.GL11
-import java.util.*
+import java.awt.Color
+import kotlin.Float
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 
 object GUIRenderer {
-    @JvmField
-    val screen = ScreenWrapper()
-
-    /**
-     * Draws a square to the screen
-     *
-     * @param xPosition the X-coordinate
-     * @param yPosition the Y-coordinate
-     * @param size the size of the square
-     * @param red the red component of the color (0-255)
-     * @param green the green component of the color (0-255)
-     * @param blue the blue component of the color (0-255)
-     * @param alpha the alpha component of the color (0-255)
-     * @param zOffset useless in legacy, included for modern parity
-     */
     @JvmStatic
     @JvmOverloads
-    fun drawSquareRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        size: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        zOffset: Float = 0f,
-    ) {
+    fun drawSquareRGBA(xPosition: Float, yPosition: Float, size: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, zOffset: Float = 0f) {
         drawRect(xPosition, yPosition, size, size, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), zOffset)
     }
 
-    /**
-     * Draws a square to the screen
-     *
-     * @param xPosition the X-coordinate
-     * @param yPosition the Y-coordinate
-     * @param size the size of the square
-     * @param color the color as a [Long] value in RGBA format
-     * @param zOffset useless in legacy, included for modern parity
-     */
     @JvmStatic
     @JvmOverloads
-    fun drawSquare(
-        xPosition: Float,
-        yPosition: Float,
-        size: Float = 1f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        zOffset: Float = 0f,
-    ) {
+    fun drawSquare(xPosition: Float, yPosition: Float, size: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, zOffset: Float = 0f) {
         drawRect(xPosition, yPosition, size, size, color, zOffset)
     }
 
-    /**
-     * Draws a rectangle to the screen
-     *
-     * @param xPosition the X-coordinate
-     * @param yPosition the Y-coordinate
-     * @param width the width of the rectangle
-     * @param height the height of the rectangle
-     * @param red the red component of the color (0-255)
-     * @param green the green component of the color (0-255)
-     * @param blue the blue component of the color (0-255)
-     * @param alpha the alpha component of the color (0-255)
-     * @param zOffset useless in legacy, included for modern parity
-     */
     @JvmStatic
     @JvmOverloads
-    fun drawRectRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        width: Float = 1f,
-        height: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        zOffset: Float = 0f,
-    ) {
+    fun drawRectRGBA(xPosition: Float, yPosition: Float, width: Float = 1f, height: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, zOffset: Float = 0f) {
         drawRect(xPosition, yPosition, width, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), zOffset)
     }
 
-    /**
-     * Draws a rectangle to the screen
-     *
-     * @param xPosition the X-coordinate
-     * @param yPosition the Y-coordinate
-     * @param width the width of the rectangle
-     * @param height the height of the rectangle
-     * @param color the color as a [Long] value in RGBA format
-     * @param zOffset useless in legacy, included for modern parity
-     */
     @JvmStatic
     @JvmOverloads
     fun drawRect(
@@ -110,78 +37,113 @@ object GUIRenderer {
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         zOffset: Float = 0f,
     ) {
-        val pos = mutableListOf(xPosition, yPosition, xPosition + width, yPosition + height)
-        if (pos[0] > pos[2]) Collections.swap(pos, 0, 2)
-        if (pos[1] > pos[3]) Collections.swap(pos, 1, 3)
+        val x1 = xPosition
+        val x2 = xPosition + width
+        val y1 = yPosition
+        val y2 = yPosition + height
 
         RenderUtils
-            .pushMatrix()
-            .resetColor()
-            .disableCull()
-            .enableBlend()
-            .tryBlendFuncSeparate(770, 771, 1, 0)
-            .depthMask(false)
+            .guiStartDraw()
             .disableTexture2D()
-            .enableLineSmooth()
 
             .begin(GL11.GL_QUADS, VertexFormat.POSITION)
             .colorizeRGBA(color)
-            .pos(pos[0], pos[3], 0f)
-            .pos(pos[2], pos[3], 0f)
-            .pos(pos[2], pos[1], 0f)
-            .pos(pos[0], pos[1], 0f)
+            .translate(0f, 0f, zOffset)
+            .pos(x1, y2, 0f)
+            .pos(x2, y2, 0f)
+            .pos(x2, y1, 0f)
+            .pos(x1, y1, 0f)
             .draw()
 
-            .resetColor()
-            .enableCull()
-            .disableBlend()
-            .depthMask(true)
             .enableTexture2D()
-            .disableLineSmooth()
-            .resetLineWidth()
-            .enableDepth()
-            .popMatrix()
+            .guiEndDraw()
     }
 
-    /**
-     * Draws a line on the screen from point (startX, startY) to (endX, endY)
-     *
-     * @param startX the starting X-coordinate
-     * @param startY the starting Y-coordinate
-     * @param endX the ending X-coordinate
-     * @param endY the ending Y-coordinate
-     * @param red the red component of the color (0-255)
-     * @param green the green component of the color (0-255)
-     * @param blue the blue component of the color (0-255)
-     * @param alpha the alpha component of the color (0-255)
-     * @param lineThickness the thickness of the line
-     */
     @JvmStatic
     @JvmOverloads
-    fun drawLineRGBA(
-        startX: Float,
-        startY: Float,
-        endX: Float,
-        endY: Float,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        lineThickness: Float = 1f,
-    ) {
-        drawLine(startX, startY, endX, endY, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), lineThickness)
+    fun drawRoundedRectRGBA(xPosition: Float, yPosition: Float, width: Float, height: Float, radius: Float = 4f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, flatCorners: List<RenderUtils.FlattenRoundedRectCorner> = emptyList(), segments: Int = 16, zOffset: Float = 0f) {
+        drawRoundedRect(xPosition, yPosition, width, height, radius, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), flatCorners, segments, zOffset)
     }
 
-    /**
-     * Draws a line on the screen from point (startX, startY) to (endX, endY)
-     *
-     * @param startX the starting X-coordinate
-     * @param startY the starting Y-coordinate
-     * @param endX the ending X-coordinate
-     * @param endY the ending Y-coordinate
-     * @param color the color as a [Long] value in RGBA format
-     * @param lineThickness the thickness of the line
-     */
+    @JvmStatic
+    @JvmOverloads
+    fun drawRoundedRect(
+        xPosition: Float,
+        yPosition: Float,
+        width: Float = 1f,
+        height: Float = 1f,
+        radius: Float = 4f,
+        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
+        flatCorners: List<RenderUtils.FlattenRoundedRectCorner> = emptyList(),
+        segments: Int = 16,
+        zOffset: Float = 0f,
+    ) {
+//        !! fix
+    }
+    private fun addCornerVertices(
+        centerX: Float,
+        centerY: Float,
+        radius: Float,
+        startAngle: Float,
+        endAngle: Float,
+        segments: Int,
+    ) {
+//        !! fix
+        val angleStep = (endAngle - startAngle) / segments
+        for (i in 1..segments) {
+            val angle = Math.toRadians((startAngle + angleStep * i).toDouble())
+            val x = centerX + (radius * cos(angle)).toFloat()
+            val y = centerY + (radius * sin(angle)).toFloat()
+            RenderUtils.pos(x, y, 0f)
+        }
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun drawSimpleGradient(x: Float, y: Float, width: Float, height: Float, startColor: Color, endColor: Color, direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT, zOffset: Float = 0f,) {
+        val startColorLong = RenderUtils.RGBAColor(startColor.red, startColor.green, startColor.blue, startColor.alpha).getLong()
+        val endColorLong = RenderUtils.RGBAColor(endColor.red, endColor.green, endColor.blue, endColor.alpha).getLong()
+        drawSimpleGradient(x, y, width, height, startColorLong, endColorLong, direction, zOffset)
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun drawSimpleGradientRGBA(x: Float, y: Float, width: Float, height: Float, startRed: Int = 255, startGreen: Int = 255, startBlue: Int = 255, startAlpha: Int = 255, endRed: Int = 0, endGreen: Int = 0, endBlue: Int = 0, endAlpha: Int = 255, direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT, zOffset: Float = 0f,) {
+        val startColor = RenderUtils.RGBAColor(startRed, startGreen, startBlue, startAlpha).getLong()
+        val endColor = RenderUtils.RGBAColor(endRed, endGreen, endBlue, endAlpha).getLong()
+        drawSimpleGradient(x, y, width, height, startColor, endColor, direction, zOffset)
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun drawSimpleGradient(x: Float, y: Float, width: Float, height: Float, startColor: Long = RenderUtils.WHITE, endColor: Long = RenderUtils.BLACK, direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT, zOffset: Float = 0f,) {
+        val gradientColors = RenderUtils.getGradientColors(direction, startColor, endColor)
+        drawGradient(x, y, width, height, gradientColors.topLeft, gradientColors.topRight, gradientColors.bottomLeft, gradientColors.bottomRight, direction, zOffset)
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun drawGradient(
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        topLeftColor: Long = RenderUtils.WHITE,
+        topRightColor: Long = RenderUtils.WHITE,
+        bottomLeftColor: Long = RenderUtils.BLACK,
+        bottomRightColor: Long = RenderUtils.BLACK,
+        direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT,
+        zOffset: Float = 0f,
+    ) {
+//        !! fix
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun drawLineRGBA(startX: Float, startY: Float, endX: Float, endY: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, lineThickness: Float = 1f, zOffset: Float = 0f,) {
+        drawLine(startX, startY, endX, endY, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), lineThickness, zOffset)
+    }
+
     @JvmStatic
     @JvmOverloads
     fun drawLine(
@@ -191,20 +153,15 @@ object GUIRenderer {
         endY: Float,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         lineThickness: Float = 1f,
+        zOffset: Float = 0f,
     ) {
         val theta = -atan2(endY - startY, endX - startX)
         val i = sin(theta) * (lineThickness / 2)
         val j = cos(theta) * (lineThickness / 2)
 
         RenderUtils
-            .pushMatrix()
-            .resetColor()
-            .disableCull()
-            .enableBlend()
-            .tryBlendFuncSeparate(770, 771, 1, 0)
-            .depthMask(false)
+            .guiStartDraw()
             .disableTexture2D()
-            .enableLineSmooth()
 
             .begin(GL11.GL_QUADS, VertexFormat.POSITION)
             .colorizeRGBA(color)
@@ -214,113 +171,28 @@ object GUIRenderer {
             .pos(startX - i, startY - j, 0f)
             .draw()
 
-            .resetColor()
-            .enableCull()
-            .disableBlend()
-            .depthMask(true)
             .enableTexture2D()
-            .disableLineSmooth()
-            .resetLineWidth()
-            .enableDepth()
-            .popMatrix()
+            .guiEndDraw()
     }
 
-    /**
-     * Draws a circle to the screen
-     *
-     * @param xPosition the X-coordinate
-     * @param yPosition the Y-coordinate
-     * @param radius the radius of the circle
-     * @param red the red component of the color (0-255)
-     * @param green the green component of the color (0-255)
-     * @param blue the blue component of the color (0-255)
-     * @param alpha the alpha component of the color (0-255)
-     * @param edges the number of edges
-     */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleCircleRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        radius: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        edges: Int = 32,
-    ) {
-        drawCircle(xPosition, yPosition, radius, radius, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), edges, 0f, 0f, 0f)
+    fun drawSimpleCircleRGBA(xPosition: Float, yPosition: Float, radius: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, edges: Int = 32, zOffset: Float = 0f) {
+        drawCircle(xPosition, yPosition, radius, radius, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), edges, 0f, 0f, 0f, zOffset)
     }
 
-    /**
-     * Draws a circle to the screen
-     *
-     * @param xPosition the X-coordinate
-     * @param yPosition the Y-coordinate
-     * @param radius the radius of the circle
-     * @param color the color as a [Long] value in RGBA format
-     * @param edges the number of edges
-     */
     @JvmStatic
     @JvmOverloads
-    fun drawSimpleCircle(
-        xPosition: Float,
-        yPosition: Float,
-        radius: Float = 1f,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        edges: Int = 32,
-    ) {
-        drawCircle(xPosition, yPosition, radius, radius, color, edges, 0f, 0f, 0f)
+    fun drawSimpleCircle(xPosition: Float, yPosition: Float, radius: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, edges: Int = 32, zOffset: Float = 0f) {
+        drawCircle(xPosition, yPosition, radius, radius, color, edges, 0f, 0f, 0f, zOffset)
     }
 
-    /**
-     * Draws a circle to the screen
-     *
-     * @param xPosition the X-coordinate
-     * @param yPosition the Y-coordinate
-     * @param xScale the X-radius of the circle
-     * @param yScale the Y-radius of the circle
-     * @param red the red component of the color (0-255)
-     * @param green the green component of the color (0-255)
-     * @param blue the blue component of the color (0-255)
-     * @param alpha the alpha component of the color (0-255)
-     * @param edges the number of edges
-     * @param rotationDegrees number of degrees to rotate the circle on the Z-axis
-     * @param xRotationOffset the X-offset for the rotation
-     * @param yRotationOffset the Y-offset for the rotation
-     */
     @JvmStatic
     @JvmOverloads
-    fun drawCircleRGBA(
-        xPosition: Float,
-        yPosition: Float,
-        xScale: Float = 1f,
-        yScale: Float = 1f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        edges: Int = 32,
-        rotationDegrees: Float = 0f,
-        xRotationOffset: Float = 0f,
-        yRotationOffset: Float = 0f,
-    ) {
-        drawCircle(xPosition, yPosition, xScale, yScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), edges, rotationDegrees, xRotationOffset, yRotationOffset)
+    fun drawCircleRGBA(xPosition: Float, yPosition: Float, xScale: Float = 1f, yScale: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, edges: Int = 32, rotationDegrees: Float = 0f, xRotationOffset: Float = 0f, yRotationOffset: Float = 0f, zOffset: Float = 0f) {
+        drawCircle(xPosition, yPosition, xScale, yScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), edges, rotationDegrees, xRotationOffset, yRotationOffset, zOffset)
     }
 
-    /**
-     * Draws a circle to the screen
-     *
-     * @param xPosition the X-coordinate
-     * @param yPosition the Y-coordinate
-     * @param xScale the X-radius of the circle
-     * @param yScale the Y-radius of the circle
-     * @param color the color as a [Long] value in RGBA format
-     * @param edges the number of edges
-     * @param rotationDegrees number of degrees to rotate the circle on the Z-axis
-     * @param xRotationOffset the X-offset for the rotation
-     * @param yRotationOffset the Y-offset for the rotation
-     */
     @JvmStatic
     @JvmOverloads
     fun drawCircle(
@@ -333,7 +205,9 @@ object GUIRenderer {
         rotationDegrees: Float = 0f,
         xRotationOffset: Float = 0f,
         yRotationOffset: Float = 0f,
+        zOffset: Float = 0f,
     ) {
+//        !! fix
         val theta = 2 * PI / edges
         val cos = cos(theta).toFloat()
         val sin = sin(theta).toFloat()
@@ -344,14 +218,8 @@ object GUIRenderer {
 
         // rotation from circle's center
         RenderUtils
-            .pushMatrix()
-            .resetColor()
-            .disableCull()
-            .enableBlend()
-            .tryBlendFuncSeparate(770, 771, 1, 0)
-            .depthMask(false)
+            .guiStartDraw()
             .disableTexture2D()
-            .enableLineSmooth()
             .translate(xPosition + xRotationOffset, yPosition + yRotationOffset, 0f)
             .rotate(rotationDegrees % 360, 0f, 0f, 1f)
             .translate(-xPosition + -xRotationOffset, -yPosition + -yRotationOffset, 0f)
@@ -371,118 +239,28 @@ object GUIRenderer {
 
         RenderUtils
             .draw()
-            .resetColor()
-            .enableCull()
-            .disableBlend()
-            .depthMask(true)
             .enableTexture2D()
-            .disableLineSmooth()
-            .resetLineWidth()
-            .enableDepth()
-            .popMatrix()
+            .baseEndDraw()
     }
 
-    /**
-     * Draws text with a shadow to the screen
-     *
-     * @param text the text as a string
-     * @param xPosition the X-coordinate
-     * @param yPosition the Y-coordinate
-     * @param red the red component of the color (0-255)
-     * @param green the green component of the color (0-255)
-     * @param blue the blue component of the color (0-255)
-     * @param alpha the alpha component of the color (0-255)
-     * @param textScale the text scale
-     * @param renderBackground whether to draw a transparent background
-     * @param maxWidth useless in legacy, included for modern parity
-     */
     @JvmStatic
     @JvmOverloads
-    fun drawStringWithShadowRGBA(
-        text: String,
-        xPosition: Float,
-        yPosition: Float,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        textScale: Float = 1f,
-        renderBackground: Boolean = false,
-        maxWidth: Int = 512,
-    ) {
-        drawString(text, xPosition, yPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), textScale, renderBackground, true, maxWidth)
+    fun drawStringWithShadowRGBA(text: String, xPosition: Float, yPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, textScale: Float = 1f, renderBackground: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
+        drawString(text, xPosition, yPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), textScale, renderBackground, true, maxWidth, zOffset)
     }
 
-    /**
-     * Draws text with a shadow to the screen
-     *
-     * @param text the text as a string
-     * @param xPosition the X-coordinate
-     * @param yPosition the Y-coordinate
-     * @param color the color as a [Long] value in RGBA format
-     * @param textScale the text scale
-     * @param renderBackground whether to draw a transparent background
-     * @param maxWidth useless in legacy, included for modern parity
-     */
     @JvmStatic
     @JvmOverloads
-    fun drawStringWithShadow(
-        text: String,
-        xPosition: Float,
-        yPosition: Float,
-        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        textScale: Float = 1f,
-        renderBackground: Boolean = false,
-        maxWidth: Int = 512,
-    ) {
-        drawString(text, xPosition, yPosition, color, textScale, renderBackground, true, maxWidth)
+    fun drawStringWithShadow(text: String, xPosition: Float, yPosition: Float, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, textScale: Float = 1f, renderBackground: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
+        drawString(text, xPosition, yPosition, color, textScale, renderBackground, true, maxWidth, zOffset)
     }
 
-    /**
-     * Draws text to the screen
-     *
-     * @param text the text as a string
-     * @param xPosition the X-coordinate
-     * @param yPosition the Y-coordinate
-     * @param red the red component of the color (0-255)
-     * @param green the green component of the color (0-255)
-     * @param blue the blue component of the color (0-255)
-     * @param alpha the alpha component of the color (0-255)
-     * @param textScale the text scale
-     * @param renderBackground whether to draw a transparent background
-     * @param textShadow whether to draw a shadow behind the text
-     * @param maxWidth useless in legacy, included for modern parity
-     */
     @JvmStatic
     @JvmOverloads
-    fun drawStringRGBA(
-        text: String,
-        xPosition: Float,
-        yPosition: Float,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        textScale: Float = 1f,
-        renderBackground: Boolean = false,
-        textShadow: Boolean = false,
-        maxWidth: Int = 512,
-    ) {
-        drawString(text, xPosition, yPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), textScale, renderBackground, textShadow, maxWidth)
+    fun drawStringRGBA(text: String, xPosition: Float, yPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, textScale: Float = 1f, renderBackground: Boolean = false, textShadow: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
+        drawString(text, xPosition, yPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), textScale, renderBackground, textShadow, maxWidth, zOffset)
     }
 
-    /**
-     * Draws text to the screen
-     *
-     * @param text the text as a string
-     * @param xPosition the X-coordinate
-     * @param yPosition the Y-coordinate
-     * @param color the color as a [Long] value in RGBA format
-     * @param textScale the text scale
-     * @param renderBackground whether to draw a transparent background
-     * @param textShadow whether to draw a shadow behind the text
-     * @param maxWidth useless in legacy, included for modern parity
-     */
     @JvmStatic
     @JvmOverloads
     fun drawString(
@@ -494,57 +272,28 @@ object GUIRenderer {
         renderBackground: Boolean = false,
         textShadow: Boolean = false,
         maxWidth: Int = 512,
+        zOffset: Float = 0f,
     ) {
-        val fontRenderer = UMinecraft.getFontRenderer()
+        val fontRenderer = RenderUtils.getTextRenderer()
         var newY = yPosition
 
-        RenderUtils.pushMatrix()
-        RenderUtils.addColor(text).split("\n").forEach {
-            fontRenderer.drawString(it, xPosition, newY, RenderUtils.RGBAColor.fromLongRGBA(color).getLongARGB().toInt(), textShadow)
-            newY += fontRenderer.FONT_HEIGHT
-        }
+        RenderUtils
+            .pushMatrix()
+            .addColor(text)
+            .split("\n")
+            .forEach {
+                fontRenderer.drawString(it, xPosition, newY, RenderUtils.RGBAColor.fromLongRGBA(color).getLongARGB().toInt(), textShadow)
+                newY += fontRenderer.FONT_HEIGHT
+            }
         RenderUtils.popMatrix()
     }
 
-    /**
-     * Draws an image to the screen
-     *
-     * @param image the image
-     * @param xPosition the X-coordinate
-     * @param yPosition the Y-coordinate
-     * @param width new image width
-     * @param height new image height
-     * @param red the red component of the color (0-255)
-     * @param green the green component of the color (0-255)
-     * @param blue the blue component of the color (0-255)
-     * @param alpha the alpha component of the color (0-255)
-     */
     @JvmStatic
     @JvmOverloads
-    fun drawImageRGBA(
-        image: Image,
-        xPosition: Float,
-        yPosition: Float,
-        width: Float? = null,
-        height: Float? = null,
-        zOffset: Float = 0f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-    ) {
-        drawImage(image, xPosition, yPosition, width, height, zOffset, RenderUtils.RGBAColor(red, green, blue, alpha).getLong())
+    fun drawImageRGBA(image: Image, xPosition: Float, yPosition: Float, width: Float? = null, height: Float? = null, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, zOffset: Float = 0f) {
+        drawImage(image, xPosition, yPosition, width, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), zOffset)
     }
 
-    /**
-     * Draws an image to the screen
-     *
-     * @param image the image
-     * @param xPosition the X-coordinate
-     * @param yPosition the Y-coordinate
-     * @param width new image width
-     * @param height new image height
-     */
     @JvmStatic
     @JvmOverloads
     fun drawImage(
@@ -553,16 +302,12 @@ object GUIRenderer {
         yPosition: Float,
         width: Float? = null,
         height: Float? = null,
-        zOffset: Float = 0f,
         color: Long = RenderUtils.WHITE,
+        zOffset: Float = 0f,
     ) {
         val (drawWidth, drawHeight) = image.getImageSize(width, height)
-
         RenderUtils
-            .pushMatrix()
-            .resetColor()
-            .disableCull()
-            .enableBlend()
+            .guiStartDraw()
             .translate(0f, 0f, zOffset)
             .scale(1f, 1f, 50f)
             .bindTexture(image.getTexture().getGlTextureId())
@@ -576,17 +321,7 @@ object GUIRenderer {
             .pos(xPosition, yPosition, 0f).tex(0f, 0f)
             .draw()
 
-            .resetColor()
-            .disableBlend()
             .disableTexture2D()
-            .popMatrix()
-    }
-
-    class ScreenWrapper {
-        fun getWidth(): Int = ScaledResolution(UMinecraft.getMinecraft()).scaledWidth
-    
-        fun getHeight(): Int = ScaledResolution(UMinecraft.getMinecraft()).scaledHeight
-    
-        fun getScale(): Double = ScaledResolution(UMinecraft.getMinecraft()).scaleFactor.toDouble()
+            .guiEndDraw()
     }
 }

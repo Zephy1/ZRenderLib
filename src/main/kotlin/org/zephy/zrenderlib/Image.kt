@@ -3,7 +3,6 @@ package org.zephy.zrenderlib
 //#if MC == 10809 || MC >= 12100
 import java.awt.image.BufferedImage
 import java.io.File
-import java.nio.ByteBuffer
 import javax.imageio.ImageIO
 
 //#if MC < 12100
@@ -33,6 +32,8 @@ import javax.imageio.ImageIO
 //$$        MinecraftForge.EVENT_BUS.unregister(this)
 //$$    }
 //#else
+import java.nio.ByteBuffer
+import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Identifier
@@ -110,17 +111,25 @@ class Image(var image: BufferedImage?) {
      */
     @JvmOverloads
     fun drawRGBA(
+        //#if MC >= 12100
+        drawContext: DrawContext,
+        //#endif
         xPosition: Float,
         yPosition: Float,
         width: Float? = null,
         height: Float? = null,
-        zOffset: Float = 0f,
         red: Int = 255,
         green: Int = 255,
         blue: Int = 255,
-        alpha: Int = 255
+        alpha: Int = 255,
+        zOffset: Float = 0f,
     ) = apply {
-        draw(xPosition, yPosition, width, height, zOffset, RenderUtils.RGBAColor(red, green, blue, alpha).getLong())
+        draw(
+            //#if MC >= 12100
+            drawContext,
+            //#endif
+            xPosition, yPosition, width, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), zOffset
+        )
     }
 
     /**
@@ -129,16 +138,24 @@ class Image(var image: BufferedImage?) {
      */
     @JvmOverloads
     fun draw(
+        //#if MC >= 12100
+        drawContext: DrawContext,
+        //#endif
         xPosition: Float,
         yPosition: Float,
         width: Float? = null,
         height: Float? = null,
-        zOffset: Float = 0f,
         color: Long = RenderUtils.WHITE,
+        zOffset: Float = 0f,
     ) = apply {
         val (drawWidth, drawHeight) = getImageSize(width, height)
         if (texture == null) return@apply
-        GUIRenderer.drawImage(this, xPosition, yPosition, drawWidth, drawHeight, zOffset, color)
+        GUIRenderer.drawImage(
+            //#if MC >= 12100
+            drawContext,
+            //#endif
+            this, xPosition, yPosition, drawWidth, drawHeight, color, zOffset
+        )
     }
 
     //#if MC >= 12100
