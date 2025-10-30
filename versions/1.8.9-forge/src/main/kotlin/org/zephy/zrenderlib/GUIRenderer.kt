@@ -395,8 +395,8 @@ object GUIRenderer {
             .pos(xPosition + drawWidth, yPosition + drawHeight, 0f).tex(1f, 1f)
             .pos(xPosition + drawWidth, yPosition, 0f).tex(1f, 0f)
             .pos(xPosition, yPosition, 0f).tex(0f, 0f)
-            .draw()
 
+            .draw()
             .disableTexture2D()
             .guiEndDraw()
     }

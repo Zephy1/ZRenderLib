@@ -461,13 +461,14 @@ object GUIRenderer {
         val (drawWidth, drawHeight) = image.getImageSize(width, height)
 
         RenderUtils
-            .pushMatrix()
+            .guiStartDraw()
             //#if MC>=12106
             //$$.setShaderTexture(0, texture.glTextureView)
             //#else
             .setShaderTexture(0, texture.glTexture)
             //#endif
             .scale(1f, 1f, 50f)
+
             .begin(RenderLayers.TEXTURED_QUADS_ESP(textureIdentifier = identifier!!))
             .colorizeRGBA(color)
             .translate(0f, 0f, zOffset)
@@ -475,10 +476,9 @@ object GUIRenderer {
             .cameraPos(xPosition + drawWidth, yPosition + drawHeight, 0f).tex(1f, 1f)
             .cameraPos(xPosition + drawWidth, yPosition, 0f).tex(1f, 0f)
             .cameraPos(xPosition, yPosition, 0f).tex(0f, 0f)
-            .draw()
 
-            .resetColor()
-            .popMatrix()
+            .draw()
+            .guiEndDraw()
     }
 }
 //#endif
