@@ -184,7 +184,7 @@ object GUIRenderer {
     @JvmOverloads
     fun drawSimpleGradient(drawContext: DrawContext, x: Float, y: Float, width: Float, height: Float, startColor: Long = RenderUtils.WHITE, endColor: Long = RenderUtils.BLACK, direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT, zOffset: Float = 0f) {
         val gradientColors = RenderUtils.getGradientColors(direction, startColor, endColor)
-        drawGradient(drawContext, x, y, width, height, gradientColors.topLeft, gradientColors.topRight, gradientColors.bottomLeft, gradientColors.bottomRight, direction, zOffset)
+        drawGradient(drawContext, x, y, width, height, gradientColors.topLeft, gradientColors.topRight, gradientColors.bottomLeft, gradientColors.bottomRight, zOffset)
     }
 
     @JvmStatic
@@ -199,7 +199,6 @@ object GUIRenderer {
         topRightColor: Long = RenderUtils.WHITE,
         bottomLeftColor: Long = RenderUtils.BLACK,
         bottomRightColor: Long = RenderUtils.BLACK,
-        direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT,
         zOffset: Float = 0f,
     ) {
 //        !! fix with drawContext
@@ -209,6 +208,7 @@ object GUIRenderer {
             .guiStartDraw()
 
             .begin(RenderLayers.TRIANGLES())
+            .translate(0f, 0f, zOffset)
             .colorizeRGBA(topLeftColor).cameraPos(x, y, 0f)
             .colorizeRGBA(topRightColor).cameraPos(x2, y, 0f)
             .colorizeRGBA(bottomLeftColor).cameraPos(x, y2, 0f)
@@ -249,6 +249,7 @@ object GUIRenderer {
 
             .begin(RenderLayers.QUADS_ESP())
             .colorizeRGBA(color)
+            .translate(0f, 0f, zOffset)
             .cameraPos(startX + i, startY + j, 0f)
             .cameraPos(endX + i, endY + j, 0f)
             .cameraPos(endX - i, endY - j, 0f)
@@ -308,6 +309,7 @@ object GUIRenderer {
             .translate(-xPosition + -xRotationOffset, -yPosition + -yRotationOffset, 0f)
             .begin(RenderLayers.TRIANGLE_STRIP_ESP())
             .colorizeRGBA(color)
+            .translate(0f, 0f, zOffset)
 
         for (i in 0..edges) {
             RenderUtils

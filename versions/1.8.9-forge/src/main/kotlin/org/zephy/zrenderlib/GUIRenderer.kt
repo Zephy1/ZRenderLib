@@ -2,7 +2,6 @@ package org.zephy.zrenderlib
 
 import org.lwjgl.opengl.GL11
 import java.awt.Color
-import kotlin.Float
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -78,7 +77,67 @@ object GUIRenderer {
         segments: Int = 16,
         zOffset: Float = 0f,
     ) {
-//        !! fix
+        val x1 = xPosition
+        val y1 = yPosition
+        val x2 = xPosition + width
+        val y2 = yPosition + height
+
+        val centerX = (x1 + x2) / 2f
+        val centerY = (y1 + y2) / 2f
+        val clampedRadius = radius.coerceAtMost(minOf(width, height) / 2f)
+        val flatCornersSet = flatCorners.toSet()
+
+        RenderUtils
+            .guiStartDraw()
+            .disableTexture2D()
+
+            .begin(GL11.GL_TRIANGLE_FAN, VertexFormat.POSITION)
+            .colorizeRGBA(color)
+            .translate(0f, 0f, zOffset)
+            .pos(centerX, centerY, 0f)
+
+        RenderUtils.pos(x2 - clampedRadius, y1, 0f)
+        if (RenderUtils.FlattenRoundedRectCorner.TOP_RIGHT in flatCornersSet) {
+            RenderUtils.pos(x2, y1, 0f)
+        } else {
+            addCornerVertices(x2 - clampedRadius, y1 + clampedRadius, clampedRadius, 270f, 360f, segments)
+            RenderUtils.pos(x2, y1 + clampedRadius, 0f)
+        }
+
+        // right edge
+        RenderUtils.pos(x2, y2 - clampedRadius, 0f)
+        if (RenderUtils.FlattenRoundedRectCorner.BOTTOM_RIGHT in flatCornersSet) {
+            RenderUtils.pos(x2, y2, 0f)
+        } else {
+            addCornerVertices(x2 - clampedRadius, y2 - clampedRadius, clampedRadius, 0f, 90f, segments)
+            RenderUtils.pos(x2 - clampedRadius, y2, 0f)
+        }
+
+        // bottom edge
+        RenderUtils.pos(x1 + clampedRadius, y2, 0f)
+        if (RenderUtils.FlattenRoundedRectCorner.BOTTOM_LEFT in flatCornersSet) {
+            RenderUtils.pos(x1, y2, 0f)
+        } else {
+            addCornerVertices(x1 + clampedRadius, y2 - clampedRadius, clampedRadius, 90f, 180f, segments)
+            RenderUtils.pos(x1, y2 - clampedRadius, 0f)
+        }
+
+        // left edge
+        RenderUtils.pos(x1, y1 + clampedRadius, 0f)
+        if (RenderUtils.FlattenRoundedRectCorner.TOP_LEFT in flatCornersSet) {
+            RenderUtils.pos(x1, y1, 0f)
+        } else {
+            addCornerVertices(x1 + clampedRadius, y1 + clampedRadius, clampedRadius, 180f, 270f, segments)
+            RenderUtils.pos(x1 + clampedRadius, y1, 0f)
+        }
+
+        // top edge
+        RenderUtils
+            .pos(x2 - clampedRadius, y1, 0f)
+
+            .draw()
+            .enableTexture2D()
+            .guiEndDraw()
     }
     private fun addCornerVertices(
         centerX: Float,
@@ -88,7 +147,6 @@ object GUIRenderer {
         endAngle: Float,
         segments: Int,
     ) {
-//        !! fix
         val angleStep = (endAngle - startAngle) / segments
         for (i in 1..segments) {
             val angle = Math.toRadians((startAngle + angleStep * i).toDouble())
@@ -118,7 +176,7 @@ object GUIRenderer {
     @JvmOverloads
     fun drawSimpleGradient(x: Float, y: Float, width: Float, height: Float, startColor: Long = RenderUtils.WHITE, endColor: Long = RenderUtils.BLACK, direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT, zOffset: Float = 0f,) {
         val gradientColors = RenderUtils.getGradientColors(direction, startColor, endColor)
-        drawGradient(x, y, width, height, gradientColors.topLeft, gradientColors.topRight, gradientColors.bottomLeft, gradientColors.bottomRight, direction, zOffset)
+        drawGradient(x, y, width, height, gradientColors.topLeft, gradientColors.topRight, gradientColors.bottomLeft, gradientColors.bottomRight, zOffset)
     }
 
     @JvmStatic
@@ -132,10 +190,27 @@ object GUIRenderer {
         topRightColor: Long = RenderUtils.WHITE,
         bottomLeftColor: Long = RenderUtils.BLACK,
         bottomRightColor: Long = RenderUtils.BLACK,
-        direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT,
         zOffset: Float = 0f,
     ) {
-//        !! fix
+        val x2 = x + width
+        val y2 = y + height
+        RenderUtils
+            .guiStartDraw()
+            .disableTexture2D()
+
+            .begin(GL11.GL_TRIANGLES, VertexFormat.POSITION)
+            .translate(0f, 0f, zOffset)
+            .colorizeRGBA(topLeftColor).pos(x, y, 0f)
+            .colorizeRGBA(topRightColor).pos(x2, y, 0f)
+            .colorizeRGBA(bottomLeftColor).pos(x, y2, 0f)
+
+            .colorizeRGBA(bottomLeftColor).pos(x, y2, 0f)
+            .colorizeRGBA(topRightColor).pos(x2, y, 0f)
+            .colorizeRGBA(bottomRightColor).pos(x2, y2, 0f)
+
+            .draw()
+            .enableTexture2D()
+            .guiEndDraw()
     }
 
     @JvmStatic
@@ -165,6 +240,7 @@ object GUIRenderer {
 
             .begin(GL11.GL_QUADS, VertexFormat.POSITION)
             .colorizeRGBA(color)
+            .translate(0f, 0f, zOffset)
             .pos(startX + i, startY + j, 0f)
             .pos(endX + i, endY + j, 0f)
             .pos(endX - i, endY - j, 0f)
@@ -207,7 +283,6 @@ object GUIRenderer {
         yRotationOffset: Float = 0f,
         zOffset: Float = 0f,
     ) {
-//        !! fix
         val theta = 2 * PI / edges
         val cos = cos(theta).toFloat()
         val sin = sin(theta).toFloat()
@@ -225,6 +300,7 @@ object GUIRenderer {
             .translate(-xPosition + -xRotationOffset, -yPosition + -yRotationOffset, 0f)
             .begin(GL11.GL_TRIANGLE_STRIP, VertexFormat.POSITION)
             .colorizeRGBA(color)
+            .translate(0f, 0f, zOffset)
 
         for (i in 0..edges) {
             RenderUtils
@@ -240,7 +316,7 @@ object GUIRenderer {
         RenderUtils
             .draw()
             .enableTexture2D()
-            .baseEndDraw()
+            .guiEndDraw()
     }
 
     @JvmStatic
@@ -308,13 +384,13 @@ object GUIRenderer {
         val (drawWidth, drawHeight) = image.getImageSize(width, height)
         RenderUtils
             .guiStartDraw()
-            .translate(0f, 0f, zOffset)
             .scale(1f, 1f, 50f)
             .bindTexture(image.getTexture().getGlTextureId())
             .enableTexture2D()
 
             .begin(GL11.GL_QUADS, VertexFormat.POSITION_TEX)
             .colorizeRGBA(color)
+            .translate(0f, 0f, zOffset)
             .pos(xPosition, yPosition + drawHeight, 0f).tex(0f, 1f)
             .pos(xPosition + drawWidth, yPosition + drawHeight, 0f).tex(1f, 1f)
             .pos(xPosition + drawWidth, yPosition, 0f).tex(1f, 0f)

@@ -706,31 +706,31 @@ object WorldRenderer {
     @JvmStatic
     @JvmOverloads
     fun drawSimpleWireframePyramidRGBA(xPosition: Float, yPosition: Float, zPosition: Float, size: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, disableDepth: Boolean = false, lineThickness: Float = 1f) {
-        drawPyramid(xPosition, yPosition, zPosition, size, size, size, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, true)
+        drawPyramid(xPosition, yPosition, zPosition, size, size, size, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, true, lineThickness)
     }
 
     @JvmStatic
     @JvmOverloads
     fun drawSimpleWireframePyramid(xPosition: Float, yPosition: Float, zPosition: Float, size: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, disableDepth: Boolean = false, lineThickness: Float = 1f) {
-        drawPyramid(xPosition, yPosition, zPosition, size, size, size, color, disableDepth, true)
+        drawPyramid(xPosition, yPosition, zPosition, size, size, size, color, disableDepth, true, lineThickness)
     }
 
     @JvmStatic
     @JvmOverloads
     fun drawWireframePyramidRGBA(xPosition: Float, yPosition: Float, zPosition: Float, xScale: Float = 1f, yScale: Float = 1f, zScale: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, disableDepth: Boolean = false, lineThickness: Float = 1f) {
-        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, true)
+        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, true, lineThickness)
     }
 
     @JvmStatic
     @JvmOverloads
     fun drawWireframePyramid(xPosition: Float, yPosition: Float, zPosition: Float, xScale: Float = 1f, yScale: Float = 1f, zScale: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, disableDepth: Boolean = false, lineThickness: Float = 1f) {
-        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, color, disableDepth, true)
+        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, color, disableDepth, true, lineThickness)
     }
 
     @JvmStatic
     @JvmOverloads
     fun drawPyramidRGBA(xPosition: Float, yPosition: Float, zPosition: Float, xScale: Float = 1f, yScale: Float = 1f, zScale: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, disableDepth: Boolean = false, wireframe: Boolean = false, lineThickness: Float = 1f) {
-        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe)
+        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe, lineThickness)
     }
 
     @JvmStatic
