@@ -250,7 +250,6 @@ object WorldRenderer {
             RenderUtils.pos(x1, y0, z1).pos(x0, y0, z1).pos(x0, y0, z0).pos(x1, y0, z0)
         }
         RenderUtils
-            .pos(x1, y0, z0)
             .draw()
 
             .resetColor()
