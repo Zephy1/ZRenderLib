@@ -1,8 +1,6 @@
 package org.zephy.zrenderlib
 
 import org.lwjgl.opengl.GL11;
-import org.zephy.zrenderlib.RenderUtils.setAndNormalize
-import org.zephy.zrenderlib.RenderUtils.tempNormal
 import kotlin.math.sin
 import kotlin.math.cos
 
@@ -26,7 +24,7 @@ object WorldRenderer {
         centered: Boolean = false,
         textShadow: Boolean = true,
         disableDepth: Boolean = false,
-        maxWidth: Int = 512,
+        maxWidth: Int = 512, // No use on <1.21.x
     ) {
         val fontRenderer = RenderUtils.getTextRenderer()
         val renderManager = RenderUtils.renderManager
@@ -80,13 +78,7 @@ object WorldRenderer {
             RenderUtils.ARGBColor.fromLongRGBA(color).getLong().toInt(),
             textShadow
         )
-        RenderUtils
-            .colorize_01(1f, 1f, 1f, 1f)
-            .depthMask(true)
-            .enableBlend()
-            .enableCull()
-            .popMatrix()
-        if (disableDepth) RenderUtils.enableDepth()
+        RenderUtils.worldEndDraw()
     }
 
     @JvmStatic
@@ -126,16 +118,9 @@ object WorldRenderer {
             .colorizeRGBA(color)
             .pos(startX, startY, startZ)
             .pos(endX, endY, endZ)
-            .draw()
 
-            .resetColor()
-            .enableCull()
-            .disableBlend()
-            .depthMask(true)
-            .enableTexture2D()
-            .resetLineWidth()
-            .enableDepth()
-            .popMatrix()
+            .draw()
+            .worldEndDraw()
     }
 
     @JvmStatic
@@ -251,15 +236,7 @@ object WorldRenderer {
         }
         RenderUtils
             .draw()
-
-            .resetColor()
-            .enableCull()
-            .disableBlend()
-            .depthMask(true)
-            .enableTexture2D()
-            .resetLineWidth()
-            .enableDepth()
-            .popMatrix()
+            .worldEndDraw()
     }
 
     @JvmStatic
@@ -435,13 +412,7 @@ object WorldRenderer {
 
         RenderUtils
             .draw()
-            .enableCull()
-            .disableBlend()
-            .depthMask(true)
-            .enableTexture2D()
-            .resetLineWidth()
-            .enableDepth()
-            .popMatrix()
+            .worldEndDraw()
     }
 
     @JvmStatic
@@ -646,13 +617,7 @@ object WorldRenderer {
 
         RenderUtils
             .draw()
-            .enableCull()
-            .disableBlend()
-            .depthMask(true)
-            .enableTexture2D()
-            .resetLineWidth()
-            .enableDepth()
-            .popMatrix()
+            .worldEndDraw()
     }
 
     @JvmStatic
@@ -775,13 +740,7 @@ object WorldRenderer {
 
         RenderUtils
             .draw()
-            .enableCull()
-            .disableBlend()
-            .depthMask(true)
-            .enableTexture2D()
-            .resetLineWidth()
-            .enableDepth()
-            .popMatrix()
+            .worldEndDraw()
     }
 
     @JvmStatic

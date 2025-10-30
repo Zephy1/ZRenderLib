@@ -174,6 +174,15 @@ object RenderUtils {
             .disableLineSmooth()
             .resetLineWidth()
     }
+    @JvmStatic
+    fun worldEndDraw() = apply {
+        baseEndDraw()
+            .enableTexture2D()
+            .depthMask(true)
+            .enableDepth()
+            .disableLineSmooth()
+            .resetLineWidth()
+    }
 
     private fun _begin() = apply {
         pushMatrix()

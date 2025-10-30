@@ -74,6 +74,7 @@ object WorldRenderer {
             Color(0, 0, 0, 0).rgb
         }
 
+        RenderUtils.baseStartDraw()
         for (line in lines) {
             matrix
                 .translate(
@@ -105,6 +106,7 @@ object WorldRenderer {
 
             yOffset += fontRenderer.fontHeight + 1
         }
+        RenderUtils.worldEndDraw()
     }
 
     @JvmStatic
@@ -129,17 +131,15 @@ object WorldRenderer {
         val renderLayer = getLineRenderLayer(disableDepth)
         tempNormal.setAndNormalize(endX - startX, endY - startY, endZ - startZ)
         RenderUtils
-            .pushMatrix()
-            .disableDepth()
+            .baseStartDraw()
             .lineWidth(lineThickness)
             .begin(renderLayer)
             .colorizeRGBA(color)
             .pos(startX, startY, startZ).normal(tempNormal.x, tempNormal.y, tempNormal.z)
             .pos(endX, endY, endZ).normal(tempNormal.x, tempNormal.y, tempNormal.z)
+
             .draw()
-            .resetLineWidth()
-            .enableDepth()
-            .popMatrix()
+            .worldEndDraw()
     }
 
     @JvmStatic
@@ -264,8 +264,7 @@ object WorldRenderer {
         }
 
         RenderUtils
-            .pushMatrix()
-            .enableBlend()
+            .baseStartDraw()
             .lineWidth(lineThickness)
             .begin(renderLayer)
             .colorizeRGBA(color)
@@ -285,9 +284,7 @@ object WorldRenderer {
 
         RenderUtils
             .draw()
-            .disableBlend()
-            .resetLineWidth()
-            .popMatrix()
+            .worldEndDraw()
     }
 
     @JvmStatic
@@ -366,8 +363,7 @@ object WorldRenderer {
         val cache = RenderUtils.getTrigCache(segments)
 
         RenderUtils
-            .pushMatrix()
-            .enableBlend()
+            .baseStartDraw()
             .lineWidth(lineThickness)
             .begin(renderLayer)
             .colorizeRGBA(color)
@@ -469,9 +465,7 @@ object WorldRenderer {
 
         RenderUtils
             .draw()
-            .disableBlend()
-            .resetLineWidth()
-            .popMatrix()
+            .worldEndDraw()
     }
 
     @JvmStatic
@@ -616,8 +610,7 @@ object WorldRenderer {
         }
 
         RenderUtils
-            .pushMatrix()
-            .enableBlend()
+            .baseStartDraw()
             .lineWidth(lineThickness)
             .begin(renderLayer)
             .colorizeRGBA(color)
@@ -674,9 +667,7 @@ object WorldRenderer {
 
         RenderUtils
             .draw()
-            .disableBlend()
-            .resetLineWidth()
-            .popMatrix()
+            .worldEndDraw()
     }
 
     @JvmStatic
@@ -780,8 +771,7 @@ object WorldRenderer {
         }
 
         RenderUtils
-            .pushMatrix()
-            .enableBlend()
+            .baseStartDraw()
             .lineWidth(lineThickness)
             .begin(renderLayer)
             .colorizeRGBA(color)
@@ -796,9 +786,7 @@ object WorldRenderer {
 
         RenderUtils
             .draw()
-            .disableBlend()
-            .resetLineWidth()
-            .popMatrix()
+            .worldEndDraw()
     }
 
     @JvmStatic
