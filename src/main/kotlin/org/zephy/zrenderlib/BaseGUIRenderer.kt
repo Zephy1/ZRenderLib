@@ -13,7 +13,17 @@ abstract class BaseGUIRenderer {
         //#if MC>12100
         drawContext: DrawContext,
         //#endif
-        text: String, xPosition: Float, yPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, textScale: Float = 1f, renderBackground: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f
+        text: String,
+        xPosition: Float,
+        yPosition: Float,
+        red: Int = 255,
+        green: Int = 255,
+        blue: Int = 255,
+        alpha: Int = 255,
+        textScale: Float = 1f,
+        renderBackground: Boolean = false,
+        maxWidth: Int = 512,
+        zOffset: Float = 0f,
     ) {
         drawString(
             //#if MC>12100
@@ -28,7 +38,14 @@ abstract class BaseGUIRenderer {
         //#if MC>12100
         drawContext: DrawContext,
         //#endif
-        text: String, xPosition: Float, yPosition: Float, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, textScale: Float = 1f, renderBackground: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f
+        text: String,
+        xPosition: Float,
+        yPosition: Float,
+        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
+        textScale: Float = 1f,
+        renderBackground: Boolean = false,
+        maxWidth: Int = 512,
+        zOffset: Float = 0f,
     ) {
         drawString(
             //#if MC>12100
@@ -43,7 +60,18 @@ abstract class BaseGUIRenderer {
         //#if MC>12100
         drawContext: DrawContext,
         //#endif
-        text: String, xPosition: Float, yPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, textScale: Float = 1f, renderBackground: Boolean = false, textShadow: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f
+        text: String,
+        xPosition: Float,
+        yPosition: Float,
+        red: Int = 255,
+        green: Int = 255,
+        blue: Int = 255,
+        alpha: Int = 255,
+        textScale: Float = 1f,
+        renderBackground: Boolean = false,
+        textShadow: Boolean = false,
+        maxWidth: Int = 512,
+        zOffset: Float = 0f,
     ) {
         drawString(
             //#if MC>12100
@@ -65,7 +93,7 @@ abstract class BaseGUIRenderer {
         renderBackground: Boolean = false,
         textShadow: Boolean = false,
         maxWidth: Int = 512,
-        zOffset: Float = 0f
+        zOffset: Float = 0f,
     )
 
     @JvmOverloads
@@ -73,7 +101,16 @@ abstract class BaseGUIRenderer {
         //#if MC>12100
         drawContext: DrawContext,
         //#endif
-        startX: Float, startY: Float, endX: Float, endY: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, lineThickness: Float = 1f, zOffset: Float = 0f
+        startX: Float,
+        startY: Float,
+        endX: Float,
+        endY: Float,
+        red: Int = 255,
+        green: Int = 255,
+        blue: Int = 255,
+        alpha: Int = 255,
+        lineThickness: Float = 1f,
+        zOffset: Float = 0f,
     ) {
         drawLine(
             //#if MC>12100
@@ -93,7 +130,7 @@ abstract class BaseGUIRenderer {
         endY: Float,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         lineThickness: Float = 1f,
-        zOffset: Float = 0f
+        zOffset: Float = 0f,
     )
 
     @JvmOverloads
@@ -101,7 +138,14 @@ abstract class BaseGUIRenderer {
         //#if MC>12100
         drawContext: DrawContext,
         //#endif
-        xPosition: Float, yPosition: Float, size: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, zOffset: Float = 0f
+        xPosition: Float,
+        yPosition: Float,
+        size: Float = 1f,
+        red: Int = 255,
+        green: Int = 255,
+        blue: Int = 255,
+        alpha: Int = 255,
+        zOffset: Float = 0f,
     ) {
         drawRect(
             //#if MC>12100
@@ -116,7 +160,11 @@ abstract class BaseGUIRenderer {
         //#if MC>12100
         drawContext: DrawContext,
         //#endif
-        xPosition: Float, yPosition: Float, size: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, zOffset: Float = 0f
+        xPosition: Float,
+        yPosition: Float,
+        size: Float = 1f,
+        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
+        zOffset: Float = 0f,
     ) {
         drawRect(
             //#if MC>12100
@@ -131,7 +179,15 @@ abstract class BaseGUIRenderer {
         //#if MC>12100
         drawContext: DrawContext,
         //#endif
-        xPosition: Float, yPosition: Float, width: Float = 1f, height: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, zOffset: Float = 0f
+        xPosition: Float,
+        yPosition: Float,
+        width: Float = 1f,
+        height: Float = 1f,
+        red: Int = 255,
+        green: Int = 255,
+        blue: Int = 255,
+        alpha: Int = 255,
+        zOffset: Float = 0f,
     ) {
         drawRect(
             //#if MC>12100
@@ -158,7 +214,18 @@ abstract class BaseGUIRenderer {
         //#if MC>12100
         drawContext: DrawContext,
         //#endif
-        xPosition: Float, yPosition: Float, width: Float, height: Float, radius: Float = 4f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, flatCorners: List<RenderUtils.FlattenRoundedRectCorner> = emptyList(), segments: Int = 16, zOffset: Float = 0f
+        xPosition: Float,
+        yPosition: Float,
+        width: Float,
+        height: Float,
+        radius: Float = 4f,
+        red: Int = 255,
+        green: Int = 255,
+        blue: Int = 255,
+        alpha: Int = 255,
+        flatCorners: List<RenderUtils.FlattenRoundedRectCorner> = emptyList(),
+        segments: Int = 16,
+        zOffset: Float = 0f,
     ) {
         drawRoundedRect(
             //#if MC>12100
@@ -188,7 +255,14 @@ abstract class BaseGUIRenderer {
         //#if MC>12100
         drawContext: DrawContext,
         //#endif
-        x: Float, y: Float, width: Float, height: Float, startColor: Color, endColor: Color, direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT, zOffset: Float = 0f
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        startColor: Color,
+        endColor: Color,
+        direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT,
+        zOffset: Float = 0f,
     ) {
         val startColorLong = RenderUtils.RGBAColor(startColor.red, startColor.green, startColor.blue, startColor.alpha).getLong()
         val endColorLong = RenderUtils.RGBAColor(endColor.red, endColor.green, endColor.blue, endColor.alpha).getLong()
@@ -205,7 +279,20 @@ abstract class BaseGUIRenderer {
         //#if MC>12100
         drawContext: DrawContext,
         //#endif
-        x: Float, y: Float, width: Float, height: Float, startRed: Int = 255, startGreen: Int = 255, startBlue: Int = 255, startAlpha: Int = 255, endRed: Int = 0, endGreen: Int = 0, endBlue: Int = 0, endAlpha: Int = 255, direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT, zOffset: Float = 0f
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        startRed: Int = 255,
+        startGreen: Int = 255,
+        startBlue: Int = 255,
+        startAlpha: Int = 255,
+        endRed: Int = 0,
+        endGreen: Int = 0,
+        endBlue: Int = 0,
+        endAlpha: Int = 255,
+        direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT,
+        zOffset: Float = 0f,
     ) {
         val startColor = RenderUtils.RGBAColor(startRed, startGreen, startBlue, startAlpha).getLong()
         val endColor = RenderUtils.RGBAColor(endRed, endGreen, endBlue, endAlpha).getLong()
@@ -222,7 +309,14 @@ abstract class BaseGUIRenderer {
         //#if MC>12100
         drawContext: DrawContext,
         //#endif
-        x: Float, y: Float, width: Float, height: Float, startColor: Long = RenderUtils.WHITE, endColor: Long = RenderUtils.BLACK, direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT, zOffset: Float = 0f
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        startColor: Long = RenderUtils.WHITE,
+        endColor: Long = RenderUtils.BLACK,
+        direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT,
+        zOffset: Float = 0f,
     ) {
         val gradientColors = RenderUtils.getGradientColors(direction, startColor, endColor)
         drawGradient(
@@ -253,7 +347,15 @@ abstract class BaseGUIRenderer {
         //#if MC>12100
         drawContext: DrawContext,
         //#endif
-        xPosition: Float, yPosition: Float, radius: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, edges: Int = 32, zOffset: Float = 0f
+        xPosition: Float,
+        yPosition: Float,
+        radius: Float = 1f,
+        red: Int = 255,
+        green: Int = 255,
+        blue: Int = 255,
+        alpha: Int = 255,
+        edges: Int = 32,
+        zOffset: Float = 0f,
     ) {
         drawCircle(
             //#if MC>12100
@@ -268,7 +370,12 @@ abstract class BaseGUIRenderer {
         //#if MC>12100
         drawContext: DrawContext,
         //#endif
-        xPosition: Float, yPosition: Float, radius: Float = 1f, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, edges: Int = 32, zOffset: Float = 0f
+        xPosition: Float,
+        yPosition: Float,
+        radius: Float = 1f,
+        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
+        edges: Int = 32,
+        zOffset: Float = 0f,
     ) {
         drawCircle(
             //#if MC>12100
@@ -283,7 +390,19 @@ abstract class BaseGUIRenderer {
         //#if MC>12100
         drawContext: DrawContext,
         //#endif
-        xPosition: Float, yPosition: Float, xScale: Float = 1f, yScale: Float = 1f, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, edges: Int = 32, rotationDegrees: Float = 0f, xRotationOffset: Float = 0f, yRotationOffset: Float = 0f, zOffset: Float = 0f
+        xPosition: Float,
+        yPosition: Float,
+        xScale: Float = 1f,
+        yScale: Float = 1f,
+        red: Int = 255,
+        green: Int = 255,
+        blue: Int = 255,
+        alpha: Int = 255,
+        edges: Int = 32,
+        rotationDegrees: Float = 0f,
+        xRotationOffset: Float = 0f,
+        yRotationOffset: Float = 0f,
+        zOffset: Float = 0f,
     ) {
         drawCircle(
             //#if MC>12100
@@ -314,7 +433,16 @@ abstract class BaseGUIRenderer {
         //#if MC>12100
         drawContext: DrawContext,
         //#endif
-        image: Image, xPosition: Float, yPosition: Float, width: Float? = null, height: Float? = null, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, zOffset: Float = 0f
+        image: Image,
+        xPosition: Float,
+        yPosition: Float,
+        width: Float? = null,
+        height: Float? = null,
+        red: Int = 255,
+        green: Int = 255,
+        blue: Int = 255,
+        alpha: Int = 255,
+        zOffset: Float = 0f,
     ) {
         drawImage(
             //#if MC>12100
@@ -334,7 +462,7 @@ abstract class BaseGUIRenderer {
         width: Float? = null,
         height: Float? = null,
         color: Long = RenderUtils.WHITE,
-        zOffset: Float = 0f
+        zOffset: Float = 0f,
     )
 }
 //#endif

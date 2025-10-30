@@ -17,7 +17,7 @@ abstract class BaseWorldRenderer {
         centered: Boolean = false,
         textShadow: Boolean = true,
         disableDepth: Boolean = false,
-        maxWidth: Int = 512
+        maxWidth: Int = 512,
     ) {
         drawString(text, xPosition, yPosition, zPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
     }
@@ -49,7 +49,7 @@ abstract class BaseWorldRenderer {
         blue: Int = 255,
         alpha: Int = 255,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawLine(startX, startY, startZ, endX, endY, endZ, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, lineThickness)
     }
@@ -77,7 +77,7 @@ abstract class BaseWorldRenderer {
         blue: Int = 255,
         alpha: Int = 255,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawBox(xPosition, yPosition, zPosition, size, size, size, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe = true, lineThickness)
     }
@@ -90,7 +90,7 @@ abstract class BaseWorldRenderer {
         size: Float = 1f,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawBox(xPosition, yPosition, zPosition, size, size, size, color, disableDepth, wireframe = true, lineThickness)
     }
@@ -108,7 +108,7 @@ abstract class BaseWorldRenderer {
         blue: Int = 255,
         alpha: Int = 255,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawBox(xPosition, yPosition, zPosition, width, height, depth, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe = true, lineThickness)
     }
@@ -123,7 +123,7 @@ abstract class BaseWorldRenderer {
         depth: Float = 1f,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawBox(xPosition, yPosition, zPosition, width, height, depth, color, disableDepth, wireframe = true, lineThickness)
     }
@@ -138,7 +138,7 @@ abstract class BaseWorldRenderer {
         green: Int = 255,
         blue: Int = 255,
         alpha: Int = 255,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawBox(xPosition, yPosition, zPosition, size, size, size, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe = false)
     }
@@ -150,7 +150,7 @@ abstract class BaseWorldRenderer {
         zPosition: Float,
         size: Float = 1f,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawBox(xPosition, yPosition, zPosition, size, size, size, color, disableDepth, wireframe = false)
     }
@@ -167,7 +167,7 @@ abstract class BaseWorldRenderer {
         green: Int = 255,
         blue: Int = 255,
         alpha: Int = 255,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawBox(xPosition, yPosition, zPosition, width, height, depth, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe = false)
     }
@@ -181,7 +181,7 @@ abstract class BaseWorldRenderer {
         height: Float = 1f,
         depth: Float = 1f,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawBox(xPosition, yPosition, zPosition, width, height, depth, color, disableDepth, wireframe = false)
     }
@@ -200,7 +200,7 @@ abstract class BaseWorldRenderer {
         alpha: Int = 255,
         disableDepth: Boolean = false,
         wireframe: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawBox(xPosition, yPosition, zPosition, width, height, depth, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe, lineThickness)
     }
@@ -215,7 +215,7 @@ abstract class BaseWorldRenderer {
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         disableDepth: Boolean = false,
         wireframe: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     )
 
     @JvmOverloads
@@ -229,7 +229,7 @@ abstract class BaseWorldRenderer {
         blue: Int = 255,
         alpha: Int = 255,
         segments: Int = 32,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawSphere(xPosition, yPosition, zPosition, radius, radius, radius, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
     }
@@ -242,7 +242,7 @@ abstract class BaseWorldRenderer {
         radius: Float = 1f,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         segments: Int = 32,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawSphere(xPosition, yPosition, zPosition, radius, radius, radius, color, segments, disableDepth, false)
     }
@@ -260,7 +260,7 @@ abstract class BaseWorldRenderer {
         blue: Int = 255,
         alpha: Int = 255,
         segments: Int = 32,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
     }
@@ -275,7 +275,7 @@ abstract class BaseWorldRenderer {
         zScale: Float = 1f,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         segments: Int = 32,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, color, segments, disableDepth, false)
     }
@@ -292,7 +292,7 @@ abstract class BaseWorldRenderer {
         alpha: Int = 255,
         segments: Int = 32,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawSphere(xPosition, yPosition, zPosition, radius, radius, radius, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
     }
@@ -306,7 +306,7 @@ abstract class BaseWorldRenderer {
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         segments: Int = 32,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawSphere(xPosition, yPosition, zPosition, radius, radius, radius, color, segments, disableDepth, true, lineThickness)
     }
@@ -325,7 +325,7 @@ abstract class BaseWorldRenderer {
         alpha: Int = 255,
         segments: Int = 32,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
     }
@@ -341,7 +341,7 @@ abstract class BaseWorldRenderer {
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         segments: Int = 32,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, color, segments, disableDepth, true, lineThickness)
     }
@@ -361,7 +361,7 @@ abstract class BaseWorldRenderer {
         segments: Int = 32,
         disableDepth: Boolean = false,
         wireframe: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
     }
@@ -377,7 +377,7 @@ abstract class BaseWorldRenderer {
         segments: Int = 32,
         disableDepth: Boolean = false,
         wireframe: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     )
 
     @JvmOverloads
@@ -392,7 +392,7 @@ abstract class BaseWorldRenderer {
         blue: Int = 255,
         alpha: Int = 255,
         segments: Int = 64,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
     }
@@ -406,7 +406,7 @@ abstract class BaseWorldRenderer {
         height: Float = 1f,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         segments: Int = 64,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, color, segments, disableDepth, false)
     }
@@ -424,7 +424,7 @@ abstract class BaseWorldRenderer {
         alpha: Int = 255,
         segments: Int = 64,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
     }
@@ -439,7 +439,7 @@ abstract class BaseWorldRenderer {
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         segments: Int = 64,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, color, segments, disableDepth, true, lineThickness)
     }
@@ -458,7 +458,7 @@ abstract class BaseWorldRenderer {
         segments: Int = 64,
         disableDepth: Boolean = false,
         wireframe: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
     }
@@ -474,7 +474,7 @@ abstract class BaseWorldRenderer {
         segments: Int = 64,
         disableDepth: Boolean = false,
         wireframe: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, color, segments, disableDepth, wireframe, lineThickness)
     }
@@ -491,7 +491,7 @@ abstract class BaseWorldRenderer {
         blue: Int = 255,
         alpha: Int = 255,
         segments: Int = 64,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
     }
@@ -505,7 +505,7 @@ abstract class BaseWorldRenderer {
         height: Float = 2f,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         segments: Int = 64,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, color, segments, disableDepth, false)
     }
@@ -523,7 +523,7 @@ abstract class BaseWorldRenderer {
         blue: Int = 255,
         alpha: Int = 255,
         segments: Int = 64,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
     }
@@ -538,7 +538,7 @@ abstract class BaseWorldRenderer {
         height: Float = 2f,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         segments: Int = 64,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, color, segments, disableDepth, false)
     }
@@ -556,7 +556,7 @@ abstract class BaseWorldRenderer {
         alpha: Int = 255,
         segments: Int = 64,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
     }
@@ -571,7 +571,7 @@ abstract class BaseWorldRenderer {
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         segments: Int = 64,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, color, segments, disableDepth, true, lineThickness)
     }
@@ -590,7 +590,7 @@ abstract class BaseWorldRenderer {
         alpha: Int = 255,
         segments: Int = 64,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
     }
@@ -606,7 +606,7 @@ abstract class BaseWorldRenderer {
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         segments: Int = 64,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, color, segments, disableDepth, true, lineThickness)
     }
@@ -625,7 +625,7 @@ abstract class BaseWorldRenderer {
         segments: Int = 64,
         disableDepth: Boolean = false,
         wireframe: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
     }
@@ -644,7 +644,7 @@ abstract class BaseWorldRenderer {
         segments: Int = 64,
         disableDepth: Boolean = false,
         wireframe: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
     }
@@ -664,7 +664,7 @@ abstract class BaseWorldRenderer {
         segments: Int = 64,
         disableDepth: Boolean = false,
         wireframe: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
     }
@@ -680,7 +680,7 @@ abstract class BaseWorldRenderer {
         segments: Int = 64,
         disableDepth: Boolean = false,
         wireframe: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     )
 
     @JvmOverloads
@@ -693,7 +693,7 @@ abstract class BaseWorldRenderer {
         green: Int = 255,
         blue: Int = 255,
         alpha: Int = 255,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawPyramid(xPosition, yPosition, zPosition, size, size, size, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, false)
     }
@@ -705,7 +705,7 @@ abstract class BaseWorldRenderer {
         zPosition: Float,
         size: Float = 1f,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawPyramid(xPosition, yPosition, zPosition, size, size, size, color, disableDepth, false)
     }
@@ -722,7 +722,7 @@ abstract class BaseWorldRenderer {
         green: Int = 255,
         blue: Int = 255,
         alpha: Int = 255,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, false)
     }
@@ -736,7 +736,7 @@ abstract class BaseWorldRenderer {
         yScale: Float = 1f,
         zScale: Float = 1f,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
-        disableDepth: Boolean = false
+        disableDepth: Boolean = false,
     ) {
         drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, color, disableDepth, false)
     }
@@ -752,7 +752,7 @@ abstract class BaseWorldRenderer {
         blue: Int = 255,
         alpha: Int = 255,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawPyramid(xPosition, yPosition, zPosition, size, size, size, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, true, lineThickness)
     }
@@ -765,7 +765,7 @@ abstract class BaseWorldRenderer {
         size: Float = 1f,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawPyramid(xPosition, yPosition, zPosition, size, size, size, color, disableDepth, true, lineThickness)
     }
@@ -783,7 +783,7 @@ abstract class BaseWorldRenderer {
         blue: Int = 255,
         alpha: Int = 255,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, true, lineThickness)
     }
@@ -798,7 +798,7 @@ abstract class BaseWorldRenderer {
         zScale: Float = 1f,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, color, disableDepth, true, lineThickness)
     }
@@ -817,7 +817,7 @@ abstract class BaseWorldRenderer {
         alpha: Int = 255,
         disableDepth: Boolean = false,
         wireframe: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe, lineThickness)
     }
@@ -832,7 +832,7 @@ abstract class BaseWorldRenderer {
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         disableDepth: Boolean = false,
         wireframe: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     )
 
     @JvmOverloads
@@ -846,7 +846,7 @@ abstract class BaseWorldRenderer {
         blue: Int = 255,
         alpha: Int = 255,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         drawTracer(partialTicks, xPosition, yPosition, zPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, lineThickness)
     }
@@ -858,7 +858,7 @@ abstract class BaseWorldRenderer {
         zPosition: Float,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     )
 }
 //#endif
