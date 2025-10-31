@@ -286,6 +286,7 @@ object GUIRenderer : BaseGUIRenderer() {
         RenderUtils
             .guiStartDraw()
             .disableTexture2D()
+            .pushMatrix()
             .translate(xPosition + xRotationOffset, yPosition + yRotationOffset, 0f)
             .rotate(rotationDegrees % 360, 0f, 0f, 1f)
             .translate(-xPosition + -xRotationOffset, -yPosition + -yRotationOffset, 0f)
@@ -305,8 +306,8 @@ object GUIRenderer : BaseGUIRenderer() {
         }
 
         RenderUtils
-            .rotate(-rotationDegrees % 360, 0f, 0f, 1f)
             .draw()
+            .popMatrix()
             .enableTexture2D()
             .guiEndDraw()
     }
