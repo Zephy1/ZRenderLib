@@ -381,6 +381,7 @@ object GUIRenderer : BaseGUIRenderer() {
         }
 
         RenderUtils
+            .rotate(-rotationDegrees % 360, 0f, 0f, 1f)
             .draw()
             .guiEndDraw()
     }

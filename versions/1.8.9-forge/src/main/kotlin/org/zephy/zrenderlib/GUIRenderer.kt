@@ -200,15 +200,62 @@ object GUIRenderer : BaseGUIRenderer() {
             .guiStartDraw()
             .disableTexture2D()
 
-            .begin(GL11.GL_TRIANGLES, VertexFormat.POSITION)
+            .begin(GL11.GL_QUADS, VertexFormat.POSITION)
             .translate(0f, 0f, zOffset)
-            .colorizeRGBA(topLeftColor).pos(x, y, 0f)
-            .colorizeRGBA(topRightColor).pos(x2, y, 0f)
-            .colorizeRGBA(bottomLeftColor).pos(x, y2, 0f)
+            // This is really bad, but it works
+            when (direction) {
+                RenderUtils.GradientDirection.TOP_TO_BOTTOM,
+                RenderUtils.GradientDirection.RIGHT_TO_LEFT,
+                RenderUtils.GradientDirection.TOP_RIGHT_TO_BOTTOM_LEFT -> {
+                    RenderUtils
+                        .colorizeRGBA(topLeftColor)
+                        .pos(x, y, 0f)
+                        .colorizeRGBA(bottomLeftColor)
+                        .pos(x, y2, 0f)
+                        .colorizeRGBA(bottomRightColor)
+                        .pos(x2, y2, 0f)
+                        .colorizeRGBA(topRightColor)
+                        .pos(x2, y, 0f)
+                }
 
-            .colorizeRGBA(bottomLeftColor).pos(x, y2, 0f)
-            .colorizeRGBA(topRightColor).pos(x2, y, 0f)
-            .colorizeRGBA(bottomRightColor).pos(x2, y2, 0f)
+                RenderUtils.GradientDirection.BOTTOM_TO_TOP,
+                RenderUtils.GradientDirection.BOTTOM_RIGHT_TO_TOP_LEFT -> {
+                    RenderUtils
+                        .colorizeRGBA(bottomLeftColor)
+                        .pos(x, y2, 0f)
+                        .colorizeRGBA(topLeftColor)
+                        .pos(x, y, 0f)
+                        .colorizeRGBA(topRightColor)
+                        .pos(x2, y, 0f)
+                        .colorizeRGBA(bottomRightColor)
+                        .pos(x2, y2, 0f)
+                }
+
+                RenderUtils.GradientDirection.LEFT_TO_RIGHT,
+                RenderUtils.GradientDirection.BOTTOM_LEFT_TO_TOP_RIGHT -> {
+                    RenderUtils
+                        .colorizeRGBA(topLeftColor)
+                        .pos(x, y, 0f)
+                        .colorizeRGBA(topRightColor)
+                        .pos(x2, y, 0f)
+                        .colorizeRGBA(bottomRightColor)
+                        .pos(x2, y2, 0f)
+                        .colorizeRGBA(bottomLeftColor)
+                        .pos(x, y2, 0f)
+                }
+
+                RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT -> {
+                    RenderUtils
+                        .colorizeRGBA(topRightColor)
+                        .pos(x2, y, 0f)
+                        .colorizeRGBA(bottomRightColor)
+                        .pos(x2, y2, 0f)
+                        .colorizeRGBA(bottomLeftColor)
+                        .pos(x, y2, 0f)
+                        .colorizeRGBA(topLeftColor)
+                        .pos(x, y, 0f)
+                }
+            }
 
             .draw()
             .enableTexture2D()
@@ -258,6 +305,7 @@ object GUIRenderer : BaseGUIRenderer() {
         }
 
         RenderUtils
+            .rotate(-rotationDegrees % 360, 0f, 0f, 1f)
             .draw()
             .enableTexture2D()
             .guiEndDraw()
