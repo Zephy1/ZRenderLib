@@ -265,6 +265,7 @@ object GUIRenderer : BaseGUIRenderer() {
         topRightColor: Long,
         bottomLeftColor: Long,
         bottomRightColor: Long,
+        direction: RenderUtils.GradientDirection,
         zOffset: Float,
     ) {
 //        !! fix with drawContext
@@ -273,16 +274,65 @@ object GUIRenderer : BaseGUIRenderer() {
         RenderUtils
             .guiStartDraw()
 
-            .begin(RenderLayers.TRIANGLES())
+            .begin(RenderLayers.QUADS())
             .translate(0f, 0f, zOffset)
-            .colorizeRGBA(topLeftColor).cameraPos(x, y, 0f)
-            .colorizeRGBA(topRightColor).cameraPos(x2, y, 0f)
-            .colorizeRGBA(bottomLeftColor).cameraPos(x, y2, 0f)
 
-            .colorizeRGBA(bottomLeftColor).cameraPos(x, y2, 0f)
-            .colorizeRGBA(topRightColor).cameraPos(x2, y, 0f)
-            .colorizeRGBA(bottomRightColor).cameraPos(x2, y2, 0f)
+        // This is really bad, but it works
+        when (direction) {
+            RenderUtils.GradientDirection.TOP_TO_BOTTOM,
+            RenderUtils.GradientDirection.RIGHT_TO_LEFT,
+            RenderUtils.GradientDirection.TOP_RIGHT_TO_BOTTOM_LEFT -> {
+                RenderUtils
+                    .colorizeRGBA(topLeftColor)
+                    .cameraPos(x, y, 0f)
+                    .colorizeRGBA(bottomLeftColor)
+                    .cameraPos(x, y2, 0f)
+                    .colorizeRGBA(bottomRightColor)
+                    .cameraPos(x2, y2, 0f)
+                    .colorizeRGBA(topRightColor)
+                    .cameraPos(x2, y, 0f)
+            }
 
+            RenderUtils.GradientDirection.BOTTOM_TO_TOP,
+            RenderUtils.GradientDirection.BOTTOM_RIGHT_TO_TOP_LEFT -> {
+                RenderUtils
+                    .colorizeRGBA(bottomLeftColor)
+                    .cameraPos(x, y2, 0f)
+                    .colorizeRGBA(topLeftColor)
+                    .cameraPos(x, y, 0f)
+                    .colorizeRGBA(topRightColor)
+                    .cameraPos(x2, y, 0f)
+                    .colorizeRGBA(bottomRightColor)
+                    .cameraPos(x2, y2, 0f)
+            }
+
+            RenderUtils.GradientDirection.LEFT_TO_RIGHT,
+            RenderUtils.GradientDirection.BOTTOM_LEFT_TO_TOP_RIGHT -> {
+                RenderUtils
+                    .colorizeRGBA(topLeftColor)
+                    .cameraPos(x, y, 0f)
+                    .colorizeRGBA(topRightColor)
+                    .cameraPos(x2, y, 0f)
+                    .colorizeRGBA(bottomRightColor)
+                    .cameraPos(x2, y2, 0f)
+                    .colorizeRGBA(bottomLeftColor)
+                    .cameraPos(x, y2, 0f)
+            }
+
+            RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT -> {
+                RenderUtils
+                    .colorizeRGBA(topRightColor)
+                    .cameraPos(x2, y, 0f)
+                    .colorizeRGBA(bottomRightColor)
+                    .cameraPos(x2, y2, 0f)
+                    .colorizeRGBA(bottomLeftColor)
+                    .cameraPos(x, y2, 0f)
+                    .colorizeRGBA(topLeftColor)
+                    .cameraPos(x, y, 0f)
+            }
+        }
+
+        RenderUtils
             .draw()
             .guiEndDraw()
     }

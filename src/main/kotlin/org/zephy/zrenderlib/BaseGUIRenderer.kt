@@ -1,12 +1,10 @@
 package org.zephy.zrenderlib
 
-//#if MC == 10809 || MC >= 12100
-import java.awt.Color
-
 //#if MC>12100
 import net.minecraft.client.gui.DrawContext
 //#endif
 
+//#if MC == 10809 || MC >= 12100
 abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawStringWithShadowRGBA(
@@ -251,30 +249,6 @@ abstract class BaseGUIRenderer {
     )
 
     @JvmOverloads
-    fun drawSimpleGradient(
-        //#if MC>12100
-        drawContext: DrawContext,
-        //#endif
-        x: Float,
-        y: Float,
-        width: Float,
-        height: Float,
-        startColor: Color,
-        endColor: Color,
-        direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT,
-        zOffset: Float = 0f,
-    ) {
-        val startColorLong = RenderUtils.RGBAColor(startColor.red, startColor.green, startColor.blue, startColor.alpha).getLong()
-        val endColorLong = RenderUtils.RGBAColor(endColor.red, endColor.green, endColor.blue, endColor.alpha).getLong()
-        drawSimpleGradient(
-            //#if MC>12100
-            drawContext,
-            //#endif
-            x, y, width, height, startColorLong, endColorLong, direction, zOffset
-        )
-    }
-
-    @JvmOverloads
     fun drawSimpleGradientRGBA(
         //#if MC>12100
         drawContext: DrawContext,
@@ -323,7 +297,7 @@ abstract class BaseGUIRenderer {
             //#if MC>12100
             drawContext,
             //#endif
-            x, y, width, height, gradientColors.topLeft, gradientColors.topRight, gradientColors.bottomLeft, gradientColors.bottomRight, zOffset
+            x, y, width, height, gradientColors.topLeft, gradientColors.topRight, gradientColors.bottomLeft, gradientColors.bottomRight, direction, zOffset
         )
     }
 
@@ -339,6 +313,7 @@ abstract class BaseGUIRenderer {
         topRightColor: Long = RenderUtils.WHITE,
         bottomLeftColor: Long = RenderUtils.BLACK,
         bottomRightColor: Long = RenderUtils.BLACK,
+        direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT,
         zOffset: Float = 0f,
     )
 

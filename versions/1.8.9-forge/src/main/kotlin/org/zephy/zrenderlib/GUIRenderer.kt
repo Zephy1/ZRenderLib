@@ -191,6 +191,7 @@ object GUIRenderer : BaseGUIRenderer() {
         topRightColor: Long,
         bottomLeftColor: Long,
         bottomRightColor: Long,
+        direction: RenderUtils.GradientDirection,
         zOffset: Float,
     ) {
         val x2 = x + width
