@@ -10,23 +10,12 @@ import org.zephy.zrenderlib.RenderUtils
 
 data class GUIRectRenderState(
     val matrix: Matrix3x2f,
-    val xPosition: Float,
-    val yPosition: Float,
-    val zOffset: Float,
-    val width: Float,
-    val height: Float,
+    val xPosition: Float, val yPosition: Float, val zOffset: Float,
+    val width: Float, val height: Float,
     val color: RenderUtils.RenderColor,
     override val pipeline: RenderPipeline,
     override val textureSetup: TextureSetup,
     override val scissorArea: ScreenRect?,
-    override val bounds: ScreenRect? = createBounds(
-        matrix,
-        xPosition,
-        yPosition,
-        width,
-        height,
-        scissorArea
-    ),
 ) : BaseGUIRenderState() {
     //#if MC<12110
     //$$override fun setupVertices(vertices: VertexConsumer, depth: Float) {
@@ -46,23 +35,14 @@ data class GUIRectRenderState(
         vertices.vertex(newMatrix, x2, yPosition, zPosition).color(r, g, b, a)
     }
 
-    companion object {
-        private fun createBounds(
-            matrix: Matrix3x2f,
-            x: Float,
-            y: Float,
-            width: Float,
-            height: Float,
-            scissorArea: ScreenRect?
-        ): ScreenRect? {
-            val rect = ScreenRect(
-                x.toInt(),
-                y.toInt(),
-                width.toInt(),
-                height.toInt()
-            ).transformEachVertex(matrix)
-            return scissorArea?.intersection(rect) ?: rect
-        }
+    override fun getBounds(): ScreenRect? {
+        val rect = ScreenRect(
+            this.xPosition.toInt(),
+            this.yPosition.toInt(),
+            width.toInt(),
+            height.toInt()
+        ).transformEachVertex(matrix)
+        return scissorArea?.intersection(rect) ?: rect
     }
 }
 //#endif

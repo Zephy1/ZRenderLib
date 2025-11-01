@@ -10,11 +10,19 @@ abstract class BaseGUIRenderState : SimpleGuiElementRenderState {
     abstract val pipeline: RenderPipeline
     abstract val textureSetup: TextureSetup
     abstract val scissorArea: ScreenRect?
-    abstract val bounds: ScreenRect?
+
+    private var cachedBounds: ScreenRect? = null
+    override fun bounds(): ScreenRect? {
+        if (cachedBounds == null) {
+            cachedBounds = getBounds()
+        }
+        return cachedBounds
+    }
 
     override fun pipeline(): RenderPipeline = pipeline
     override fun textureSetup(): TextureSetup = textureSetup
     override fun scissorArea(): ScreenRect? = scissorArea
-    override fun bounds(): ScreenRect? = bounds
+
+    abstract fun getBounds(): ScreenRect?
 }
 //#endif
