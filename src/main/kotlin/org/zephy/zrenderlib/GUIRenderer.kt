@@ -1,6 +1,6 @@
 package org.zephy.zrenderlib
 
-//#if MC>12100
+//#if MC>=12100
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.text.Text
@@ -9,6 +9,12 @@ import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
+
+//#if MC>=12106
+import net.minecraft.client.texture.TextureSetup
+import org.zephy.zrenderlib.renderstates.GUIRectRenderState
+import net.minecraft.client.gl.RenderPipelines
+//#endif
 
 object GUIRenderer : BaseGUIRenderer() {
     override fun drawString(drawContext: DrawContext, text: String, xPosition: Float, yPosition: Float, color: Long, textScale: Float, renderBackground: Boolean, textShadow: Boolean, maxWidth: Int, zOffset: Float) {
@@ -139,25 +145,35 @@ object GUIRenderer : BaseGUIRenderer() {
         color: Long,
         zOffset: Float,
     ) {
-//        !! fix with drawcontext
-        val x1 = xPosition
-        val x2 = xPosition + width
-        val y1 = yPosition
-        val y2 = yPosition + height
-
-        RenderUtils
-            .guiStartDraw()
-
-            .begin(RenderLayers.QUADS())
-            .colorizeRGBA(color)
-            .translate(0f, 0f, zOffset)
-            .cameraPos(x1, y2, 0f)
-            .cameraPos(x2, y2, 0f)
-            .cameraPos(x2, y1, 0f)
-            .cameraPos(x1, y1, 0f)
-            .draw()
-
-            .guiEndDraw()
+        //#if MC<=12105
+        //$$val x1 = xPosition
+        //$$val x2 = xPosition + width
+        //$$val y1 = yPosition
+        //$$val y2 = yPosition + height
+        //$$RenderUtils
+        //$$    .guiStartDraw()
+        //$$    .begin(RenderLayers.QUADS())
+        //$$    .colorizeRGBA(color)
+        //$$    .translate(0f, 0f, zOffset)
+        //$$    .cameraPos(x1, y2, 0f)
+        //$$    .cameraPos(x2, y2, 0f)
+        //$$    .cameraPos(x2, y1, 0f)
+        //$$    .cameraPos(x1, y1, 0f)
+        //$$    .draw()
+        //$$    .guiEndDraw()
+        //#else
+        drawContext.state.addSimpleElement(
+            GUIRectRenderState(
+                RenderPipelines.GUI,
+                TextureSetup.empty(),
+                drawContext.matrices,
+                xPosition, yPosition,
+                width, height,
+                RenderUtils.RGBAColor.fromLongRGBA(color),
+                drawContext.scissorStack.peekLast()
+            )
+        )
+        //#endif
     }
 
     override fun drawRoundedRect(
@@ -405,10 +421,10 @@ object GUIRenderer : BaseGUIRenderer() {
 
         RenderUtils
             .guiStartDraw()
-            //#if MC>=12106
-            //$$.setShaderTexture(0, texture.glTextureView)
+            //#if MC<12106
+            //$$.setShaderTexture(0, texture.glTexture)
             //#else
-            .setShaderTexture(0, texture.glTexture)
+            .setShaderTexture(0, texture.glTextureView)
             //#endif
             .scale(1f, 1f, 50f)
 
