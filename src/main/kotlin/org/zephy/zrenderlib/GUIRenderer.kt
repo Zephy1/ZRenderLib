@@ -6,13 +6,13 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.text.Text
 import java.awt.Color
 import kotlin.math.PI
-import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 //#if MC>=12106
 import net.minecraft.client.texture.TextureSetup
-import org.zephy.zrenderlib.renderstates.GUIRectRenderState
+import org.zephy.zrenderlib.renderstates.*
 import net.minecraft.client.gl.RenderPipelines
 //#endif
 
@@ -116,24 +116,40 @@ object GUIRenderer : BaseGUIRenderer() {
         lineThickness: Float,
         zOffset: Float,
     ) {
-//        !! fix with drawContext
-        val theta = -atan2(endY - startY, endX - startX)
-        val i = sin(theta) * (lineThickness / 2)
-        val j = cos(theta) * (lineThickness / 2)
+        val dx = endX - startX
+        val dy = endY - startY
+        val len = sqrt(dx * dx + dy * dy)
+        val halfThickness = lineThickness / 2f
+        val offsetX = if (len > 0) -dy / len * halfThickness else 0f
+        val offsetY = if (len > 0) dx / len * halfThickness else 0f
 
-        RenderUtils
-            .guiStartDraw()
-
-            .begin(RenderLayers.QUADS_ESP())
-            .colorizeRGBA(color)
-            .translate(0f, 0f, zOffset)
-            .cameraPos(startX + i, startY + j, 0f)
-            .cameraPos(endX + i, endY + j, 0f)
-            .cameraPos(endX - i, endY - j, 0f)
-            .cameraPos(startX - i, startY - j, 0f)
-
-            .draw()
-            .guiEndDraw()
+        //#if MC<=12105
+        //$$RenderUtils
+        //$$    .guiStartDraw()
+        //$$    .begin(RenderLayers.QUADS_ESP())
+        //$$    .colorizeRGBA(color)
+        //$$    .translate(0f, 0f, zOffset)
+        //$$    .cameraPos(startX + offsetX, startY + offsetY, 0f)
+        //$$    .cameraPos(endX + offsetX, endY + offsetY, 0f)
+        //$$    .cameraPos(endX - offsetX, endY - offsetY, 0f)
+        //$$    .cameraPos(startX - offsetX, startY - offsetY, 0f)
+        //$$    .draw()
+        //$$    .guiEndDraw()
+        //#else
+        drawContext.state.addSimpleElement(
+            GUILineRenderState(
+                drawContext.matrices,
+                startX, endX, offsetX,
+                startY, endY, offsetY,
+                zOffset,
+                lineThickness,
+                RenderUtils.RGBAColor.fromLongRGBA(color),
+                RenderPipelines.GUI,
+                TextureSetup.empty(),
+                drawContext.scissorStack.peekLast(),
+            )
+        )
+        //#endif
     }
 
     override fun drawRect(
