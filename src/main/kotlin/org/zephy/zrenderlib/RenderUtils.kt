@@ -36,6 +36,8 @@ import org.joml.Vector3f
     //$$import com.mojang.blaze3d.textures.GpuTexture
     //#else
     import com.mojang.blaze3d.textures.GpuTextureView
+    import org.joml.Matrix3x2f
+    import org.joml.Matrix4f
     //#endif
 //#endif
 
@@ -794,6 +796,26 @@ object RenderUtils {
             a.coerceIn(0, 255) / 255f,
         )
     }
+
+    //#if MC>=12106
+    fun Matrix3x2f.toMatrix4f(): Matrix4f = Matrix4f(
+        m00(), m01(), 0f, 0f,
+        m10(), m11(), 0f, 0f,
+        0f, 0f, 1f, 0f,
+        m20(), m21(), 0f, 1f
+    )
+
+    @JvmStatic
+    //#if MC<12110
+    //$$fun getGUIMatrix(matrix: Matrix3x2f): Matrix3x2f {
+    //$$    val newMatrix = matrix
+    //#else
+    fun getGUIMatrix(matrix: Matrix3x2f): Matrix4f {
+        val newMatrix = matrix.toMatrix4f()
+    //#endif
+        return newMatrix
+    }
+    //#endif
 
     @JvmStatic
     fun resetColor() = apply {

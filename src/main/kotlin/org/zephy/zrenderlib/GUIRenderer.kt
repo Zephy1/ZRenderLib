@@ -164,13 +164,13 @@ object GUIRenderer : BaseGUIRenderer() {
         //#else
         drawContext.state.addSimpleElement(
             GUIRectRenderState(
-                RenderPipelines.GUI,
-                TextureSetup.empty(),
                 drawContext.matrices,
-                xPosition, yPosition,
+                xPosition, yPosition, zOffset,
                 width, height,
                 RenderUtils.RGBAColor.fromLongRGBA(color),
-                drawContext.scissorStack.peekLast()
+                RenderPipelines.GUI,
+                TextureSetup.empty(),
+                drawContext.scissorStack.peekLast(),
             )
         )
         //#endif
