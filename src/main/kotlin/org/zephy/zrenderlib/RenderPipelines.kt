@@ -1,6 +1,6 @@
 package org.zephy.zrenderlib
 
-//#if MC>12100
+//#if MC>=12100
 import net.minecraft.client.render.RenderPhase
 
 object RenderPipelines {

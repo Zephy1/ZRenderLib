@@ -1,8 +1,7 @@
 package org.zephy.zrenderlib
 
-//#if MC == 10809 || MC >= 12100
-
-//#if MC < 12100
+//#if MC==10809 || MC>=12100
+//#if MC<12100
 //$$import net.minecraft.client.renderer.vertex.VertexFormat
 //$$import net.minecraft.client.renderer.vertex.DefaultVertexFormats
 //$$enum class VertexFormat(private val mcValue: net.minecraft.client.renderer.vertex.VertexFormat) {
@@ -23,7 +22,7 @@ import com.mojang.blaze3d.vertex.VertexFormat
 import net.minecraft.client.render.VertexFormats
 enum class VertexFormat(private val mcValue: VertexFormat) {
     //#if MC<=12108
-    BLIT_SCREEN(VertexFormats.BLIT_SCREEN),
+    //$$BLIT_SCREEN(VertexFormats.BLIT_SCREEN),
     //#endif
     POSITION_COLOR_TEXTURE_LIGHT_NORMAL(VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL),
     POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL(VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL),

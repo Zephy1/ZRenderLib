@@ -24,7 +24,6 @@ listOf(
     "1.8.9-forge",
     "1.12.2-forge",
     "1.12.2-fabric",
-    "1.14.4-fabric",
     "1.16.2-fabric",
     "1.21.5-fabric",
     "1.21.8-fabric",

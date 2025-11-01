@@ -1,6 +1,6 @@
 package org.zephy.zrenderlib
 
-//#if MC == 10809 || MC >= 12100
+//#if MC==10809 || MC>=12100
 abstract class BaseWorldRenderer {
     @JvmOverloads
     fun drawStringRGBA(

@@ -1,6 +1,6 @@
 package org.zephy.zrenderlib
 
-//#if MC == 10809 || MC >= 12100
+//#if MC==10809 || MC>=12100
 import kotlin.math.abs
 import java.awt.Color
 import org.lwjgl.opengl.GL11
@@ -8,7 +8,7 @@ import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.math.cos
 
-//#if MC < 12100
+//#if MC<12100
 //$$import net.minecraft.client.renderer.GlStateManager
 //$$import net.minecraft.client.renderer.Tessellator
 //$$import net.minecraft.client.renderer.entity.RenderManager
@@ -22,7 +22,6 @@ import com.mojang.blaze3d.platform.DepthTestFunction
 import com.mojang.blaze3d.platform.DestFactor
 import com.mojang.blaze3d.platform.SourceFactor
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.GpuTexture
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
 import net.minecraft.client.render.RenderLayer
@@ -32,8 +31,12 @@ import org.joml.Quaternionf
 import org.joml.Vector3f
 //#endif
 
-//#if MC>=12106
-//$$import com.mojang.blaze3d.textures.GpuTextureView
+//#if MC>=12100
+    //#if MC<12106
+    //$$import com.mojang.blaze3d.textures.GpuTexture
+    //#else
+    import com.mojang.blaze3d.textures.GpuTextureView
+    //#endif
 //#endif
 
 object RenderUtils {
@@ -41,7 +44,7 @@ object RenderUtils {
     val screen = ScreenWrapper()
 
     @JvmStatic
-    //#if MC < 12100
+    //#if MC<12100
     //$$fun getTextRenderer() = Client.getMinecraft().fontRendererObj
     //#else
     fun getTextRenderer() = Client.getMinecraft().textRenderer
@@ -56,7 +59,7 @@ object RenderUtils {
     private var firstVertex = true
     private var began = false
 
-    //#if MC < 12100
+    //#if MC<12100
     //$$@JvmStatic val renderManager: RenderManager = Client.getMinecraft().renderManager
     //$$@JvmStatic val tessellator: Tessellator = Tessellator.getInstance()
     //$$@JvmStatic val worldRenderer: net.minecraft.client.renderer.WorldRenderer? = tessellator.worldRenderer
@@ -68,8 +71,7 @@ object RenderUtils {
     //$$    )
     //$$}
     //#else
-    private val ucWorldRenderer = UGraphics.getFromTessellator()
-
+    private val ucRenderer = UGraphics.getFromTessellator()
     internal lateinit var matrixStack: UMatrixStack
     private val matrixStackStack = ArrayDeque<UMatrixStack>()
     internal var matrixPushCounter = 0
@@ -133,7 +135,7 @@ object RenderUtils {
     }
 
     @JvmStatic
-    //#if MC < 12100
+    //#if MC<12100
     //$$fun getStringWidth(text: String) = getTextRenderer().getStringWidth(addColor(text))
     //#else
     fun getStringWidth(text: String) = getTextRenderer().getWidth(addColor(text))
@@ -192,11 +194,11 @@ object RenderUtils {
         began = true
     }
 
-    //#if MC >= 12100
+    //#if MC>=12100
     @JvmStatic
     fun begin(renderLayer: RenderLayer = RenderLayers.QUADS()) = apply {
         _begin()
-        ucWorldRenderer.beginRenderLayer(renderLayer)
+        ucRenderer.beginRenderLayer(renderLayer)
     }
 
     @JvmStatic
@@ -211,14 +213,14 @@ object RenderUtils {
 
     @JvmStatic
     fun begin(
-        //#if MC < 12100
+        //#if MC<12100
         //$$drawMode: Int = GL11.GL_QUADS,
         //#else
         drawMode: DrawMode = DrawMode.QUADS,
         //#endif
         vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR,
     ) = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$_begin()
         //$$worldRenderer?.let {
         //$$    it.begin(drawMode, vertexFormat.toMC())
@@ -235,10 +237,10 @@ object RenderUtils {
         if (!began) return this
         began = false
 
-        //#if MC < 12100
+        //#if MC<12100
         //$$tessellator.draw()
         //#else
-        ucWorldRenderer.drawDirect()
+        ucRenderer.drawDirect()
         //#endif
     }
 
@@ -250,13 +252,13 @@ object RenderUtils {
     fun pos(x: Double, y: Double, z: Double) = apply {
         if (!began) begin()
 
-        //#if MC < 12100
+        //#if MC<12100
         //$$if (!firstVertex) worldRenderer?.endVertex()
         //$$worldRenderer?.pos(x, y, z)
         //#else
-        if (!firstVertex) ucWorldRenderer.endVertex()
+        if (!firstVertex) ucRenderer.endVertex()
         val camera = Client.getMinecraft().gameRenderer.camera.pos
-        ucWorldRenderer.pos(matrixStack, x - camera.x, y - camera.y, z - camera.z)
+        ucRenderer.pos(matrixStack, x - camera.x, y - camera.y, z - camera.z)
         //#endif
 
         firstVertex = false
@@ -285,13 +287,13 @@ object RenderUtils {
     @JvmStatic
     fun worldPos(x: Double, y: Double, z: Double) = apply {
         if (!began) begin()
-        if (!firstVertex) ucWorldRenderer.endVertex()
+        if (!firstVertex) ucRenderer.endVertex()
         firstVertex = false
 
-        //#if MC < 12100
+        //#if MC<12100
         //$$worldRenderer?.pos(x, y, z)
         //#else
-        ucWorldRenderer.pos(matrixStack, x, y, z)
+        ucRenderer.pos(matrixStack, x, y, z)
         //#endif
 
         vertexColor?.let {
@@ -306,20 +308,20 @@ object RenderUtils {
     }
     @JvmStatic
     fun tex(u: Double, v: Double) = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$worldRenderer?.tex(u, v)
         //#else
-        ucWorldRenderer.tex(u, v)
+        ucRenderer.tex(u, v)
         //#endif
     }
 
     @JvmStatic
     @JvmOverloads
     fun color(r: Float, g: Float, b: Float, a: Float = 1f) = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$worldRenderer?.color(r, g, b, a)
         //#else
-        ucWorldRenderer.color(r, g, b, a)
+        ucRenderer.color(r, g, b, a)
         //#endif
     }
 
@@ -346,10 +348,10 @@ object RenderUtils {
 
     @JvmStatic
     fun normal(x: Float, y: Float, z: Float) = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$worldRenderer?.normal(x, y, z)
         //#else
-        ucWorldRenderer.norm(matrixStack, x, y, z)
+        ucRenderer.norm(matrixStack, x, y, z)
         //#endif
     }
     @JvmStatic
@@ -359,25 +361,25 @@ object RenderUtils {
 
     @JvmStatic
     fun overlay(u: Int, v: Int) = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$tex(u.toDouble(), v.toDouble())
         //#else
-        ucWorldRenderer.overlay(u, v)
+        ucRenderer.overlay(u, v)
         //#endif
     }
 
     @JvmStatic
     fun light(u: Int, v: Int) = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$worldRenderer?.lightmap(u, v)
         //#else
-        ucWorldRenderer.light(u, v)
+        ucRenderer.light(u, v)
         //#endif
     }
 
     @JvmStatic
     fun lineWidth(width: Float) = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GL11.glLineWidth(width)
         //#else
         RenderSystem.lineWidth(width)
@@ -391,7 +393,7 @@ object RenderUtils {
 
     @JvmStatic
     fun enableCull() = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.enableCull()
         //#else
         PipelineBuilder.enableCull()
@@ -400,7 +402,7 @@ object RenderUtils {
 
     @JvmStatic
     fun disableCull() = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.disableCull()
         //#else
         PipelineBuilder.disableCull()
@@ -409,7 +411,7 @@ object RenderUtils {
 
     @JvmStatic
     fun enableLighting() = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.enableLighting()
         //#else
         UGraphics.enableLighting()
@@ -418,7 +420,7 @@ object RenderUtils {
 
     @JvmStatic
     fun disableLighting() = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.disableLighting()
         //#else
         UGraphics.disableLighting()
@@ -427,7 +429,7 @@ object RenderUtils {
 
     @JvmStatic
     fun enableDepth() = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.enableDepth()
         //#else
         PipelineBuilder.enableDepth()
@@ -436,7 +438,7 @@ object RenderUtils {
 
     @JvmStatic
     fun disableDepth() = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.disableDepth()
         //#else
         PipelineBuilder.disableDepth()
@@ -467,7 +469,7 @@ object RenderUtils {
 
     @JvmStatic
     fun depthFunc(depthFunc: Int) = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.depthFunc(depthFunc)
         //#else
         depthFunc(getDepthTestFunctionFromInt(depthFunc))
@@ -476,40 +478,40 @@ object RenderUtils {
 
     @JvmStatic
     fun depthMask(mask: Boolean) = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.depthMask(mask)
         //#endif
     }
 
     @JvmStatic
     fun enableTexture2D() = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.enableTexture2D()
         //#endif
     }
     @JvmStatic
     fun disableTexture2D() = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.disableTexture2D()
         //#endif
     }
 
     @JvmStatic
     fun enableLineSmooth() = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GL11.glEnable(GL11.GL_LINE_SMOOTH)
         //#endif
     }
     @JvmStatic
     fun disableLineSmooth() = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GL11.glDisable(GL11.GL_LINE_SMOOTH)
         //#endif
     }
 
     @JvmStatic
     fun enableBlend() = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.enableBlend()
         //#else
         PipelineBuilder.enableBlend()
@@ -517,7 +519,7 @@ object RenderUtils {
     }
     @JvmStatic
     fun disableBlend() = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.disableBlend()
         //#else
         PipelineBuilder.disableBlend()
@@ -526,7 +528,7 @@ object RenderUtils {
 
     @JvmStatic
     fun blendFunc(srcFactor: Int, dstFactor: Int) = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.blendFunc(srcFactor, dstFactor)
         //#else
         blendFunc(getSourceFactorFromInt(srcFactor), getDestFactorFromInt(dstFactor))
@@ -603,7 +605,7 @@ object RenderUtils {
         sourceFactorAlpha: Int,
         destFactorAlpha: Int,
     ) = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.tryBlendFuncSeparate(sourceFactor, destFactor, sourceFactorAlpha, destFactorAlpha)
         //#else
         tryBlendFuncSeparate(
@@ -616,7 +618,7 @@ object RenderUtils {
     }
 
     @JvmStatic
-    //#if MC < 12100
+    //#if MC<12100
     //$$fun bindTexture(textureId: Int) = apply {
     //$$    GlStateManager.bindTexture(textureId)
     //$$}
@@ -628,7 +630,7 @@ object RenderUtils {
     //#endif
 
     @JvmStatic
-    //#if MC < 12100
+    //#if MC<12100
     //$$fun deleteTexture(textureId: Int) = apply {
     //$$    GlStateManager.deleteTexture(textureId)
     //$$}
@@ -640,10 +642,10 @@ object RenderUtils {
 
     //#if MC >= 12100
     @JvmStatic
-    //#if MC>=12106
-    //$$fun setShaderTexture(textureIndex: Int, texture: GpuTextureView?) = apply {
+    //#if MC<12106
+    //$$fun setShaderTexture(textureIndex: Int, texture: GpuTexture?) = apply {
     //#else
-    fun setShaderTexture(textureIndex: Int, texture: GpuTexture?) = apply {
+    fun setShaderTexture(textureIndex: Int, texture: GpuTextureView?) = apply {
         //#endif
         RenderSystem.setShaderTexture(textureIndex, texture)
     }
@@ -654,17 +656,17 @@ object RenderUtils {
     fun setShaderTexture(textureIndex: Int, textureImage: Image) = apply {
         val gpuTexture = textureImage.getTexture()
         gpuTexture?.let {
-            //#if MC>=12106
-            //$$RenderSystem.setShaderTexture(textureIndex, gpuTexture.glTextureView)
+            //#if MC<12106
+            //$$RenderSystem.setShaderTexture(textureIndex, gpuTexture.glTexture)
             //#else
-            RenderSystem.setShaderTexture(textureIndex, gpuTexture.glTexture)
+            RenderSystem.setShaderTexture(textureIndex, gpuTexture.glTextureView)
             //#endif
         }
     }
     //#endif
 
     @JvmStatic
-    //#if MC < 12100
+    //#if MC<12100
     //$$fun pushMatrix() = apply { GlStateManager.pushMatrix() }
     //#else
     fun pushMatrix(stack: UMatrixStack = matrixStack) = apply {
@@ -677,7 +679,7 @@ object RenderUtils {
 
     @JvmStatic
     fun popMatrix() = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.popMatrix()
         //#else
         matrixPushCounter--
@@ -689,7 +691,7 @@ object RenderUtils {
     @JvmStatic
     @JvmOverloads
     fun translate(x: Float, y: Float, z: Float = 0.0F) = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$translate(x.toDouble(), y.toDouble(), z.toDouble())
         //#else
         matrixStack.translate(x, y, z)
@@ -698,7 +700,7 @@ object RenderUtils {
     @JvmStatic
     @JvmOverloads
     fun translate(x: Double, y: Double, z: Double = 0.0) = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.translate(x, y, z)
         //#else
         translate(x.toFloat(), y.toFloat(), z.toFloat())
@@ -708,7 +710,7 @@ object RenderUtils {
     @JvmStatic
     @JvmOverloads
     fun scale(scaleX: Float, scaleY: Float = scaleX, scaleZ: Float = scaleX) = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$scale(scaleX.toDouble(), scaleY.toDouble(), scaleZ.toDouble())
         //#else
         matrixStack.scale(scaleX, scaleY, scaleZ)
@@ -717,7 +719,7 @@ object RenderUtils {
     @JvmStatic
     @JvmOverloads
     fun scale(scaleX: Double, scaleY: Double = scaleX, scaleZ: Double = scaleX) = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.scale(scaleX, scaleY, scaleZ)
         //#else
         scale(scaleX.toFloat(), scaleY.toFloat(), scaleZ.toFloat())
@@ -727,7 +729,7 @@ object RenderUtils {
     @JvmStatic
     @JvmOverloads
     fun rotate(angle: Float, x: Float = 0f, y: Float = 0f, z: Float = 1f) = apply {
-        //#if MC < 12100
+        //#if MC<12100
         //$$GlStateManager.rotate(angle, x, y, z)
         //#else
         matrixStack.rotate(angle, x, y, z)
@@ -740,7 +742,7 @@ object RenderUtils {
     }
 
     @JvmStatic
-    //#if MC < 12100
+    //#if MC<12100
     //$$fun multiply(floatBuffer: FloatBuffer) = apply {
     //$$    GlStateManager.multMatrix(floatBuffer)
     //#else
@@ -771,15 +773,15 @@ object RenderUtils {
         colorized = RGBAColor(red, green, blue, alpha).getLong()
         vertexColor = Color(red, green, blue, alpha)
 
-        //#if MC <= 12100
+        //#if MC<=12100
         //$$GlStateManager.color(r, g, b, a)
-        //#elseif MC <= 12105
-        RenderSystem.setShaderColor(
-            vertexColor!!.red / 255f,
-            vertexColor!!.green / 255f,
-            vertexColor!!.blue / 255f,
-            vertexColor!!.alpha / 255f,
-        )
+        //#elseif MC<=12105
+        //$$RenderSystem.setShaderColor(
+        //$$    vertexColor!!.red / 255f,
+        //$$    vertexColor!!.green / 255f,
+        //$$    vertexColor!!.blue / 255f,
+        //$$    vertexColor!!.alpha / 255f,
+        //$$)
         //#endif
     }
 
@@ -1046,7 +1048,7 @@ object RenderUtils {
 
     val tempNormal = Vector3f()
     fun Vector3f.setAndNormalize(x: Float, y: Float, z: Float): Vector3f {
-        //#if MC < 12100
+        //#if MC<12100
         //$$this.set(x, y, z)
         //$$tempNormal.normalize()
         //$$return tempNormal
@@ -1115,7 +1117,7 @@ object RenderUtils {
     )
 
     class ScreenWrapper {
-        //#if MC < 12100
+        //#if MC<12100
         //$$fun getWidth(): Int = ScaledResolution(Client.getMinecraft()).scaledWidth
         //$$fun getHeight(): Int = ScaledResolution(Client.getMinecraft()).scaledHeight
         //$$fun getScale(): Double = ScaledResolution(Client.getMinecraft()).scaleFactor.toDouble()

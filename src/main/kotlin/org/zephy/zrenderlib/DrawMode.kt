@@ -1,6 +1,6 @@
 package org.zephy.zrenderlib
 
-//#if MC>12100
+//#if MC>=12100
 import com.mojang.blaze3d.vertex.VertexFormat
 
 enum class DrawMode(private val mcValue: VertexFormat.DrawMode) {

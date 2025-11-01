@@ -1,11 +1,11 @@
 package org.zephy.zrenderlib
 
-//#if MC == 10809 || MC >= 12100
+//#if MC==10809 || MC>=12100
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
 
-//#if MC < 12100
+//#if MC<12100
 //$$import net.minecraftforge.client.event.RenderGameOverlayEvent
 //$$import net.minecraftforge.common.MinecraftForge
 //$$import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
@@ -60,14 +60,14 @@ class Image(var image: BufferedImage?) {
     fun getTextureWidth(): Int = textureWidth
     fun getTextureHeight(): Int = textureHeight
 
-    //#if MC < 12100
+    //#if MC<12100
     //$$fun setTexture(tex: DynamicTexture) {
     //#else
     fun setTexture(tex: Texture?) {
     //#endif
         destroy()
         texture = tex
-        //#if MC >= 12100
+        //#if MC>=12100
         if (texture == null) return
         identifier = Identifier.of("zrenderlib", texture!!.uniqueName)
         Client.getMinecraft().textureManager.registerTexture(identifier!!, texture!!.texture)
@@ -75,7 +75,7 @@ class Image(var image: BufferedImage?) {
     }
 
     fun destroy() {
-        //#if MC < 12100
+        //#if MC<12100
         //$$texture.deleteGlTexture()
         //#else
         if (identifier != null) {
@@ -103,7 +103,7 @@ class Image(var image: BufferedImage?) {
 
     @JvmOverloads
     fun drawRGBA(
-        //#if MC >= 12100
+        //#if MC>=12100
         drawContext: DrawContext,
         //#endif
         xPosition: Float,
@@ -117,7 +117,7 @@ class Image(var image: BufferedImage?) {
         zOffset: Float = 0f,
     ) = apply {
         draw(
-            //#if MC >= 12100
+            //#if MC>=12100
             drawContext,
             //#endif
             xPosition, yPosition, width, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), zOffset
@@ -126,7 +126,7 @@ class Image(var image: BufferedImage?) {
 
     @JvmOverloads
     fun draw(
-        //#if MC >= 12100
+        //#if MC>=12100
         drawContext: DrawContext,
         //#endif
         xPosition: Float,
@@ -139,14 +139,14 @@ class Image(var image: BufferedImage?) {
         val (drawWidth, drawHeight) = getImageSize(width, height)
         if (texture == null) return@apply
         GUIRenderer.drawImage(
-            //#if MC >= 12100
+            //#if MC>=12100
             drawContext,
             //#endif
             this, xPosition, yPosition, drawWidth, drawHeight, color, zOffset
         )
     }
 
-    //#if MC >= 12100
+    //#if MC>=12100
     data class Texture(val texture: NativeImageBackedTexture, val buffer: ByteBuffer, val uniqueName: String)
     //#endif
 
@@ -161,7 +161,7 @@ class Image(var image: BufferedImage?) {
         fun fromFile(file: String) = fromFile(File(file))
 
 
-        //#if MC >= 12100
+        //#if MC>=12100
         @JvmStatic
         fun bufferedImageToNativeTexture(image: BufferedImage): Texture {
             return ByteArrayOutputStream().use {

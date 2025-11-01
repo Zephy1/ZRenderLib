@@ -1,8 +1,7 @@
 package org.zephy.zrenderlib
 
-//#if MC == 10809 || MC >= 12100
-
-//#if MC < 12100
+//#if MC==10809 || MC>=12100
+//#if MC<12100
 //$$import net.minecraft.client.Minecraft
 //$$import net.minecraftforge.common.MinecraftForge
 //$$import net.minecraftforge.fml.common.Mod
@@ -63,7 +62,7 @@ object Client : ClientModInitializer {
     class Task(var delay: Int, val callback: () -> Unit)
 
     @JvmStatic
-    //#if MC < 12100
+    //#if MC<12100
     //$$fun getMinecraft(): Minecraft = Minecraft.getMinecraft()
     //#else
     fun getMinecraft(): MinecraftClient = MinecraftClient.getInstance()
