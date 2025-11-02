@@ -7,8 +7,11 @@ import com.mojang.blaze3d.platform.DepthTestFunction
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.RenderPhase
 import net.minecraft.util.Identifier
-import net.minecraft.util.TriState
 import java.util.OptionalDouble
+
+//#if MC<12106
+//$$import net.minecraft.util.TriState
+//#endif
 
 object PipelineBuilder {
     private val layerList = mutableMapOf<String, RenderLayer>()
@@ -23,6 +26,7 @@ object PipelineBuilder {
     private var vertexFormat = VertexFormat.POSITION_COLOR
     private var snippet = RenderSnippet.POSITION_COLOR_SNIPPET
     private var location: String? = null
+    private var bufferSize: Int? = null
 
     @JvmStatic
     @JvmOverloads
@@ -97,6 +101,11 @@ object PipelineBuilder {
     }
 
     @JvmStatic
+    fun setBufferSize(size: Int) = apply {
+        bufferSize = size
+    }
+
+    @JvmStatic
     fun build(): RenderPipeline {
         if (pipelineList.containsKey(state())) return pipelineList[state()]!!
 
@@ -153,7 +162,7 @@ object PipelineBuilder {
 
             val layer = RenderLayer.of(
                 "zrenderlib/custom/layers/${location ?: hashCode()}",
-                RenderLayer.DEFAULT_BUFFER_SIZE,
+                bufferSize ?: RenderLayer.DEFAULT_BUFFER_SIZE,
                 build(),
                 layerBuilder.build(false),
             )
@@ -193,6 +202,7 @@ object PipelineBuilder {
                 "vertexFormat=${vertexFormat.name}, " +
                 "snippet=${snippet.name}, " +
                 "textureIdentifier=$textureIdentifier" +
+                "bufferSize=$bufferSize" +
             "]"
         )
     }
