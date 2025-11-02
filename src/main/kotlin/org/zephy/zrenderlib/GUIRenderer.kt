@@ -148,7 +148,6 @@ object GUIRenderer : BaseGUIRenderer() {
                 zOffset,
                 RenderUtils.RGBAColor.fromLongRGBA(color),
                 RenderPipelines.QUADS_ESP().build(),
-                TextureSetup.empty(),
                 drawContext.scissorStack.peekLast(),
             )
         )
@@ -194,7 +193,6 @@ object GUIRenderer : BaseGUIRenderer() {
                 zOffset,
                 RenderUtils.RGBAColor.fromLongRGBA(color),
                 RenderPipelines.QUADS_ESP().build(),
-                TextureSetup.empty(),
                 drawContext.scissorStack.peekLast(),
             )
         )
@@ -454,7 +452,6 @@ object GUIRenderer : BaseGUIRenderer() {
                 zOffset,
                 RenderUtils.RGBAColor.fromLongRGBA(color),
                 RenderPipelines.QUADS_ESP().build(),
-                TextureSetup.empty(),
                 drawContext.scissorStack.peekLast(),
             )
         )
@@ -471,31 +468,54 @@ object GUIRenderer : BaseGUIRenderer() {
         color: Long,
         zOffset: Float,
     ) {
-//        !! fix with drawContext
         val texture = image.getTexture() ?: throw IllegalStateException("Image is null.")
-
-        val identifier = image.getIdentifier()
         val (drawWidth, drawHeight) = image.getImageSize(width, height)
 
-        RenderUtils
-            .guiStartDraw()
-            //#if MC<12106
-            //$$.setShaderTexture(0, texture.glTexture)
-            //#else
-            .setShaderTexture(0, texture.glTextureView)
-            //#endif
-            .scale(1f, 1f, 50f)
+        val vertexList = listOf(
+            Pair(xPosition, yPosition + drawHeight),
+            Pair(xPosition + drawWidth, yPosition + drawHeight),
+            Pair(xPosition + drawWidth, yPosition),
+            Pair(xPosition, yPosition)
+        )
+        val uvList = listOf(
+            Pair(0f, 1f),
+            Pair(1f, 1f),
+            Pair(1f, 0f),
+            Pair(0f, 0f)
+        )
 
-            .begin(RenderLayers.TEXTURED_QUADS_ESP(textureIdentifier = identifier!!))
-            .colorizeRGBA(color)
-            .translate(0f, 0f, zOffset)
-            .cameraPos(xPosition, yPosition + drawHeight, 0f).tex(0f, 1f)
-            .cameraPos(xPosition + drawWidth, yPosition + drawHeight, 0f).tex(1f, 1f)
-            .cameraPos(xPosition + drawWidth, yPosition, 0f).tex(1f, 0f)
-            .cameraPos(xPosition, yPosition, 0f).tex(0f, 0f)
-
-            .draw()
-            .guiEndDraw()
+        //#if MC<=12105
+        //$$RenderUtils
+        //$$    .guiStartDraw()
+        //$$    .setShaderTexture(0, texture.glTexture)
+        //$$    .scale(1f, 1f, 50f)
+        //$$    .begin(RenderLayers.TEXTURED_QUADS_ESP(textureIdentifier = image.getIdentifier()!!))
+        //$$    .colorizeRGBA(color)
+        //$$    .translate(0f, 0f, zOffset)
+        //$$    .cameraPos(vertexList[0].first, vertexList[0].second, 0f).tex(uvList[0].first, uvList[0].second)
+        //$$    .cameraPos(vertexList[1].first, vertexList[1].second, 0f).tex(uvList[1].first, uvList[1].second)
+        //$$    .cameraPos(vertexList[2].first, vertexList[2].second, 0f).tex(uvList[2].first, uvList[2].second)
+        //$$    .cameraPos(vertexList[3].first, vertexList[3].second, 0f).tex(uvList[3].first, uvList[3].second)
+        //$$    .draw()
+        //$$    .guiEndDraw()
+        //#else
+        val boundsList = vertexList.toList()
+        drawContext.state.addSimpleElement(
+            TexturedGUIRenderState(
+                GUIRenderState(
+                    drawContext.matrices,
+                    vertexList,
+                    boundsList,
+                    zOffset,
+                    RenderUtils.RGBAColor.fromLongRGBA(color),
+                    RenderPipelines.TEXTURED_QUADS_ESP().build(),
+                    drawContext.scissorStack.peekLast()
+                ),
+                TextureSetup.withoutGlTexture(texture.glTextureView),
+                uvList,
+            )
+        )
+        //#endif
     }
 }
 //#endif
