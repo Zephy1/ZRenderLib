@@ -9,14 +9,13 @@ import net.minecraft.client.texture.TextureSetup
 import org.joml.Matrix3x2f
 import org.zephy.zrenderlib.RenderUtils
 
-data class GUIRenderState(
+class GUIRenderState(
     val matrix: Matrix3x2f,
     val vertexList: List<Pair<Float, Float>>,
     val boundsList: List<Pair<Float, Float>>,
     val zOffset: Float,
     val color: RenderUtils.RenderColor,
     val pipeline: RenderPipeline,
-    val textureSetup: TextureSetup,
     val scissorArea: ScreenRect?
 ) : SimpleGuiElementRenderState {
     //#if MC<12110
@@ -34,7 +33,7 @@ data class GUIRenderState(
     }
 
     override fun pipeline(): RenderPipeline = pipeline
-    override fun textureSetup(): TextureSetup = textureSetup
+    override fun textureSetup(): TextureSetup = TextureSetup.empty()
     override fun scissorArea(): ScreenRect? = scissorArea
     override fun bounds(): ScreenRect? {
         if (boundsList.isEmpty()) return null
