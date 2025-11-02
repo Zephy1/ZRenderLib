@@ -211,7 +211,6 @@ object GUIRenderer : BaseGUIRenderer() {
         segments: Int,
         zOffset: Float,
     ) {
-//        !! fix with draw context
         val x1 = xPosition
         val y1 = yPosition
         val x2 = xPosition + width
@@ -222,76 +221,87 @@ object GUIRenderer : BaseGUIRenderer() {
         val clampedRadius = radius.coerceAtMost(minOf(width, height) / 2f)
         val flatCornersSet = flatCorners.toSet()
 
-        RenderUtils
-            .guiStartDraw()
+        val edgeVertices = mutableListOf<Pair<Float, Float>>()
+        fun addCornerVertices(cx: Float, cy: Float, r: Float, startAngle: Float, endAngle: Float, segs: Int) {
+            val angleStep = (endAngle - startAngle) / segs
+            for (i in 1..segs) {
+                val angle = Math.toRadians((startAngle + angleStep * i).toDouble())
+                val x = cx + (r * cos(angle)).toFloat()
+                val y = cy + (r * sin(angle)).toFloat()
+                edgeVertices.add(Pair(x, y))
+            }
+        }
 
-            .begin(RenderLayers.TRIANGLE_FAN())
-            .colorizeRGBA(color)
-            .translate(0f, 0f, zOffset)
-            .cameraPos(centerX, centerY, 0f)
-
-        RenderUtils.cameraPos(x2 - clampedRadius, y1, 0f)
+        edgeVertices.add(Pair(x2 - clampedRadius, y1))
         if (RenderUtils.FlattenRoundedRectCorner.TOP_RIGHT in flatCornersSet) {
-            RenderUtils.cameraPos(x2, y1, 0f)
+            edgeVertices.add(Pair(x2, y1))
         } else {
-            addCornerVertices(drawContext, x2 - clampedRadius, y1 + clampedRadius, clampedRadius, 270f, 360f, segments)
-            RenderUtils.cameraPos(x2, y1 + clampedRadius, 0f)
+            addCornerVertices(x2 - clampedRadius, y1 + clampedRadius, clampedRadius, 270f, 360f, segments)
+            edgeVertices.add(Pair(x2, y1 + clampedRadius))
         }
 
-        // right edge
-        RenderUtils.cameraPos(x2, y2 - clampedRadius, 0f)
-
+        edgeVertices.add(Pair(x2, y2 - clampedRadius))
         if (RenderUtils.FlattenRoundedRectCorner.BOTTOM_RIGHT in flatCornersSet) {
-            RenderUtils.cameraPos(x2, y2, 0f)
+            edgeVertices.add(Pair(x2, y2))
         } else {
-            addCornerVertices(drawContext, x2 - clampedRadius, y2 - clampedRadius, clampedRadius, 0f, 90f, segments)
-            RenderUtils.cameraPos(x2 - clampedRadius, y2, 0f)
+            addCornerVertices(x2 - clampedRadius, y2 - clampedRadius, clampedRadius, 0f, 90f, segments)
+            edgeVertices.add(Pair(x2 - clampedRadius, y2))
         }
 
-        // bottom edge
-        RenderUtils.cameraPos(x1 + clampedRadius, y2, 0f)
-
+        edgeVertices.add(Pair(x1 + clampedRadius, y2))
         if (RenderUtils.FlattenRoundedRectCorner.BOTTOM_LEFT in flatCornersSet) {
-            RenderUtils.cameraPos(x1, y2, 0f)
+            edgeVertices.add(Pair(x1, y2))
         } else {
-            addCornerVertices(drawContext, x1 + clampedRadius, y2 - clampedRadius, clampedRadius, 90f, 180f, segments)
-            RenderUtils.cameraPos(x1, y2 - clampedRadius, 0f)
+            addCornerVertices(x1 + clampedRadius, y2 - clampedRadius, clampedRadius, 90f, 180f, segments)
+            edgeVertices.add(Pair(x1, y2 - clampedRadius))
         }
 
-        // left edge
-        RenderUtils.cameraPos(x1, y1 + clampedRadius, 0f)
-
+        edgeVertices.add(Pair(x1, y1 + clampedRadius))
         if (RenderUtils.FlattenRoundedRectCorner.TOP_LEFT in flatCornersSet) {
-            RenderUtils.cameraPos(x1, y1, 0f)
+            edgeVertices.add(Pair(x1, y1))
         } else {
-            addCornerVertices(drawContext, x1 + clampedRadius, y1 + clampedRadius, clampedRadius, 180f, 270f, segments)
-            RenderUtils.cameraPos(x1 + clampedRadius, y1, 0f)
+            addCornerVertices(x1 + clampedRadius, y1 + clampedRadius, clampedRadius, 180f, 270f, segments)
+            edgeVertices.add(Pair(x1 + clampedRadius, y1))
+        }
+        edgeVertices.add(Pair(x2 - clampedRadius, y1))
+
+        val vertexList = mutableListOf<Pair<Float, Float>>()
+        for (i in 0 until edgeVertices.size - 1) {
+            vertexList.add(Pair(centerX, centerY))
+            vertexList.add(edgeVertices[i])
+            vertexList.add(edgeVertices[i + 1])
+            vertexList.add(edgeVertices[i])
         }
 
-        // top edge
-        RenderUtils
-            .cameraPos(x2 - clampedRadius, y1, 0f)
+        //#if MC<=12105
+        //$$RenderUtils
+        //$$    .guiStartDraw()
+        //$$    .begin(RenderLayers.QUADS_ESP())
+        //$$    .colorizeRGBA(color)
+        //$$    .translate(0f, 0f, zOffset)
+        //$$    .cameraPosList(vertexList, 0f)
+        //$$    .draw()
+        //$$    .guiEndDraw()
+        //#else
+        val boundsList = listOf(
+            Pair(x1, y1),
+            Pair(x2, y1),
+            Pair(x2, y2),
+            Pair(x1, y2)
+        )
 
-            .draw()
-            .guiEndDraw()
-    }
-    private fun addCornerVertices(
-        drawContext: DrawContext,
-        centerX: Float,
-        centerY: Float,
-        radius: Float,
-        startAngle: Float,
-        endAngle: Float,
-        segments: Int,
-    ) {
-//        !! fix with draw context
-        val angleStep = (endAngle - startAngle) / segments
-        for (i in 1..segments) {
-            val angle = Math.toRadians((startAngle + angleStep * i).toDouble())
-            val x = centerX + (radius * cos(angle)).toFloat()
-            val y = centerY + (radius * sin(angle)).toFloat()
-            RenderUtils.cameraPos(x, y, 0f)
-        }
+        drawContext.state.addSimpleElement(
+            GUIRenderState(
+                drawContext.matrices,
+                vertexList,
+                boundsList,
+                zOffset,
+                RenderUtils.RGBAColor.fromLongRGBA(color),
+                RenderPipelines.QUADS_ESP().build(),
+                drawContext.scissorStack.peekLast(),
+            )
+        )
+        //#endif
     }
 
     override fun drawGradient(
