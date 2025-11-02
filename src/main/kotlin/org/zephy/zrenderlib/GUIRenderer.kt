@@ -317,73 +317,88 @@ object GUIRenderer : BaseGUIRenderer() {
         direction: RenderUtils.GradientDirection,
         zOffset: Float,
     ) {
-//        !! fix with drawContext
         val x2 = x + width
         val y2 = y + height
-        RenderUtils
-            .guiStartDraw()
-
-            .begin(RenderLayers.QUADS())
-            .translate(0f, 0f, zOffset)
 
         // This is really bad, but it works
-        when (direction) {
+        val vertexAndColorList = when (direction) {
             RenderUtils.GradientDirection.TOP_TO_BOTTOM,
             RenderUtils.GradientDirection.RIGHT_TO_LEFT,
             RenderUtils.GradientDirection.TOP_RIGHT_TO_BOTTOM_LEFT -> {
-                RenderUtils
-                    .colorizeRGBA(topLeftColor)
-                    .cameraPos(x, y, 0f)
-                    .colorizeRGBA(bottomLeftColor)
-                    .cameraPos(x, y2, 0f)
-                    .colorizeRGBA(bottomRightColor)
-                    .cameraPos(x2, y2, 0f)
-                    .colorizeRGBA(topRightColor)
-                    .cameraPos(x2, y, 0f)
+                listOf(
+                    Triple(x, y, topLeftColor),
+                    Triple(x, y2, bottomLeftColor),
+                    Triple(x2, y2, bottomRightColor),
+                    Triple(x2, y, topRightColor),
+                )
             }
 
             RenderUtils.GradientDirection.BOTTOM_TO_TOP,
             RenderUtils.GradientDirection.BOTTOM_RIGHT_TO_TOP_LEFT -> {
-                RenderUtils
-                    .colorizeRGBA(bottomLeftColor)
-                    .cameraPos(x, y2, 0f)
-                    .colorizeRGBA(topLeftColor)
-                    .cameraPos(x, y, 0f)
-                    .colorizeRGBA(topRightColor)
-                    .cameraPos(x2, y, 0f)
-                    .colorizeRGBA(bottomRightColor)
-                    .cameraPos(x2, y2, 0f)
+                listOf(
+                    Triple(x, y2, bottomLeftColor),
+                    Triple(x, y, topLeftColor),
+                    Triple(x2, y, topRightColor),
+                    Triple(x2, y2, bottomRightColor),
+                )
             }
 
             RenderUtils.GradientDirection.LEFT_TO_RIGHT,
             RenderUtils.GradientDirection.BOTTOM_LEFT_TO_TOP_RIGHT -> {
-                RenderUtils
-                    .colorizeRGBA(topLeftColor)
-                    .cameraPos(x, y, 0f)
-                    .colorizeRGBA(topRightColor)
-                    .cameraPos(x2, y, 0f)
-                    .colorizeRGBA(bottomRightColor)
-                    .cameraPos(x2, y2, 0f)
-                    .colorizeRGBA(bottomLeftColor)
-                    .cameraPos(x, y2, 0f)
+                listOf(
+                    Triple(x, y, topLeftColor),
+                    Triple(x2, y, topRightColor),
+                    Triple(x2, y2, bottomRightColor),
+                    Triple(x, y2, bottomLeftColor),
+                )
             }
 
             RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT -> {
-                RenderUtils
-                    .colorizeRGBA(topRightColor)
-                    .cameraPos(x2, y, 0f)
-                    .colorizeRGBA(bottomRightColor)
-                    .cameraPos(x2, y2, 0f)
-                    .colorizeRGBA(bottomLeftColor)
-                    .cameraPos(x, y2, 0f)
-                    .colorizeRGBA(topLeftColor)
-                    .cameraPos(x, y, 0f)
+                listOf(
+                    Triple(x2, y, topRightColor),
+                    Triple(x2, y2, bottomRightColor),
+                    Triple(x, y2, bottomLeftColor),
+                    Triple(x, y, topLeftColor),
+                )
             }
         }
 
-        RenderUtils
-            .draw()
-            .guiEndDraw()
+        //#if MC<=12105
+        //$$RenderUtils
+        //$$    .guiStartDraw()
+        //$$    .begin(RenderLayers.QUADS_ESP())
+        //$$    .translate(0f, 0f, zOffset)
+        //$$vertexAndColorList.forEach { (x, y, color) ->
+        //$$    RenderUtils
+        //$$        .colorizeRGBA(color)
+        //$$        .cameraPos(x, y, 0f)
+        //$$}
+        //$$RenderUtils
+        //$$    .draw()
+        //$$    .guiEndDraw()
+        //#else
+        val boundsList = listOf(
+            Pair(x, y),
+            Pair(x2, y),
+            Pair(x2, y2),
+            Pair(x, y2)
+        )
+
+        drawContext.state.addSimpleElement(
+            GradientGUIRenderState(
+                GUIRenderState(
+                    drawContext.matrices,
+                    listOf(),
+                    boundsList,
+                    zOffset,
+                    RenderUtils.RGBAColor(255, 255, 255, 255),
+                    RenderPipelines.QUADS_ESP().build(),
+                    drawContext.scissorStack.peekLast(),
+                ),
+                vertexAndColorList,
+            )
+        )
+        //#endif
     }
 
     override fun drawCircle(
