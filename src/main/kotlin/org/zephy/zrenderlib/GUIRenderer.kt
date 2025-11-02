@@ -1,7 +1,6 @@
 package org.zephy.zrenderlib
 
 //#if MC>=12100
-import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.text.Text
 import java.awt.Color
@@ -10,8 +9,12 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-//#if MC>=12106
+//#if MC<12106
+//$$import net.minecraft.client.font.TextRenderer
+//#else
+import net.minecraft.client.gui.render.state.TextGuiElementRenderState
 import net.minecraft.client.texture.TextureSetup
+import org.joml.Matrix3x2f
 import org.zephy.zrenderlib.renderstates.*
 //#endif
 
@@ -50,59 +53,71 @@ object GUIRenderer : BaseGUIRenderer() {
         renderBackground: Boolean = false,
         textShadow: Boolean = false,
         maxWidth: Int = 512,
-        zOffset: Float = 0f,
+        zOffset: Float = 0f, // Useless in 1.21.6+, text is drawn on top of all elements
     ) {
-//        !! fix with drawContext
-        val fontRenderer = RenderUtils.getTextRenderer()
-        val vertexConsumers = Client.getMinecraft().bufferBuilders.entityVertexConsumers
-
+        // TextRender.tweakTransparency gets called in TextRender.draw resetting the alpha value to 255 if it's less than 4
+        val (a, r, g, b) = RenderUtils.RGBAColor.fromLongRGBA(color).getIntComponentsARGB()
+        if (a == 0) {
+            return
+        }
+        val safeAlpha = if (a in 1..3) 4 else a
+        val safeColorARGB = RenderUtils.ARGBColor(r, g, b, safeAlpha).getIntARGB()
         val backgroundColorInt = if (renderBackground) {
             Color(0, 0, 0, 150).rgb
         } else {
             0
         }
 
-        RenderUtils
-            .pushMatrix()
-            .translate(xPosition, yPosition, zOffset)
+        val fontRenderer = RenderUtils.getTextRenderer()
+        var currentY = 0f
+        val lines = RenderUtils.splitText(text, maxWidth).lines
 
-        val positionMatrix = RenderUtils.matrixStack.peek().model
-        positionMatrix.scale(textScale, textScale, 1f)
+        //#if MC<=12105
+        //$$val vertexConsumers = Client.getMinecraft().bufferBuilders.entityVertexConsumers
+        //$$RenderUtils
+        //$$    .pushMatrix()
+        //$$    .translate(xPosition, yPosition, zOffset)
+        //$$val positionMatrix = RenderUtils.matrixStack.peek().model
+        //$$positionMatrix.scale(textScale, textScale, 1f)
+        //$$lines.forEach { line ->
+        //$$    fontRenderer.draw(
+        //$$        line,
+        //$$        0f,
+        //$$        currentY,
+        //$$        safeColorARGB,
+        //$$        textShadow,
+        //$$        positionMatrix,
+        //$$        vertexConsumers,
+        //$$        TextRenderer.TextLayerType.NORMAL,
+        //$$        backgroundColorInt,
+        //$$        0xF000F0,
+        //$$    )
+        //$$    currentY += fontRenderer.fontHeight
+        //$$}
+        //$$vertexConsumers.draw()
+        //$$positionMatrix.scale(1f / textScale, 1f / textScale, 1f)
+        //$$RenderUtils.guiEndDraw()
+        //#else
+        lines.forEach { line ->
+            val matrix = Matrix3x2f()
+            matrix.translate(xPosition, yPosition + currentY)
+            matrix.scale(textScale, textScale)
 
-        // TextRender.tweakTransparency gets called in TextRender.draw resetting the alpha value to 255 if it's less than 4
-        val (a, r, g, b) = RenderUtils.RGBAColor.fromLongRGBA(color).getIntComponentsARGB()
-        if (a == 0) {
-            RenderUtils.popMatrix()
-            return
-        }
-        val safeAlpha = if (a in 1..3) 4 else a
-        val safeColorARGB = RenderUtils.ARGBColor(r, g, b, safeAlpha).getIntARGB()
-
-        var newY = 0f
-        RenderUtils.splitText(text, maxWidth).lines.forEach { line ->
-            fontRenderer.draw(
+            val textState = TextGuiElementRenderState(
+                fontRenderer,
                 line,
-                0f,
-                newY,
+                matrix,
+                0,
+                0,
                 safeColorARGB,
-                textShadow,
-                positionMatrix,
-                vertexConsumers,
-                TextRenderer.TextLayerType.NORMAL,
                 backgroundColorInt,
-                0xF000F0,
+                textShadow,
+                drawContext.scissorStack.peekLast()
             )
-            newY += fontRenderer.fontHeight
+            drawContext.state.addText(textState)
+            currentY += fontRenderer.fontHeight * textScale
         }
-        vertexConsumers.draw()
-
-        positionMatrix.scale(1f / textScale, 1f / textScale, 1f)
-        RenderUtils
-//            .resetColor()
-//            .enableCull()
-//            .disableBlend()
-//            .enableDepth()
-            .popMatrix()
+        //#endif
     }
 
     override fun drawLine(
