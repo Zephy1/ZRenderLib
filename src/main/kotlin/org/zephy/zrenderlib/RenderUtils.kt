@@ -268,8 +268,20 @@ object RenderUtils {
             color(vertexColor!!)
         }
     }
+    @JvmStatic
+    fun posList(positions: List<Triple<Float, Float, Float>>) = apply {
+        for (pos in positions) {
+            pos(pos.first, pos.second, pos.third)
+        }
+    }
+    @JvmStatic
+    fun posList(positions: List<Pair<Float, Float>>, zPosition: Float) = apply {
+        for (pos in positions) {
+            pos(pos.first, pos.second, zPosition)
+        }
+    }
 
-    //#if MC >= 12100
+    //#if MC>=12100
     @JvmStatic
     @JvmOverloads
     fun cameraPos(x: Float, y: Float, z: Float = 0f) = apply {
@@ -281,27 +293,39 @@ object RenderUtils {
         val camera = Client.getMinecraft().gameRenderer.camera.pos
         pos(x + camera.x, y + camera.y, z + camera.z)
     }
-
     @JvmStatic
-    fun worldPos(x: Float, y: Float, z: Float) = apply {
-        worldPos(x.toDouble(), y.toDouble(), z.toDouble())
-    }
-    @JvmStatic
-    fun worldPos(x: Double, y: Double, z: Double) = apply {
-        if (!began) begin()
-        if (!firstVertex) ucRenderer.endVertex()
-        firstVertex = false
-
-        //#if MC<12100
-        //$$worldRenderer?.pos(x, y, z)
-        //#else
-        ucRenderer.pos(matrixStack, x, y, z)
-        //#endif
-
-        vertexColor?.let {
-            color(vertexColor!!)
+    fun cameraPosList(positions: List<Triple<Float, Float, Float>>) = apply {
+        for (pos in positions) {
+            cameraPos(pos.first, pos.second, pos.third)
         }
     }
+    @JvmStatic
+    fun cameraPosList(positions: List<Pair<Float, Float>>, zPosition: Float) = apply {
+        for (pos in positions) {
+            cameraPos(pos.first, pos.second, zPosition)
+        }
+    }
+
+//    @JvmStatic
+//    fun worldPos(x: Float, y: Float, z: Float) = apply {
+//        worldPos(x.toDouble(), y.toDouble(), z.toDouble())
+//    }
+//    @JvmStatic
+//    fun worldPos(x: Double, y: Double, z: Double) = apply {
+//        if (!began) begin()
+//        if (!firstVertex) ucRenderer.endVertex()
+//        firstVertex = false
+//
+//        //#if MC<12100
+//        //$$worldRenderer?.pos(x, y, z)
+//        //#else
+//        ucRenderer.pos(matrixStack, x, y, z)
+//        //#endif
+//
+//        vertexColor?.let {
+//            color(vertexColor!!)
+//        }
+//    }
     //#endif
 
     @JvmStatic
