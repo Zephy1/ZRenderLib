@@ -447,9 +447,6 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$RenderUtils
         //$$    .guiStartDraw()
         //$$    .pushMatrix()
-        //$$    .translate(xPosition + xRotationOffset, yPosition + yRotationOffset, 0f)
-        //$$    .rotate(rotationDegrees % 360, 0f, 0f, 1f)
-        //$$    .translate(-xPosition + -xRotationOffset, -yPosition + -yRotationOffset, 0f)
         //$$    .begin(RenderLayers.QUADS_ESP())
         //$$    .colorizeRGBA(color)
         //$$    .translate(0f, 0f, zOffset)
