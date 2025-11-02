@@ -13,7 +13,6 @@ import kotlin.math.sqrt
 //#if MC>=12106
 import net.minecraft.client.texture.TextureSetup
 import org.zephy.zrenderlib.renderstates.*
-import net.minecraft.client.gl.RenderPipelines
 //#endif
 
 object GUIRenderer : BaseGUIRenderer() {
@@ -123,28 +122,32 @@ object GUIRenderer : BaseGUIRenderer() {
         val offsetX = if (len > 0) -dy / len * halfThickness else 0f
         val offsetY = if (len > 0) dx / len * halfThickness else 0f
 
+        val vertexList = listOf(
+            Pair(startX + offsetX, startY + offsetY),
+            Pair(endX + offsetX, endY + offsetY),
+            Pair(endX - offsetX, endY - offsetY),
+            Pair(startX - offsetX, startY - offsetY)
+        )
+
         //#if MC<=12105
         //$$RenderUtils
         //$$    .guiStartDraw()
         //$$    .begin(RenderLayers.QUADS_ESP())
         //$$    .colorizeRGBA(color)
         //$$    .translate(0f, 0f, zOffset)
-        //$$    .cameraPos(startX + offsetX, startY + offsetY, 0f)
-        //$$    .cameraPos(endX + offsetX, endY + offsetY, 0f)
-        //$$    .cameraPos(endX - offsetX, endY - offsetY, 0f)
-        //$$    .cameraPos(startX - offsetX, startY - offsetY, 0f)
+        //$$    .cameraPosList(vertexList, 0f)
         //$$    .draw()
         //$$    .guiEndDraw()
         //#else
+        val boundsList = vertexList.toList()
         drawContext.state.addSimpleElement(
-            GUILineRenderState(
+            GUIRenderState(
                 drawContext.matrices,
-                startX, endX, offsetX,
-                startY, endY, offsetY,
+                vertexList,
+                boundsList,
                 zOffset,
-                lineThickness,
                 RenderUtils.RGBAColor.fromLongRGBA(color),
-                RenderPipelines.GUI,
+                RenderPipelines.QUADS_ESP().build(),
                 TextureSetup.empty(),
                 drawContext.scissorStack.peekLast(),
             )
@@ -161,30 +164,36 @@ object GUIRenderer : BaseGUIRenderer() {
         color: Long,
         zOffset: Float,
     ) {
+        val x1 = xPosition
+        val x2 = xPosition + width
+        val y1 = yPosition
+        val y2 = yPosition + height
+        val vertexList = listOf(
+            Pair(x1, y1),
+            Pair(x2, y1),
+            Pair(x2, y2),
+            Pair(x1, y2)
+        )
+
         //#if MC<=12105
-        //$$val x1 = xPosition
-        //$$val x2 = xPosition + width
-        //$$val y1 = yPosition
-        //$$val y2 = yPosition + height
         //$$RenderUtils
         //$$    .guiStartDraw()
         //$$    .begin(RenderLayers.QUADS())
         //$$    .colorizeRGBA(color)
         //$$    .translate(0f, 0f, zOffset)
-        //$$    .cameraPos(x1, y2, 0f)
-        //$$    .cameraPos(x2, y2, 0f)
-        //$$    .cameraPos(x2, y1, 0f)
-        //$$    .cameraPos(x1, y1, 0f)
+        //$$    .cameraPosList(vertexList, 0f)
         //$$    .draw()
         //$$    .guiEndDraw()
         //#else
+        val boundsList = vertexList.toList()
         drawContext.state.addSimpleElement(
-            GUIRectRenderState(
+            GUIRenderState(
                 drawContext.matrices,
-                xPosition, yPosition, zOffset,
-                width, height,
+                vertexList,
+                boundsList,
+                zOffset,
                 RenderUtils.RGBAColor.fromLongRGBA(color),
-                RenderPipelines.GUI,
+                RenderPipelines.QUADS_ESP().build(),
                 TextureSetup.empty(),
                 drawContext.scissorStack.peekLast(),
             )
@@ -382,41 +391,74 @@ object GUIRenderer : BaseGUIRenderer() {
         yRotationOffset: Float,
         zOffset: Float,
     ) {
-//        !! fix with drawContext
-        val theta = 2 * PI / edges
-        val cos = cos(theta).toFloat()
-        val sin = sin(theta).toFloat()
+        val angleStep = 2f * PI.toFloat() / edges
+        val rotationRadians = rotationDegrees * PI.toFloat() / 180f
+        val cos = cos(rotationRadians)
+        val sin = sin(rotationRadians)
 
-        var xHolder: Float
-        var circleX = 1f
-        var circleY = 0f
+        val centerX = xPosition + xRotationOffset
+        val centerY = yPosition + yRotationOffset
 
-        // rotation from circle's center
-        RenderUtils
-            .guiStartDraw()
-            .pushMatrix()
-            .translate(xPosition + xRotationOffset, yPosition + yRotationOffset, 0f)
-            .rotate(rotationDegrees % 360, 0f, 0f, 1f)
-            .translate(-xPosition + -xRotationOffset, -yPosition + -yRotationOffset, 0f)
-            .begin(RenderLayers.TRIANGLE_STRIP_ESP())
-            .colorizeRGBA(color)
-            .translate(0f, 0f, zOffset)
+        val vertexList = mutableListOf<Pair<Float, Float>>()
 
-        for (i in 0..edges) {
-            RenderUtils
-                .cameraPos(xPosition, yPosition, 0f)
-                .cameraPos(circleX * xScale + xPosition, circleY * yScale + yPosition, 0f)
-            xHolder = circleX
-            circleX = cos * circleX - sin * circleY
-            circleY = sin * xHolder + cos * circleY
-
-            RenderUtils.cameraPos(circleX * xScale + xPosition, circleY * yScale + yPosition, 0f)
+        val edgeVertices = Array(edges) { i ->
+            val angle = i * angleStep
+            val baseX = cos(angle) * xScale
+            val baseY = sin(angle) * yScale
+            val relX = baseX - xRotationOffset
+            val relY = baseY - yRotationOffset
+            val x = relX * cos - relY * sin + xRotationOffset + xPosition
+            val y = relX * sin + relY * cos + yRotationOffset + yPosition
+            Pair(x, y)
         }
 
-        RenderUtils
-            .draw()
-            .popMatrix()
-            .guiEndDraw()
+        for (i in 0 until edges) {
+            val nextIndex = (i + 1) % edges
+            vertexList.add(Pair(centerX, centerY))
+            vertexList.add(edgeVertices[i])
+            vertexList.add(edgeVertices[nextIndex])
+            vertexList.add(edgeVertices[i])
+        }
+
+        //#if MC<=12105
+        //$$RenderUtils
+        //$$    .guiStartDraw()
+        //$$    .pushMatrix()
+        //$$    .translate(xPosition + xRotationOffset, yPosition + yRotationOffset, 0f)
+        //$$    .rotate(rotationDegrees % 360, 0f, 0f, 1f)
+        //$$    .translate(-xPosition + -xRotationOffset, -yPosition + -yRotationOffset, 0f)
+        //$$    .begin(RenderLayers.QUADS_ESP())
+        //$$    .colorizeRGBA(color)
+        //$$    .translate(0f, 0f, zOffset)
+        //$$    .cameraPosList(vertexList, 0f)
+        //$$    .draw()
+        //$$    .popMatrix()
+        //$$    .guiEndDraw()
+        //#else
+        val minX = xPosition - xScale
+        val maxX = xPosition + xScale
+        val minY = yPosition - yScale
+        val maxY = yPosition + yScale
+        val boundsList = listOf(
+            Pair(minX, minY),
+            Pair(maxX, minY),
+            Pair(maxX, maxY),
+            Pair(minX, maxY)
+        )
+
+        drawContext.state.addSimpleElement(
+            GUIRenderState(
+                drawContext.matrices,
+                vertexList,
+                boundsList,
+                zOffset,
+                RenderUtils.RGBAColor.fromLongRGBA(color),
+                RenderPipelines.QUADS_ESP().build(),
+                TextureSetup.empty(),
+                drawContext.scissorStack.peekLast(),
+            )
+        )
+        //#endif
     }
 
     override fun drawImage(
