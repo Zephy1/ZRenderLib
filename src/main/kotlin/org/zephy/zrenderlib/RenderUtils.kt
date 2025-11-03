@@ -32,7 +32,7 @@ import org.joml.Vector3f
 //#endif
 
 //#if MC>=12100
-    //#if MC<12106
+    //#if MC<=12105
     //$$import com.mojang.blaze3d.textures.GpuTexture
     //#else
     import com.mojang.blaze3d.textures.GpuTextureView
@@ -471,7 +471,7 @@ object RenderUtils {
         //#endif
     }
 
-    //#if MC >= 12100
+    //#if MC>=12100
     @JvmStatic
     fun getDepthTestFunctionFromInt(value: Int): DepthTestFunction {
         return when (value) {
@@ -666,9 +666,9 @@ object RenderUtils {
     }
     //#endif
 
-    //#if MC >= 12100
+    //#if MC>=12100
     @JvmStatic
-    //#if MC<12106
+    //#if MC<=12105
     //$$fun setShaderTexture(textureIndex: Int, texture: GpuTexture?) = apply {
     //#else
     fun setShaderTexture(textureIndex: Int, texture: GpuTextureView?) = apply {
@@ -682,7 +682,7 @@ object RenderUtils {
     fun setShaderTexture(textureIndex: Int, textureImage: Image) = apply {
         val gpuTexture = textureImage.getTexture()
         gpuTexture?.let {
-            //#if MC<12106
+            //#if MC<=12105
             //$$RenderSystem.setShaderTexture(textureIndex, gpuTexture.glTexture)
             //#else
             RenderSystem.setShaderTexture(textureIndex, gpuTexture.glTextureView)

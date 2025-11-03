@@ -9,7 +9,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-//#if MC<12106
+//#if MC<=12105
 //$$import net.minecraft.client.font.TextRenderer
 //#else
 import net.minecraft.client.gui.render.state.TextGuiElementRenderState

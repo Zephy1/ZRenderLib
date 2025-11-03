@@ -9,7 +9,7 @@ import net.minecraft.client.render.RenderPhase
 import net.minecraft.util.Identifier
 import java.util.OptionalDouble
 
-//#if MC<12106
+//#if MC<=12105
 //$$import net.minecraft.util.TriState
 //#endif
 
@@ -153,7 +153,7 @@ object PipelineBuilder {
             }
 
             if (textureIdentifier != null) {
-                //#if MC<12106
+                //#if MC<=12105
                 //$$layerBuilder.texture(RenderPhase.Texture(textureIdentifier, TriState.FALSE, false))
                 //#else
                 layerBuilder.texture(RenderPhase.Texture(textureIdentifier, false))
@@ -186,6 +186,7 @@ object PipelineBuilder {
         vertexFormat = VertexFormat.POSITION_COLOR
         snippet = RenderSnippet.POSITION_COLOR_SNIPPET
         location = null
+        bufferSize = null
     }
 
     @JvmStatic
