@@ -1,6 +1,6 @@
 package org.zephy.zrenderlib
 
-import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL11
 import kotlin.math.sin
 import kotlin.math.cos
 

@@ -23,9 +23,7 @@ object GUIRenderer : BaseGUIRenderer() {
 
         RenderUtils
             .pushMatrix()
-            .addColor(text)
-            .split("\n")
-            .forEach {
+            .addColor(text).split("\n").forEach {
                 fontRenderer.drawString(it, xPosition, newY, RenderUtils.RGBAColor.fromLongRGBA(color).getLongARGB().toInt(), textShadow)
                 newY += fontRenderer.FONT_HEIGHT
             }
