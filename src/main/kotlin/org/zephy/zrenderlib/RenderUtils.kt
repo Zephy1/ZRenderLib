@@ -166,26 +166,23 @@ object RenderUtils {
     @JvmStatic
     fun baseEndDraw() = apply {
         enableCull()
+            .enableDepth()
+            .disableLineSmooth()
+            .resetLineWidth()
             .disableBlend()
             .resetColor()
             .popMatrix()
     }
     @JvmStatic
     fun guiEndDraw() = apply {
-        baseEndDraw()
-            .depthMask(true)
-            .enableDepth()
-            .disableLineSmooth()
-            .resetLineWidth()
+        depthMask(true)
+            .baseEndDraw()
     }
     @JvmStatic
     fun worldEndDraw() = apply {
-        baseEndDraw()
-            .enableTexture2D()
+        enableTexture2D()
             .depthMask(true)
-            .enableDepth()
-            .disableLineSmooth()
-            .resetLineWidth()
+            .baseEndDraw()
     }
 
     private fun _begin() = apply {
