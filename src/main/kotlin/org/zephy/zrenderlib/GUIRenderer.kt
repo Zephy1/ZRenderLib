@@ -136,30 +136,12 @@ object GUIRenderer : BaseGUIRenderer() {
         //#endif
     }
 
-    override fun drawLine(
+    override fun _drawLine(
         drawContext: DrawContext,
-        startX: Float,
-        startY: Float,
-        endX: Float,
-        endY: Float,
+        vertexList: List<Pair<Float, Float>>,
         color: Long,
-        lineThickness: Float,
         zOffset: Float,
     ) {
-        val dx = endX - startX
-        val dy = endY - startY
-        val len = sqrt(dx * dx + dy * dy)
-        val halfThickness = lineThickness / 2f
-        val offsetX = if (len > 0) -dy / len * halfThickness else 0f
-        val offsetY = if (len > 0) dx / len * halfThickness else 0f
-
-        val vertexList = listOf(
-            Pair(startX + offsetX, startY + offsetY),
-            Pair(endX + offsetX, endY + offsetY),
-            Pair(endX - offsetX, endY - offsetY),
-            Pair(startX - offsetX, startY - offsetY)
-        )
-
         //#if MC<=12105
         //$$RenderUtils
         //$$    .guiStartDraw()
@@ -185,26 +167,12 @@ object GUIRenderer : BaseGUIRenderer() {
         //#endif
     }
 
-    override fun drawRect(
+    override fun _drawRect(
         drawContext: DrawContext,
-        xPosition: Float,
-        yPosition: Float,
-        width: Float,
-        height: Float,
+        vertexList: List<Pair<Float, Float>>,
         color: Long,
         zOffset: Float,
     ) {
-        val x1 = xPosition
-        val x2 = xPosition + width
-        val y1 = yPosition
-        val y2 = yPosition + height
-        val vertexList = listOf(
-            Pair(x1, y1),
-            Pair(x2, y1),
-            Pair(x2, y2),
-            Pair(x1, y2)
-        )
-
         //#if MC<=12105
         //$$RenderUtils
         //$$    .guiStartDraw()
@@ -230,80 +198,16 @@ object GUIRenderer : BaseGUIRenderer() {
         //#endif
     }
 
-    override fun drawRoundedRect(
+    override fun _drawRoundedRect(
         drawContext: DrawContext,
-        xPosition: Float,
-        yPosition: Float,
-        width: Float,
-        height: Float,
-        radius: Float,
+        x1: Float,
+        y1: Float,
+        x2: Float,
+        y2: Float,
+        vertexList: List<Pair<Float, Float>>,
         color: Long,
-        flatCorners: List<RenderUtils.FlattenRoundedRectCorner>,
-        segments: Int,
         zOffset: Float,
     ) {
-        val x1 = xPosition
-        val y1 = yPosition
-        val x2 = xPosition + width
-        val y2 = yPosition + height
-
-        val centerX = (x1 + x2) / 2f
-        val centerY = (y1 + y2) / 2f
-        val clampedRadius = radius.coerceAtMost(minOf(width, height) / 2f)
-        val flatCornersSet = flatCorners.toSet()
-
-        val edgeVertices = mutableListOf<Pair<Float, Float>>()
-        fun addCornerVertices(cx: Float, cy: Float, r: Float, startAngle: Float, endAngle: Float, segs: Int) {
-            val angleStep = (endAngle - startAngle) / segs
-            for (i in 1..segs) {
-                val angle = Math.toRadians((startAngle + angleStep * i).toDouble())
-                val x = cx + (r * cos(angle)).toFloat()
-                val y = cy + (r * sin(angle)).toFloat()
-                edgeVertices.add(Pair(x, y))
-            }
-        }
-
-        edgeVertices.add(Pair(x2 - clampedRadius, y1))
-        if (RenderUtils.FlattenRoundedRectCorner.TOP_RIGHT in flatCornersSet) {
-            edgeVertices.add(Pair(x2, y1))
-        } else {
-            addCornerVertices(x2 - clampedRadius, y1 + clampedRadius, clampedRadius, 270f, 360f, segments)
-            edgeVertices.add(Pair(x2, y1 + clampedRadius))
-        }
-
-        edgeVertices.add(Pair(x2, y2 - clampedRadius))
-        if (RenderUtils.FlattenRoundedRectCorner.BOTTOM_RIGHT in flatCornersSet) {
-            edgeVertices.add(Pair(x2, y2))
-        } else {
-            addCornerVertices(x2 - clampedRadius, y2 - clampedRadius, clampedRadius, 0f, 90f, segments)
-            edgeVertices.add(Pair(x2 - clampedRadius, y2))
-        }
-
-        edgeVertices.add(Pair(x1 + clampedRadius, y2))
-        if (RenderUtils.FlattenRoundedRectCorner.BOTTOM_LEFT in flatCornersSet) {
-            edgeVertices.add(Pair(x1, y2))
-        } else {
-            addCornerVertices(x1 + clampedRadius, y2 - clampedRadius, clampedRadius, 90f, 180f, segments)
-            edgeVertices.add(Pair(x1, y2 - clampedRadius))
-        }
-
-        edgeVertices.add(Pair(x1, y1 + clampedRadius))
-        if (RenderUtils.FlattenRoundedRectCorner.TOP_LEFT in flatCornersSet) {
-            edgeVertices.add(Pair(x1, y1))
-        } else {
-            addCornerVertices(x1 + clampedRadius, y1 + clampedRadius, clampedRadius, 180f, 270f, segments)
-            edgeVertices.add(Pair(x1 + clampedRadius, y1))
-        }
-        edgeVertices.add(Pair(x2 - clampedRadius, y1))
-
-        val vertexList = mutableListOf<Pair<Float, Float>>()
-        for (i in 0 until edgeVertices.size - 1) {
-            vertexList.add(Pair(centerX, centerY))
-            vertexList.add(edgeVertices[i])
-            vertexList.add(edgeVertices[i + 1])
-            vertexList.add(edgeVertices[i])
-        }
-
         //#if MC<=12105
         //$$RenderUtils
         //$$    .guiStartDraw()
@@ -335,65 +239,11 @@ object GUIRenderer : BaseGUIRenderer() {
         //#endif
     }
 
-    override fun drawGradient(
+    override fun _drawGradient(
         drawContext: DrawContext,
-        x: Float,
-        y: Float,
-        width: Float,
-        height: Float,
-        topLeftColor: Long,
-        topRightColor: Long,
-        bottomLeftColor: Long,
-        bottomRightColor: Long,
-        direction: RenderUtils.GradientDirection,
+        vertexAndColorList: List<Pair<Float, Float>>,
         zOffset: Float,
     ) {
-        val x2 = x + width
-        val y2 = y + height
-
-        // This is really bad, but it works
-        val vertexAndColorList = when (direction) {
-            RenderUtils.GradientDirection.TOP_TO_BOTTOM,
-            RenderUtils.GradientDirection.RIGHT_TO_LEFT,
-            RenderUtils.GradientDirection.TOP_RIGHT_TO_BOTTOM_LEFT -> {
-                listOf(
-                    Triple(x, y, topLeftColor),
-                    Triple(x, y2, bottomLeftColor),
-                    Triple(x2, y2, bottomRightColor),
-                    Triple(x2, y, topRightColor),
-                )
-            }
-
-            RenderUtils.GradientDirection.BOTTOM_TO_TOP,
-            RenderUtils.GradientDirection.BOTTOM_RIGHT_TO_TOP_LEFT -> {
-                listOf(
-                    Triple(x, y2, bottomLeftColor),
-                    Triple(x, y, topLeftColor),
-                    Triple(x2, y, topRightColor),
-                    Triple(x2, y2, bottomRightColor),
-                )
-            }
-
-            RenderUtils.GradientDirection.LEFT_TO_RIGHT,
-            RenderUtils.GradientDirection.BOTTOM_LEFT_TO_TOP_RIGHT -> {
-                listOf(
-                    Triple(x, y, topLeftColor),
-                    Triple(x2, y, topRightColor),
-                    Triple(x2, y2, bottomRightColor),
-                    Triple(x, y2, bottomLeftColor),
-                )
-            }
-
-            RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT -> {
-                listOf(
-                    Triple(x2, y, topRightColor),
-                    Triple(x2, y2, bottomRightColor),
-                    Triple(x, y2, bottomLeftColor),
-                    Triple(x, y, topLeftColor),
-                )
-            }
-        }
-
         //#if MC<=12105
         //$$RenderUtils
         //$$    .guiStartDraw()
@@ -408,13 +258,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$    .draw()
         //$$    .guiEndDraw()
         //#else
-        val boundsList = listOf(
-            Pair(x, y),
-            Pair(x2, y),
-            Pair(x2, y2),
-            Pair(x, y2)
-        )
-
+        val boundsList = vertexAndColorList.map { (x, y, _) -> Pair(x, y) }
         drawContext.state.addSimpleElement(
             GradientGUIRenderState(
                 GUIRenderState(
@@ -432,48 +276,16 @@ object GUIRenderer : BaseGUIRenderer() {
         //#endif
     }
 
-    override fun drawCircle(
+    override fun _drawCircle(
         drawContext: DrawContext,
-        xPosition: Float,
-        yPosition: Float,
-        xScale: Float,
-        yScale: Float,
+        minX: Float,
+        maxX: Float,
+        minY: Float,
+        maxY: Float,
+        vertexList: List<Pair<Float, Float>>,
         color: Long,
-        edges: Int,
-        rotationDegrees: Float,
-        xRotationOffset: Float,
-        yRotationOffset: Float,
         zOffset: Float,
     ) {
-        val angleStep = 2f * PI.toFloat() / edges
-        val rotationRadians = rotationDegrees * PI.toFloat() / 180f
-        val cos = cos(rotationRadians)
-        val sin = sin(rotationRadians)
-
-        val centerX = xPosition + xRotationOffset
-        val centerY = yPosition + yRotationOffset
-
-        val vertexList = mutableListOf<Pair<Float, Float>>()
-
-        val edgeVertices = Array(edges) { i ->
-            val angle = i * angleStep
-            val baseX = cos(angle) * xScale
-            val baseY = sin(angle) * yScale
-            val relX = baseX - xRotationOffset
-            val relY = baseY - yRotationOffset
-            val x = relX * cos - relY * sin + xRotationOffset + xPosition
-            val y = relX * sin + relY * cos + yRotationOffset + yPosition
-            Pair(x, y)
-        }
-
-        for (i in 0 until edges) {
-            val nextIndex = (i + 1) % edges
-            vertexList.add(Pair(centerX, centerY))
-            vertexList.add(edgeVertices[i])
-            vertexList.add(edgeVertices[nextIndex])
-            vertexList.add(edgeVertices[i])
-        }
-
         //#if MC<=12105
         //$$RenderUtils
         //$$    .guiStartDraw()
@@ -486,10 +298,6 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$    .popMatrix()
         //$$    .guiEndDraw()
         //#else
-        val minX = xPosition - xScale
-        val maxX = xPosition + xScale
-        val minY = yPosition - yScale
-        val maxY = yPosition + yScale
         val boundsList = listOf(
             Pair(minX, minY),
             Pair(maxX, minY),
@@ -511,32 +319,15 @@ object GUIRenderer : BaseGUIRenderer() {
         //#endif
     }
 
-    override fun drawImage(
+    override fun _drawImage(
         drawContext: DrawContext,
         image: Image,
-        xPosition: Float,
-        yPosition: Float,
-        width: Float?,
-        height: Float?,
+        texture: Any,
+        vertexList: List<Pair<Float, Float>>,
+        uvList: List<Pair<Float, Float>>,
         color: Long,
         zOffset: Float,
     ) {
-        val texture = image.getTexture() ?: throw IllegalStateException("Image is null.")
-        val (drawWidth, drawHeight) = image.getImageSize(width, height)
-
-        val vertexList = listOf(
-            Pair(xPosition, yPosition + drawHeight),
-            Pair(xPosition + drawWidth, yPosition + drawHeight),
-            Pair(xPosition + drawWidth, yPosition),
-            Pair(xPosition, yPosition)
-        )
-        val uvList = listOf(
-            Pair(0f, 1f),
-            Pair(1f, 1f),
-            Pair(1f, 0f),
-            Pair(0f, 0f)
-        )
-
         //#if MC<=12105
         //$$RenderUtils
         //$$    .guiStartDraw()

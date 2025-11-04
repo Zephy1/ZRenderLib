@@ -30,237 +30,82 @@ object GUIRenderer : BaseGUIRenderer() {
         RenderUtils.popMatrix()
     }
 
-    override fun drawLine(
-        startX: Float,
-        startY: Float,
-        endX: Float,
-        endY: Float,
-        color: Long,
-        lineThickness: Float,
-        zOffset: Float,
-    ) {
-        val theta = -atan2(endY - startY, endX - startX)
-        val i = sin(theta) * (lineThickness / 2)
-        val j = cos(theta) * (lineThickness / 2)
-
-        RenderUtils
-            .guiStartDraw()
-            .disableTexture2D()
-
-            .begin(GL11.GL_QUADS, VertexFormat.POSITION)
-            .colorizeRGBA(color)
-            .translate(0f, 0f, zOffset)
-            .pos(startX + i, startY + j, 0f)
-            .pos(endX + i, endY + j, 0f)
-            .pos(endX - i, endY - j, 0f)
-            .pos(startX - i, startY - j, 0f)
-            .draw()
-
-            .enableTexture2D()
-            .guiEndDraw()
-    }
-
-    override fun drawRect(
-        xPosition: Float,
-        yPosition: Float,
-        width: Float,
-        height: Float,
+    override fun _drawLine(
+        vertexList: List<Pair<Float, Float>>,
         color: Long,
         zOffset: Float,
     ) {
-        val x1 = xPosition
-        val x2 = xPosition + width
-        val y1 = yPosition
-        val y2 = yPosition + height
-
         RenderUtils
             .guiStartDraw()
             .disableTexture2D()
-
             .begin(GL11.GL_QUADS, VertexFormat.POSITION)
             .colorizeRGBA(color)
             .translate(0f, 0f, zOffset)
-            .pos(x1, y2, 0f)
-            .pos(x2, y2, 0f)
-            .pos(x2, y1, 0f)
-            .pos(x1, y1, 0f)
+            .posList(vertexList, 0f)
             .draw()
-
             .enableTexture2D()
             .guiEndDraw()
     }
 
-    override fun drawRoundedRect(
-        xPosition: Float,
-        yPosition: Float,
-        width: Float,
-        height: Float,
-        radius: Float,
+    override fun _drawRect(
+        vertexList: List<Pair<Float, Float>>,
         color: Long,
-        flatCorners: List<RenderUtils.FlattenRoundedRectCorner>,
-        segments: Int,
         zOffset: Float,
     ) {
-        val x1 = xPosition
-        val y1 = yPosition
-        val x2 = xPosition + width
-        val y2 = yPosition + height
-
-        val centerX = (x1 + x2) / 2f
-        val centerY = (y1 + y2) / 2f
-        val clampedRadius = radius.coerceAtMost(minOf(width, height) / 2f)
-        val flatCornersSet = flatCorners.toSet()
-
         RenderUtils
             .guiStartDraw()
             .disableTexture2D()
-
-            .begin(GL11.GL_TRIANGLE_FAN, VertexFormat.POSITION)
+            .begin(GL11.GL_QUADS, VertexFormat.POSITION)
             .colorizeRGBA(color)
             .translate(0f, 0f, zOffset)
-            .pos(centerX, centerY, 0f)
-
-        RenderUtils.pos(x2 - clampedRadius, y1, 0f)
-        if (RenderUtils.FlattenRoundedRectCorner.TOP_RIGHT in flatCornersSet) {
-            RenderUtils.pos(x2, y1, 0f)
-        } else {
-            addCornerVertices(x2 - clampedRadius, y1 + clampedRadius, clampedRadius, 270f, 360f, segments)
-            RenderUtils.pos(x2, y1 + clampedRadius, 0f)
-        }
-
-        // right edge
-        RenderUtils.pos(x2, y2 - clampedRadius, 0f)
-        if (RenderUtils.FlattenRoundedRectCorner.BOTTOM_RIGHT in flatCornersSet) {
-            RenderUtils.pos(x2, y2, 0f)
-        } else {
-            addCornerVertices(x2 - clampedRadius, y2 - clampedRadius, clampedRadius, 0f, 90f, segments)
-            RenderUtils.pos(x2 - clampedRadius, y2, 0f)
-        }
-
-        // bottom edge
-        RenderUtils.pos(x1 + clampedRadius, y2, 0f)
-        if (RenderUtils.FlattenRoundedRectCorner.BOTTOM_LEFT in flatCornersSet) {
-            RenderUtils.pos(x1, y2, 0f)
-        } else {
-            addCornerVertices(x1 + clampedRadius, y2 - clampedRadius, clampedRadius, 90f, 180f, segments)
-            RenderUtils.pos(x1, y2 - clampedRadius, 0f)
-        }
-
-        // left edge
-        RenderUtils.pos(x1, y1 + clampedRadius, 0f)
-        if (RenderUtils.FlattenRoundedRectCorner.TOP_LEFT in flatCornersSet) {
-            RenderUtils.pos(x1, y1, 0f)
-        } else {
-            addCornerVertices(x1 + clampedRadius, y1 + clampedRadius, clampedRadius, 180f, 270f, segments)
-            RenderUtils.pos(x1 + clampedRadius, y1, 0f)
-        }
-
-        // top edge
-        RenderUtils
-            .pos(x2 - clampedRadius, y1, 0f)
-
+            .posList(vertexList)
             .draw()
             .enableTexture2D()
             .guiEndDraw()
     }
-    private fun addCornerVertices(
-        centerX: Float,
-        centerY: Float,
-        radius: Float,
-        startAngle: Float,
-        endAngle: Float,
-        segments: Int,
-    ) {
-        val angleStep = (endAngle - startAngle) / segments
-        for (i in 1..segments) {
-            val angle = Math.toRadians((startAngle + angleStep * i).toDouble())
-            val x = centerX + (radius * cos(angle)).toFloat()
-            val y = centerY + (radius * sin(angle)).toFloat()
-            RenderUtils.pos(x, y, 0f)
-        }
-    }
 
-    override fun drawGradient(
-        x: Float,
-        y: Float,
-        width: Float,
-        height: Float,
-        topLeftColor: Long,
-        topRightColor: Long,
-        bottomLeftColor: Long,
-        bottomRightColor: Long,
-        direction: RenderUtils.GradientDirection,
+    override fun _drawRoundedRect(
+        x1: Float,
+        y1: Float,
+        x2: Float,
+        y2: Float,
+        vertexList: List<Pair<Float, Float>>,
+        color: Long,
         zOffset: Float,
     ) {
-        val x2 = x + width
-        val y2 = y + height
         RenderUtils
             .guiStartDraw()
             .disableTexture2D()
-
             .begin(GL11.GL_QUADS, VertexFormat.POSITION)
+            .colorizeRGBA(color)
             .translate(0f, 0f, zOffset)
-            // This is really bad, but it works
-            when (direction) {
-                RenderUtils.GradientDirection.TOP_TO_BOTTOM,
-                RenderUtils.GradientDirection.RIGHT_TO_LEFT,
-                RenderUtils.GradientDirection.TOP_RIGHT_TO_BOTTOM_LEFT -> {
-                    RenderUtils
-                        .colorizeRGBA(topLeftColor)
-                        .pos(x, y, 0f)
-                        .colorizeRGBA(bottomLeftColor)
-                        .pos(x, y2, 0f)
-                        .colorizeRGBA(bottomRightColor)
-                        .pos(x2, y2, 0f)
-                        .colorizeRGBA(topRightColor)
-                        .pos(x2, y, 0f)
-                }
-
-                RenderUtils.GradientDirection.BOTTOM_TO_TOP,
-                RenderUtils.GradientDirection.BOTTOM_RIGHT_TO_TOP_LEFT -> {
-                    RenderUtils
-                        .colorizeRGBA(bottomLeftColor)
-                        .pos(x, y2, 0f)
-                        .colorizeRGBA(topLeftColor)
-                        .pos(x, y, 0f)
-                        .colorizeRGBA(topRightColor)
-                        .pos(x2, y, 0f)
-                        .colorizeRGBA(bottomRightColor)
-                        .pos(x2, y2, 0f)
-                }
-
-                RenderUtils.GradientDirection.LEFT_TO_RIGHT,
-                RenderUtils.GradientDirection.BOTTOM_LEFT_TO_TOP_RIGHT -> {
-                    RenderUtils
-                        .colorizeRGBA(topLeftColor)
-                        .pos(x, y, 0f)
-                        .colorizeRGBA(topRightColor)
-                        .pos(x2, y, 0f)
-                        .colorizeRGBA(bottomRightColor)
-                        .pos(x2, y2, 0f)
-                        .colorizeRGBA(bottomLeftColor)
-                        .pos(x, y2, 0f)
-                }
-
-                RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT -> {
-                    RenderUtils
-                        .colorizeRGBA(topRightColor)
-                        .pos(x2, y, 0f)
-                        .colorizeRGBA(bottomRightColor)
-                        .pos(x2, y2, 0f)
-                        .colorizeRGBA(bottomLeftColor)
-                        .pos(x, y2, 0f)
-                        .colorizeRGBA(topLeftColor)
-                        .pos(x, y, 0f)
-                }
-            }
-
+            .posList(vertexList, 0f)
             .draw()
             .enableTexture2D()
             .guiEndDraw()
     }
 
-    override fun drawCircle(
+    override fun _drawGradient(
+        vertexAndColorList: List<Pair<Float, Float>>,
+        zOffset: Float,
+    ) {
+        RenderUtils
+            .guiStartDraw()
+            .disableTexture2D()
+            .begin(GL11.GL_QUADS, VertexFormat.POSITION)
+            .translate(0f, 0f, zOffset)
+        vertexAndColorList.forEach { (x, y, color) ->
+            RenderUtils
+                .colorizeRGBA(color)
+                .pos(x, y, 0f)
+        }
+        RenderUtils
+            .draw()
+            .enableTexture2D()
+            .guiEndDraw()
+    }
+
+    override fun _drawCircle(
         xPosition: Float,
         yPosition: Float,
         xScale: Float,
