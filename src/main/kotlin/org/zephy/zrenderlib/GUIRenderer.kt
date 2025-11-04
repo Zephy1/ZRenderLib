@@ -103,6 +103,22 @@ object GUIRenderer : BaseGUIRenderer() {
             matrix.translate(xPosition, yPosition + currentY)
             matrix.scale(textScale, textScale)
 
+            // backgroundColor isn't rendered on 1.21.9+?
+            //#if MC>=12109
+            if (renderBackground) {
+                val textWidth = fontRenderer.getWidth(line)
+                drawRect(
+                    drawContext,
+                    xPosition - (1f * textScale),
+                    yPosition + currentY - (1f * textScale),
+                    (textWidth + 1f) * textScale,
+                    (fontRenderer.fontHeight + 1f) * textScale,
+                    RenderUtils.ARGBColor(0, 0, 0, 150).getLongRGBA(),
+                    0f,
+                )
+            }
+            //#endif
+
             val textState = TextGuiElementRenderState(
                 fontRenderer,
                 line,
