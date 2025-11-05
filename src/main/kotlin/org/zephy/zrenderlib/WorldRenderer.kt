@@ -1,17 +1,73 @@
 package org.zephy.zrenderlib
 
-//#if MC>12100
-import net.minecraft.client.font.TextRenderer
-import net.minecraft.client.render.LightmapTextureManager
-import net.minecraft.text.Text
-import net.minecraft.util.math.Vec3d
-import org.joml.Matrix4f
-import org.joml.Vector3f
+//#if MC==10809 || MC>=12100
+//#if MC<12100
+import org.lwjgl.opengl.GL11
+//#else
 import java.awt.Color
-import org.zephy.zrenderlib.RenderUtils.tempNormal
-import org.zephy.zrenderlib.RenderUtils.setAndNormalize
+import org.joml.Matrix4f
+import net.minecraft.text.Text
+import net.minecraft.client.render.LightmapTextureManager
+import net.minecraft.client.font.TextRenderer
+//#endif
 
 object WorldRenderer : BaseWorldRenderer() {
+    override fun drawString(text: String, xPosition: Float, yPosition: Float, zPosition: Float, color: Long, scale: Float, renderBackground: Boolean, centered: Boolean, textShadow: Boolean, disableDepth: Boolean, maxWidth: Int) {
+        //#if MC<12100
+        //$$val fontRenderer = RenderUtils.getTextRenderer()
+        //$$val renderManager = RenderUtils.renderManager
+        //$$val x = xPosition - renderManager.viewerPosX
+        //$$val y = yPosition - renderManager.viewerPosY
+        //$$val z = zPosition - renderManager.viewerPosZ
+        //$$val xMultiplier = if (Client.getMinecraft().gameSettings.thirdPersonView == 2) -1 else 1
+        //$$val adjustedScale = (scale * 0.05).toFloat()
+        //$$val textWidth = fontRenderer.getStringWidth(text)
+        //$$val j = textWidth / 2f
+        //$$RenderUtils.pushMatrix()
+        //$$GL11.glNormal3f(0f, 1f, 0f)
+        //$$if (disableDepth) RenderUtils.disableDepth()
+        //$$RenderUtils
+        //$$    .colorize_01(1f, 1f, 1f, 0.5f)
+        //$$    .disableCull()
+        //$$    .translate(x, y, z)
+        //$$    .rotate(-RenderUtils.renderManager.playerViewY, 0f, 1f, 0f)
+        //$$    .rotate(
+        //$$        RenderUtils.renderManager.playerViewX * xMultiplier,
+        //$$        1f,
+        //$$        0f,
+        //$$        0f,
+        //$$    )
+        //$$    .scale(-adjustedScale, -adjustedScale, adjustedScale)
+        //$$    .disableLighting()
+        //$$    .depthMask(false)
+        //$$    .enableBlend()
+        //$$    .tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0)
+        //$$if (renderBackground) {
+        //$$    RenderUtils
+        //$$        .disableTexture2D()
+        //$$        .begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
+        //$$        .colorize_01(0.0f, 0.0f, 0.0f, 0.25f)
+        //$$        .pos((-j - 1).toDouble(), (-1).toDouble(), 0.0)
+        //$$        .pos((-j - 1).toDouble(), 8.toDouble(), 0.0)
+        //$$        .pos((j + 1).toDouble(), 8.toDouble(), 0.0)
+        //$$        .pos((j + 1).toDouble(), (-1).toDouble(), 0.0)
+        //$$        .draw()
+        //$$        .enableTexture2D()
+        //$$}
+        //$$fontRenderer.drawString(
+        //$$    text,
+        //$$    if (centered) -j else 0f,
+        //$$    0f,
+        //$$    RenderUtils.ARGBColor.fromLongRGBA(color).getLong().toInt(),
+        //$$    textShadow
+        //$$)
+        //$$RenderUtils.worldEndDraw()
+        //#else
+        drawString(Text.of(text), xPosition, yPosition, zPosition, color, scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
+        //#endif
+    }
+
+    //#if MC>=12100
     @JvmStatic
     fun getLineRenderLayer(disableDepth: Boolean) = if (disableDepth) RenderLayers.LINES_ESP() else RenderLayers.LINES()
 
@@ -23,10 +79,6 @@ object WorldRenderer : BaseWorldRenderer() {
 
     @JvmStatic
     fun getTriangleRenderLayer(disableDepth: Boolean) = if (disableDepth) RenderLayers.TRIANGLES_ESP() else RenderLayers.TRIANGLES()
-
-    override fun drawString(text: String, xPosition: Float, yPosition: Float, zPosition: Float, color: Long, scale: Float, renderBackground: Boolean, centered: Boolean, textShadow: Boolean, disableDepth: Boolean, maxWidth: Int) {
-        drawString(Text.of(text), xPosition, yPosition, zPosition, color, scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
-    }
 
     @JvmStatic
     @JvmOverloads
@@ -100,432 +152,239 @@ object WorldRenderer : BaseWorldRenderer() {
         }
         RenderUtils.worldEndDraw()
     }
+    //#endif
 
-    override fun drawLine(
-        startX: Float,
-        startY: Float,
-        startZ: Float,
-        endX: Float,
-        endY: Float,
-        endZ: Float,
+    override fun _drawLine(
+        vertexAndNormalList: List<RenderUtils.WorldPositionVertex>,
         color: Long,
         disableDepth: Boolean,
         lineThickness: Float,
     ) {
+        //#if MC<12100
+        //$$val drawMode = GL11.GL_LINE_STRIP
+        //$$val cameraPos = RenderUtils.getCameraPos()
+        //#else
         val renderLayer = getLineRenderLayer(disableDepth)
-        tempNormal.setAndNormalize(endX - startX, endY - startY, endZ - startZ)
+        //#endif
+
         RenderUtils
             .baseStartDraw()
             .lineWidth(lineThickness)
-            .begin(renderLayer)
-            .colorizeRGBA(color)
-            .pos(startX, startY, startZ).normal(tempNormal.x, tempNormal.y, tempNormal.z)
-            .pos(endX, endY, endZ).normal(tempNormal.x, tempNormal.y, tempNormal.z)
-
+            //#if MC<12100
+            //$$.disableTexture2D()
+            //$$.translate(
+            //$$    -cameraPos.x,
+            //$$    -cameraPos.y,
+            //$$    -cameraPos.z,
+            //$$)
+            //$$.begin(drawMode, VertexFormat.POSITION)
+            //#else
+                .begin(renderLayer)
+            //#endif
+                .colorizeRGBA(color)
+        vertexAndNormalList.forEach { (x, y, z, normalVector) ->
+            RenderUtils
+                .pos(x, y, z)
+                //#if MC>=12100
+                .normal(normalVector)
+                //#endif
+        }
+        RenderUtils
             .draw()
             .worldEndDraw()
     }
 
-    override fun drawBox(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        width: Float,
-        height: Float,
-        depth: Float,
+    override fun _drawBox(
+        vertexAndNormalList: List<RenderUtils.WorldPositionVertex>,
         color: Long,
         disableDepth: Boolean,
         wireframe: Boolean,
         lineThickness: Float,
     ) {
+        //#if MC<12100
+        //$$val drawMode = if (wireframe) GL11.GL_LINE_STRIP else GL11.GL_TRIANGLE_STRIP
+        //$$val cameraPos = RenderUtils.getCameraPos()
+        //#else
         val renderLayer = when {
             !wireframe -> getTriangleStripRenderLayer(disableDepth)
             else -> getLineRenderLayer(disableDepth)
         }
-
-        val hw = width / 2f
-        val hh = height / 2f
-        val hd = depth / 2f
-
-        val x0 = xPosition - hw
-        val x1 = xPosition + hw
-        val y0 = yPosition - hh
-        val y1 = yPosition + hh
-        val z0 = zPosition - hd
-        val z1 = zPosition + hd
-
-        val vertexes = when {
-            wireframe -> listOf(
-                Vector3f(x0, y0, z0),
-                Vector3f(x1, y0, z0),
-                Vector3f(x1, y1, z0),
-                Vector3f(x0, y1, z0),
-                Vector3f(x1, y1, z0),
-                Vector3f(x1, y1, z1),
-                Vector3f(x0, y1, z1),
-                Vector3f(x1, y1, z1),
-                Vector3f(x1, y0, z1),
-                Vector3f(x0, y0, z1),
-                Vector3f(x0, y1, z1),
-                Vector3f(x0, y1, z0),
-                Vector3f(x0, y0, z0),
-                Vector3f(x0, y0, z1),
-                Vector3f(x1, y0, z1),
-                Vector3f(x1, y0, z0),
-            )
-            else -> listOf(
-                Vector3f(x0, y0, z0),
-                Vector3f(x1, y0, z0),
-                Vector3f(x0, y1, z0),
-                Vector3f(x1, y1, z0),
-                Vector3f(x1, y1, z1),
-                Vector3f(x1, y0, z0),
-                Vector3f(x1, y0, z1),
-                Vector3f(x0, y0, z0),
-                Vector3f(x0, y0, z1),
-                Vector3f(x0, y1, z0),
-                Vector3f(x0, y1, z1),
-                Vector3f(x1, y1, z1),
-                Vector3f(x0, y0, z1),
-                Vector3f(x1, y0, z1),
-            )
-        }
+        //#endif
 
         RenderUtils
             .baseStartDraw()
             .lineWidth(lineThickness)
-            .begin(renderLayer)
-            .colorizeRGBA(color)
-
-        for (i in 0 until vertexes.size - if (wireframe) 1 else 0) {
-            val p1 = vertexes[i]
-            RenderUtils.pos(p1.x, p1.y, p1.z)
-            if (wireframe) {
-                val p2 = vertexes[i + 1]
-                tempNormal.setAndNormalize(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z)
-                RenderUtils
-                    .normal(tempNormal.x, tempNormal.y, tempNormal.z)
-                    .pos(p2.x, p2.y, p2.z)
-                    .normal(tempNormal.x, tempNormal.y, tempNormal.z)
-            }
+            //#if MC<12100
+            //$$.disableTexture2D()
+            //$$.translate(
+            //$$    -cameraPos.x,
+            //$$    -cameraPos.y,
+            //$$    -cameraPos.z,
+            //$$)
+            //$$.begin(drawMode, VertexFormat.POSITION)
+            //#else
+                .begin(renderLayer)
+            //#endif
+                .colorizeRGBA(color)
+        vertexAndNormalList.forEach { (x, y, z, normalVector) ->
+            RenderUtils
+                .pos(x, y, z)
+                //#if MC>=12100
+                .normal(normalVector)
+                //#endif
         }
-
         RenderUtils
             .draw()
             .worldEndDraw()
     }
 
     // Normals are a bit wrong here, fine enough
-    override fun drawSphere(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        xScale: Float,
-        yScale: Float,
-        zScale: Float,
+    override fun _drawSphere(
+        vertexAndNormalList: List<RenderUtils.WorldPositionVertex>,
         color: Long,
-        segments: Int,
         disableDepth: Boolean,
         wireframe: Boolean,
         lineThickness: Float,
     ) {
+        //#if MC<12100
+        //$$val drawMode = if (wireframe) GL11.GL_LINE_STRIP else GL11.GL_QUADS
+        //$$val cameraPos = RenderUtils.getCameraPos()
+        //#else
         val renderLayer = when {
             !wireframe -> getQuadRenderLayer(disableDepth)
             else -> getLineRenderLayer(disableDepth)
         }
-        val cache = RenderUtils.getTrigCache(segments)
+        //#endif
 
         RenderUtils
             .baseStartDraw()
             .lineWidth(lineThickness)
-            .begin(renderLayer)
-            .colorizeRGBA(color)
-
-        if (!wireframe) {
-            for (phi in 0 until segments) {
-                val sinPhi1 = cache.sinPhi[phi]
-                val cosPhi1 = cache.cosPhi[phi]
-                val sinPhi2 = cache.sinPhi[phi + 1]
-                val cosPhi2 = cache.cosPhi[phi + 1]
-
-                for (theta in 0 until (segments * 2)) {
-                    val cosTheta1 = cache.cosTheta[theta]
-                    val sinTheta1 = cache.sinTheta[theta]
-                    val cosTheta2 = cache.cosTheta[theta + 1]
-                    val sinTheta2 = cache.sinTheta[theta + 1]
-
-                    val x1 = xPosition + xScale * sinPhi1 * cosTheta1
-                    val y1 = yPosition + yScale * cosPhi1
-                    val z1 = zPosition + zScale * sinPhi1 * sinTheta1
-
-                    val x2 = xPosition + xScale * sinPhi2 * cosTheta1
-                    val y2 = yPosition + yScale * cosPhi2
-                    val z2 = zPosition + zScale * sinPhi2 * sinTheta1
-
-                    val x3 = xPosition + xScale * sinPhi2 * cosTheta2
-                    val y3 = yPosition + yScale * cosPhi2
-                    val z3 = zPosition + zScale * sinPhi2 * sinTheta2
-
-                    val x4 = xPosition + xScale * sinPhi1 * cosTheta2
-                    val y4 = yPosition + yScale * cosPhi1
-                    val z4 = zPosition + zScale * sinPhi1 * sinTheta2
-
-                    tempNormal.setAndNormalize(x1 - xPosition, y1 - yPosition, z1 - zPosition)
-                    RenderUtils.pos(x1, y1, z1).normal(tempNormal.x, tempNormal.y, tempNormal.z)
-
-                    tempNormal.setAndNormalize(x2 - xPosition, y2 - yPosition, z2 - zPosition)
-                    RenderUtils.pos(x2, y2, z2).normal(tempNormal.x, tempNormal.y, tempNormal.z)
-
-                    tempNormal.setAndNormalize(x3 - xPosition, y3 - yPosition, z3 - zPosition)
-                    RenderUtils.pos(x3, y3, z3).normal(tempNormal.x, tempNormal.y, tempNormal.z)
-
-                    tempNormal.setAndNormalize(x4 - xPosition, y4 - yPosition, z4 - zPosition)
-                    RenderUtils.pos(x4, y4, z4).normal(tempNormal.x, tempNormal.y, tempNormal.z)
-                }
-            }
-        } else {
-            for (phi in 1 until segments) {
-                val sinPhi = cache.sinPhi[phi]
-                val cosPhi = cache.cosPhi[phi]
-                val y = yPosition + yScale * cosPhi
-
-                for (theta in 0 until (segments * 2)) {
-                    val cosTheta1 = cache.cosTheta[theta]
-                    val sinTheta1 = cache.sinTheta[theta]
-                    val cosTheta2 = cache.cosTheta[theta + 1]
-                    val sinTheta2 = cache.sinTheta[theta + 1]
-
-                    val x1 = xPosition + xScale * sinPhi * cosTheta1
-                    val z1 = zPosition + zScale * sinPhi * sinTheta1
-
-                    val x2 = xPosition + xScale * sinPhi * cosTheta2
-                    val z2 = zPosition + zScale * sinPhi * sinTheta2
-
-                    tempNormal.setAndNormalize(x1 - xPosition, y - yPosition, z1 - zPosition)
-                    RenderUtils.pos(x1, y, z1).normal(tempNormal.x, tempNormal.y, tempNormal.z)
-
-                    tempNormal.setAndNormalize(x2 - xPosition, y - yPosition, z2 - zPosition)
-                    RenderUtils.pos(x2, y, z2).normal(tempNormal.x, tempNormal.y, tempNormal.z)
-                }
-            }
-
-            for (theta in 0 until (segments * 2)) {
-                val cosTheta = cache.cosTheta[theta]
-                val sinTheta = cache.sinTheta[theta]
-
-                for (phi in 0 until segments) {
-                    val sinPhi1 = cache.sinPhi[phi]
-                    val cosPhi1 = cache.cosPhi[phi]
-                    val sinPhi2 = cache.sinPhi[phi + 1]
-                    val cosPhi2 = cache.cosPhi[phi + 1]
-
-                    val x1 = xPosition + xScale * sinPhi1 * cosTheta
-                    val y1 = yPosition + yScale * cosPhi1
-                    val z1 = zPosition + zScale * sinPhi1 * sinTheta
-
-                    val x2 = xPosition + xScale * sinPhi2 * cosTheta
-                    val y2 = yPosition + yScale * cosPhi2
-                    val z2 = zPosition + zScale * sinPhi2 * sinTheta
-
-                    tempNormal.setAndNormalize(x1 - xPosition, y1 - yPosition, z1 - zPosition)
-                    RenderUtils.pos(x1, y1, z1).normal(tempNormal.x, tempNormal.y, tempNormal.z)
-
-                    tempNormal.setAndNormalize(x2 - xPosition, y2 - yPosition, z2 - zPosition)
-                    RenderUtils.pos(x2, y2, z2).normal(tempNormal.x, tempNormal.y, tempNormal.z)
-                }
-            }
+            //#if MC<12100
+            //$$.disableTexture2D()
+            //$$.translate(
+            //$$    -cameraPos.x,
+            //$$    -cameraPos.y,
+            //$$    -cameraPos.z,
+            //$$)
+            //$$.begin(drawMode, VertexFormat.POSITION)
+            //#else
+                .begin(renderLayer)
+            //#endif
+                .colorizeRGBA(color)
+        vertexAndNormalList.forEach { (x, y, z, normalVector) ->
+            RenderUtils
+                .pos(x, y, z)
+                //#if MC>=12100
+                .normal(normalVector)
+                //#endif
         }
-
         RenderUtils
             .draw()
             .worldEndDraw()
     }
 
     // Normals are a bit wrong here, fine enough
-    override fun drawCylinder(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        topRadius: Float,
-        bottomRadius: Float,
-        height: Float,
+    override fun _drawCylinder(
+        vertexAndNormalList: List<RenderUtils.WorldPositionVertex>,
         color: Long,
-        segments: Int,
         disableDepth: Boolean,
         wireframe: Boolean,
         lineThickness: Float,
     ) {
+        //#if MC<12100
+        //$$val drawMode = if (wireframe) GL11.GL_LINE_STRIP else GL11.GL_QUADS
+        //$$val cameraPos = RenderUtils.getCameraPos()
+        //#else
         val renderLayer = when {
             !wireframe -> getQuadRenderLayer(disableDepth)
             else -> getLineRenderLayer(disableDepth)
         }
-
-        val bottomX = FloatArray(segments + 1)
-        val bottomY = yPosition
-        val bottomZ = FloatArray(segments + 1)
-        val topX = FloatArray(segments + 1)
-        val topY = bottomY + height
-        val topZ = FloatArray(segments + 1)
-
-        val cache = RenderUtils.getTrigCache(segments)
-        for (i in 0..segments) {
-            val thetaIndex = (i * 2) % (segments * 2)
-            val cosA = cache.cosTheta[thetaIndex]
-            val sinA = cache.sinTheta[thetaIndex]
-
-            bottomX[i] = xPosition + bottomRadius * cosA
-            bottomZ[i] = zPosition + bottomRadius * sinA
-            topX[i] = xPosition + topRadius * cosA
-            topZ[i] = zPosition + topRadius * sinA
-        }
+        //#endif
 
         RenderUtils
             .baseStartDraw()
             .lineWidth(lineThickness)
+        //#if MC<12100
+        //$$.disableTexture2D()
+        //$$.translate(
+        //$$    -cameraPos.x,
+        //$$    -cameraPos.y,
+        //$$    -cameraPos.z,
+        //$$)
+        //$$.begin(drawMode, VertexFormat.POSITION)
+        //#else
             .begin(renderLayer)
+        //#endif
             .colorizeRGBA(color)
-
-        for (i in 0 until segments) {
-            val next = (i + 1) % segments
-
-            if (wireframe) {
-                tempNormal.setAndNormalize(bottomX[i] - xPosition, 0f, bottomZ[i] - zPosition)
-                RenderUtils.pos(bottomX[i], bottomY, bottomZ[i]).normal(tempNormal.x, tempNormal.y, tempNormal.z)
-
-                tempNormal.setAndNormalize(topX[i] - xPosition, 0f, topZ[i] - zPosition)
-                RenderUtils.pos(topX[i], topY, topZ[i]).normal(tempNormal.x, tempNormal.y, tempNormal.z)
-
-                tempNormal.setAndNormalize(topX[next] - xPosition, 0f, topZ[next] - zPosition)
-                RenderUtils.pos(topX[next], topY, topZ[next]).normal(tempNormal.x, tempNormal.y, tempNormal.z)
-
-                tempNormal.setAndNormalize(bottomX[next] - xPosition, 0f, bottomZ[next] - zPosition)
-                RenderUtils.pos(bottomX[next], bottomY, bottomZ[next]).normal(tempNormal.x, tempNormal.y, tempNormal.z)
-            } else {
-                RenderUtils
-                    .pos(bottomX[i], bottomY, bottomZ[i])
-                    .pos(bottomX[next], bottomY, bottomZ[next])
-                    .pos(topX[next], topY, topZ[next])
-                    .pos(topX[i], topY, topZ[i])
-            }
+        vertexAndNormalList.forEach { (x, y, z, normalVector) ->
+            RenderUtils
+                .pos(x, y, z)
+                //#if MC>=12100
+                .normal(normalVector)
+                //#endif
         }
-
-        val caps = listOf(
-            Triple(bottomY, bottomX, bottomZ),
-            Triple(topY, topX, topZ)
-        )
-        val normalsY = listOf(-1f, 1f)
-        for (index in caps.indices) {
-            val (y, xRing, zRing) = caps[index]
-            val normalY = normalsY[index]
-
-            for (i in 0 until segments) {
-                val next = (i + 1) % segments
-                RenderUtils
-                    .pos(xPosition, y, zPosition).normal(0f, normalY, 0f)
-                    .pos(xRing[next], y, zRing[next]).normal(0f, normalY, 0f)
-                    .pos(xRing[i], y, zRing[i]).normal(0f, normalY, 0f)
-                    .pos(xPosition, y, zPosition).normal(0f, normalY, 0f)
-            }
-
-            for (i in 0 until segments) {
-                val next = (i + 1) % segments
-                RenderUtils
-                    .pos(xRing[i], y, zRing[i]).normal(0f, normalY, 0f)
-                    .pos(xRing[next], y, zRing[next]).normal(0f, normalY, 0f)
-            }
-        }
-
         RenderUtils
             .draw()
             .worldEndDraw()
     }
 
-    // Normals are a bit wrong here, fine enough
-    override fun drawPyramid(
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
-        xScale: Float,
-        yScale: Float,
-        zScale: Float,
+    override fun _drawPyramid(
+        vertexAndNormalList: List<RenderUtils.WorldPositionVertex>,
         color: Long,
         disableDepth: Boolean,
         wireframe: Boolean,
         lineThickness: Float,
     ) {
+        //#if MC<12100
+        //$$val drawMode = if (wireframe) GL11.GL_LINE_STRIP else GL11.GL_TRIANGLES
+        //$$val cameraPos = RenderUtils.getCameraPos()
+        //#else
         val renderLayer = when {
             !wireframe -> getTriangleRenderLayer(disableDepth)
             else -> getLineRenderLayer(disableDepth)
         }
-
-        val halfX = xScale / 2f
-        val halfZ = zScale / 2f
-
-        val x0 = xPosition - halfX
-        val x1 = xPosition + halfX
-        val z0 = zPosition - halfZ
-        val z1 = zPosition + halfZ
-
-        val yBase = yPosition
-        val yTip = yPosition + yScale
-
-        val tipX = xPosition
-        val tipY = yTip
-        val tipZ = zPosition
-
-        fun triangle(ax: Float, ay: Float, az: Float, bx: Float, by: Float, bz: Float, cx: Float, cy: Float, cz: Float) {
-            tempNormal.setAndNormalize(
-                (bx - ax) * (cy - ay) - (cx - ax) * (by - ay),
-                (bz - az) * (cy - ay) - (cz - az) * (by - ay),
-                (cx - ax) * (by - ay) - (bx - ax) * (cy - ay),
-            )
-            RenderUtils
-                .pos(ax, ay, az).normal(tempNormal.x, tempNormal.y, tempNormal.z)
-                .pos(bx, by, bz).normal(tempNormal.x, tempNormal.y, tempNormal.z)
-                .pos(cx, cy, cz).normal(tempNormal.x, tempNormal.y, tempNormal.z)
-        }
+        //#endif
 
         RenderUtils
             .baseStartDraw()
             .lineWidth(lineThickness)
-            .begin(renderLayer)
-            .colorizeRGBA(color)
-
-        triangle(tipX, tipY, tipZ, x0, yBase, z0, x1, yBase, z0)
-        triangle(tipX, tipY, tipZ, x1, yBase, z0, x1, yBase, z1)
-        triangle(tipX, tipY, tipZ, x1, yBase, z1, x0, yBase, z1)
-        triangle(tipX, tipY, tipZ, x0, yBase, z1, x0, yBase, z0)
-
-        triangle(x0, yBase, z0, x1, yBase, z0, x1, yBase, z1)
-        triangle(x0, yBase, z0, x1, yBase, z1, x0, yBase, z1)
-
+            //#if MC<12100
+            //$$.disableTexture2D()
+            //$$.translate(
+            //$$    -cameraPos.x,
+            //$$    -cameraPos.y,
+            //$$    -cameraPos.z,
+            //$$)
+            //$$.begin(drawMode, VertexFormat.POSITION)
+            //#else
+                .begin(renderLayer)
+            //#endif
+                .colorizeRGBA(color)
+        vertexAndNormalList.forEach { (x, y, z, normalVector) ->
+            RenderUtils
+                .pos(x, y, z)
+                //#if MC>=12100
+                .normal(normalVector)
+                //#endif
+        }
         RenderUtils
             .draw()
             .worldEndDraw()
     }
 
-    override fun drawTracer(
+    override fun _drawTracer(
         partialTicks: Float,
-        xPosition: Float,
-        yPosition: Float,
-        zPosition: Float,
+        startPosX: Float,
+        startPosY: Float,
+        startPosZ: Float,
+        endPosX: Float,
+        endPosY: Float,
+        endPosZ: Float,
         color: Long,
         disableDepth: Boolean,
         lineThickness: Float,
     ) {
-        val mc = Client.getMinecraft()
-        mc.player?.let { player ->
-            val x1: Double = player.lastX + (player.x - player.lastX) * partialTicks
-            val y1: Double = player.getEyeHeight(player.pose) + player.lastY + (player.y - player.lastY) * partialTicks
-            val z1: Double = player.lastZ + (player.z - player.lastZ) * partialTicks
-
-            val vec2 = Vec3d(0.0, 0.0, 75.0)
-                .rotateX(-Math.toRadians(mc.gameRenderer.camera.pitch.toDouble()).toFloat())
-                .rotateY(-Math.toRadians(mc.gameRenderer.camera.yaw.toDouble()).toFloat())
-                .add(x1, y1, z1)
-
-            drawLine(vec2.x.toFloat(), vec2.y.toFloat(), vec2.z.toFloat(), xPosition, yPosition, zPosition, color, disableDepth, lineThickness)
-        }
+        drawLine(startPosX, startPosY, startPosZ, endPosX, endPosY, endPosZ, color, disableDepth, lineThickness)
     }
 }
 //#endif

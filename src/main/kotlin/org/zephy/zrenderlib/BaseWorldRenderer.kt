@@ -1,6 +1,18 @@
 package org.zephy.zrenderlib
 
 //#if MC==10809 || MC>=12100
+//#if MC<12100
+//$$import javax.vecmath.Vector3f
+//$$import javax.vecmath.Vector3d
+//$$import kotlin.math.cos
+//$$import kotlin.math.sin
+//#else
+import net.minecraft.util.math.Vec3d
+import org.joml.Vector3f
+import org.zephy.zrenderlib.RenderUtils.setAndNormalize
+import org.zephy.zrenderlib.RenderUtils.tempNormal
+//#endif
+
 abstract class BaseWorldRenderer {
     @JvmOverloads
     fun drawStringRGBA(
@@ -54,7 +66,8 @@ abstract class BaseWorldRenderer {
         drawLine(startX, startY, startZ, endX, endY, endZ, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, lineThickness)
     }
 
-    abstract fun drawLine(
+    @JvmOverloads
+    fun drawLine(
         startX: Float,
         startY: Float,
         startZ: Float,
@@ -64,6 +77,23 @@ abstract class BaseWorldRenderer {
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         disableDepth: Boolean = false,
         lineThickness: Float = 1f
+    ) {
+        val vertexAndNormalList = mutableListOf<RenderUtils.WorldPositionVertex>()
+        //#if MC<12100
+        //$$val tempNormal = null
+        //#else
+        tempNormal.setAndNormalize(endX - startX, endY - startY, endZ - startZ)
+        //#endif
+        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(startX, startY, startZ, tempNormal))
+        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(endX, endY, endZ, tempNormal))
+        _drawLine(vertexAndNormalList, color, disableDepth, lineThickness)
+    }
+
+    abstract fun _drawLine(
+        vertexAndNormalList: List<RenderUtils.WorldPositionVertex>,
+        color: Long,
+        disableDepth: Boolean,
+        lineThickness: Float,
     )
 
     @JvmOverloads
@@ -205,7 +235,8 @@ abstract class BaseWorldRenderer {
         drawBox(xPosition, yPosition, zPosition, width, height, depth, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe, lineThickness)
     }
 
-    abstract fun drawBox(
+    @JvmOverloads
+    fun drawBox(
         xPosition: Float,
         yPosition: Float,
         zPosition: Float,
@@ -216,6 +247,82 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         wireframe: Boolean = false,
         lineThickness: Float = 1f,
+    ) {
+        val vertexAndNormalList = mutableListOf<RenderUtils.WorldPositionVertex>()
+        val hw = width / 2f
+        val hh = height / 2f
+        val hd = depth / 2f
+
+        val x0 = xPosition - hw
+        val x1 = xPosition + hw
+        val y0 = yPosition - hh
+        val y1 = yPosition + hh
+        val z0 = zPosition - hd
+        val z1 = zPosition + hd
+
+        val vertexes = when {
+            wireframe -> listOf(
+                Vector3f(x0, y0, z0),
+                Vector3f(x1, y0, z0),
+                Vector3f(x1, y1, z0),
+                Vector3f(x0, y1, z0),
+                Vector3f(x1, y1, z0),
+                Vector3f(x1, y1, z1),
+                Vector3f(x0, y1, z1),
+                Vector3f(x1, y1, z1),
+                Vector3f(x1, y0, z1),
+                Vector3f(x0, y0, z1),
+                Vector3f(x0, y1, z1),
+                Vector3f(x0, y1, z0),
+                Vector3f(x0, y0, z0),
+                Vector3f(x0, y0, z1),
+                Vector3f(x1, y0, z1),
+                Vector3f(x1, y0, z0),
+            )
+            else -> listOf(
+                Vector3f(x0, y0, z0),
+                Vector3f(x1, y0, z0),
+                Vector3f(x0, y1, z0),
+                Vector3f(x1, y1, z0),
+                Vector3f(x1, y1, z1),
+                Vector3f(x1, y0, z0),
+                Vector3f(x1, y0, z1),
+                Vector3f(x0, y0, z0),
+                Vector3f(x0, y0, z1),
+                Vector3f(x0, y1, z0),
+                Vector3f(x0, y1, z1),
+                Vector3f(x1, y1, z1),
+                Vector3f(x0, y0, z1),
+                Vector3f(x1, y0, z1),
+            )
+        }
+
+        //#if MC<12100
+        //$$val tempNormal = null
+        //#endif
+        for (i in 0 until vertexes.size - if (wireframe) 1 else 0) {
+            val p1 = vertexes[i]
+            if (wireframe) {
+                val p2 = vertexes[i + 1]
+                //#if MC>=12100
+                tempNormal.setAndNormalize(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z)
+                //#endif
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p1.x, p1.y, p1.z, tempNormal))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p2.x, p2.y, p2.z, tempNormal))
+            } else {
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p1.x, p1.y, p1.z, null))
+            }
+        }
+
+        _drawBox(vertexAndNormalList, color, disableDepth, wireframe, lineThickness)
+    }
+
+    abstract fun _drawBox(
+        vertexAndNormalList: List<RenderUtils.WorldPositionVertex>,
+        color: Long,
+        disableDepth: Boolean,
+        wireframe: Boolean,
+        lineThickness: Float,
     )
 
     @JvmOverloads
@@ -366,7 +473,8 @@ abstract class BaseWorldRenderer {
         drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
     }
 
-    abstract fun drawSphere(
+    @JvmOverloads
+    fun drawSphere(
         xPosition: Float,
         yPosition: Float,
         zPosition: Float,
@@ -378,6 +486,134 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         wireframe: Boolean = false,
         lineThickness: Float = 1f,
+    ) {
+        val vertexAndNormalList = mutableListOf<RenderUtils.WorldPositionVertex>()
+        val cache = RenderUtils.getTrigCache(segments)
+
+        //#if MC<12100
+        //$$val tempNormal = null
+        //#endif
+
+        if (!wireframe) {
+            for (phi in 0 until segments) {
+                val sinPhi1 = cache.sinPhi[phi]
+                val cosPhi1 = cache.cosPhi[phi]
+                val sinPhi2 = cache.sinPhi[phi + 1]
+                val cosPhi2 = cache.cosPhi[phi + 1]
+
+                for (theta in 0 until (segments * 2)) {
+                    val cosTheta1 = cache.cosTheta[theta]
+                    val sinTheta1 = cache.sinTheta[theta]
+                    val cosTheta2 = cache.cosTheta[theta + 1]
+                    val sinTheta2 = cache.sinTheta[theta + 1]
+
+                    val x1 = xPosition + xScale * sinPhi1 * cosTheta1
+                    val y1 = yPosition + yScale * cosPhi1
+                    val z1 = zPosition + zScale * sinPhi1 * sinTheta1
+
+                    val x2 = xPosition + xScale * sinPhi2 * cosTheta1
+                    val y2 = yPosition + yScale * cosPhi2
+                    val z2 = zPosition + zScale * sinPhi2 * sinTheta1
+
+                    val x3 = xPosition + xScale * sinPhi2 * cosTheta2
+                    val y3 = yPosition + yScale * cosPhi2
+                    val z3 = zPosition + zScale * sinPhi2 * sinTheta2
+
+                    val x4 = xPosition + xScale * sinPhi1 * cosTheta2
+                    val y4 = yPosition + yScale * cosPhi1
+                    val z4 = zPosition + zScale * sinPhi1 * sinTheta2
+
+                    //#if MC>=12100
+                    tempNormal.setAndNormalize(x1 - xPosition, y1 - yPosition, z1 - zPosition)
+                    //#endif
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x1, y1, z1, tempNormal))
+
+                    //#if MC>=12100
+                    tempNormal.setAndNormalize(x2 - xPosition, y2 - yPosition, z2 - zPosition)
+                    //#endif
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x2, y2, z2, tempNormal))
+
+                    //#if MC>=12100
+                    tempNormal.setAndNormalize(x3 - xPosition, y3 - yPosition, z3 - zPosition)
+                    //#endif
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x3, y3, z3, tempNormal))
+
+                    //#if MC>=12100
+                    tempNormal.setAndNormalize(x4 - xPosition, y4 - yPosition, z4 - zPosition)
+                    //#endif
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x4, y4, z4, tempNormal))
+                }
+            }
+        } else {
+            for (phi in 1 until segments) {
+                val sinPhi = cache.sinPhi[phi]
+                val cosPhi = cache.cosPhi[phi]
+                val y = yPosition + yScale * cosPhi
+
+                for (theta in 0 until (segments * 2)) {
+                    val cosTheta1 = cache.cosTheta[theta]
+                    val sinTheta1 = cache.sinTheta[theta]
+                    val cosTheta2 = cache.cosTheta[theta + 1]
+                    val sinTheta2 = cache.sinTheta[theta + 1]
+
+                    val x1 = xPosition + xScale * sinPhi * cosTheta1
+                    val z1 = zPosition + zScale * sinPhi * sinTheta1
+
+                    val x2 = xPosition + xScale * sinPhi * cosTheta2
+                    val z2 = zPosition + zScale * sinPhi * sinTheta2
+
+                    //#if MC>=12100
+                    tempNormal.setAndNormalize(x1 - xPosition, y - yPosition, z1 - zPosition)
+                    //#endif
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x1, y, z1, tempNormal))
+
+                    //#if MC>=12100
+                    tempNormal.setAndNormalize(x2 - xPosition, y - yPosition, z2 - zPosition)
+                    //#endif
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x2, y, z2, tempNormal))
+                }
+            }
+
+            for (theta in 0 until (segments * 2)) {
+                val cosTheta = cache.cosTheta[theta]
+                val sinTheta = cache.sinTheta[theta]
+
+                for (phi in 0 until segments) {
+                    val sinPhi1 = cache.sinPhi[phi]
+                    val cosPhi1 = cache.cosPhi[phi]
+                    val sinPhi2 = cache.sinPhi[phi + 1]
+                    val cosPhi2 = cache.cosPhi[phi + 1]
+
+                    val x1 = xPosition + xScale * sinPhi1 * cosTheta
+                    val y1 = yPosition + yScale * cosPhi1
+                    val z1 = zPosition + zScale * sinPhi1 * sinTheta
+
+                    val x2 = xPosition + xScale * sinPhi2 * cosTheta
+                    val y2 = yPosition + yScale * cosPhi2
+                    val z2 = zPosition + zScale * sinPhi2 * sinTheta
+
+                    //#if MC>=12100
+                    tempNormal.setAndNormalize(x1 - xPosition, y1 - yPosition, z1 - zPosition)
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x1, y1, z1, tempNormal))
+                    //#endif
+
+                    //#if MC>=12100
+                    tempNormal.setAndNormalize(x2 - xPosition, y2 - yPosition, z2 - zPosition)
+                    //#endif
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x2, y2, z2, tempNormal))
+                }
+            }
+        }
+
+        _drawSphere(vertexAndNormalList, color, disableDepth, wireframe, lineThickness)
+    }
+
+    abstract fun _drawSphere(
+        vertexAndNormalList: List<RenderUtils.WorldPositionVertex>,
+        color: Long,
+        disableDepth: Boolean,
+        wireframe: Boolean,
+        lineThickness: Float,
     )
 
     @JvmOverloads
@@ -669,7 +905,8 @@ abstract class BaseWorldRenderer {
         drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
     }
 
-    abstract fun drawCylinder(
+    @JvmOverloads
+    fun drawCylinder(
         xPosition: Float,
         yPosition: Float,
         zPosition: Float,
@@ -681,6 +918,93 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         wireframe: Boolean = false,
         lineThickness: Float = 1f,
+    ) {
+        val vertexAndNormalList = mutableListOf<RenderUtils.WorldPositionVertex>()
+        val bottomX = FloatArray(segments + 1)
+        val bottomY = yPosition
+        val bottomZ = FloatArray(segments + 1)
+        val topX = FloatArray(segments + 1)
+        val topY = bottomY + height
+        val topZ = FloatArray(segments + 1)
+
+        val cache = RenderUtils.getTrigCache(segments)
+        for (i in 0..segments) {
+            val thetaIndex = (i * 2) % (segments * 2)
+            val cosA = cache.cosTheta[thetaIndex]
+            val sinA = cache.sinTheta[thetaIndex]
+
+            bottomX[i] = xPosition + bottomRadius * cosA
+            bottomZ[i] = zPosition + bottomRadius * sinA
+            topX[i] = xPosition + topRadius * cosA
+            topZ[i] = zPosition + topRadius * sinA
+        }
+
+        for (i in 0 until segments) {
+            val next = (i + 1) % segments
+            if (wireframe) {
+                //#if MC<12100
+                //$$val tempNormal = null
+                //#else
+                tempNormal.setAndNormalize(bottomX[i] - xPosition, 0f, bottomZ[i] - zPosition)
+                //#endif
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], tempNormal))
+
+                //#if MC>=12100
+                tempNormal.setAndNormalize(topX[i] - xPosition, 0f, topZ[i] - zPosition)
+                //#endif
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[i], topY, topZ[i], tempNormal))
+
+                //#if MC>=12100
+                tempNormal.setAndNormalize(topX[next] - xPosition, 0f, topZ[next] - zPosition)
+                //#endif
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[next], topY, topZ[next], tempNormal))
+
+                //#if MC>=12100
+                tempNormal.setAndNormalize(bottomX[next] - xPosition, 0f, bottomZ[next] - zPosition)
+                //#endif
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[next], bottomY, bottomZ[next], tempNormal))
+            } else {
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], null))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[next], bottomY, bottomZ[next], null))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[next], topY, topZ[next], null))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[i], topY, topZ[i], null))
+            }
+        }
+
+        val caps = listOf(
+            Triple(bottomY, bottomX, bottomZ),
+            Triple(topY, topX, topZ)
+        )
+        val normalsY = listOf(-1f, 1f)
+        for (index in caps.indices) {
+            val (y, xRing, zRing) = caps[index]
+            val normalY = normalsY[index]
+            val normalVector = Vector3f(0f, normalY, 0f)
+
+            for (i in 0 until segments) {
+                val next = (i + 1) % segments
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, y, zPosition, normalVector))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xRing[next], y, zRing[next], normalVector))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xRing[i], y, zRing[i], normalVector))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, y, zPosition, normalVector))
+            }
+
+            for (i in 0 until segments) {
+                val next = (i + 1) % segments
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xRing[i], y, zRing[i], normalVector))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xRing[next], y, zRing[next], normalVector))
+            }
+        }
+
+        _drawCylinder(vertexAndNormalList, color, disableDepth, wireframe, lineThickness)
+    }
+
+    abstract fun _drawCylinder(
+        vertexAndNormalList: List<RenderUtils.WorldPositionVertex>,
+        color: Long,
+        disableDepth: Boolean,
+        wireframe: Boolean,
+        lineThickness: Float,
     )
 
     @JvmOverloads
@@ -822,7 +1146,8 @@ abstract class BaseWorldRenderer {
         drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe, lineThickness)
     }
 
-    abstract fun drawPyramid(
+    @JvmOverloads
+    fun drawPyramid(
         xPosition: Float,
         yPosition: Float,
         zPosition: Float,
@@ -833,6 +1158,56 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         wireframe: Boolean = false,
         lineThickness: Float = 1f,
+    ) {
+        val vertexAndNormalList = mutableListOf<RenderUtils.WorldPositionVertex>()
+        val halfX = xScale / 2f
+        val halfZ = zScale / 2f
+
+        val x0 = xPosition - halfX
+        val x1 = xPosition + halfX
+        val z0 = zPosition - halfZ
+        val z1 = zPosition + halfZ
+
+        val yBase = yPosition
+        val tipX = xPosition
+        val tipY = yPosition + yScale
+        val tipZ = zPosition
+
+        //#if MC<12100
+        //$$val tempNormal = null
+        //#endif
+
+        // Normals are a bit wrong here, fine enough
+        fun triangle(ax: Float, ay: Float, az: Float, bx: Float, by: Float, bz: Float, cx: Float, cy: Float, cz: Float) {
+            //#if MC>=12100
+            tempNormal.setAndNormalize(
+                (bx - ax) * (cy - ay) - (cx - ax) * (by - ay),
+                (bz - az) * (cy - ay) - (cz - az) * (by - ay),
+                (cx - ax) * (by - ay) - (bx - ax) * (cy - ay),
+            )
+            //#endif
+            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(ax, ay, az, tempNormal))
+            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bx, by, bz, tempNormal))
+            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(cx, cy, cz, tempNormal))
+        }
+
+        triangle(tipX, tipY, tipZ, x0, yBase, z0, x1, yBase, z0)
+        triangle(tipX, tipY, tipZ, x1, yBase, z0, x1, yBase, z1)
+        triangle(tipX, tipY, tipZ, x1, yBase, z1, x0, yBase, z1)
+        triangle(tipX, tipY, tipZ, x0, yBase, z1, x0, yBase, z0)
+
+        triangle(x0, yBase, z0, x1, yBase, z0, x1, yBase, z1)
+        triangle(x0, yBase, z0, x1, yBase, z1, x0, yBase, z1)
+
+        _drawPyramid(vertexAndNormalList, color, disableDepth, wireframe, lineThickness)
+    }
+
+    abstract fun _drawPyramid(
+        vertexAndNormalList: List<RenderUtils.WorldPositionVertex>,
+        color: Long,
+        disableDepth: Boolean,
+        wireframe: Boolean,
+        lineThickness: Float,
     )
 
     @JvmOverloads
@@ -851,11 +1226,62 @@ abstract class BaseWorldRenderer {
         drawTracer(partialTicks, xPosition, yPosition, zPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, lineThickness)
     }
 
-    abstract fun drawTracer(
+    @JvmOverloads
+    fun drawTracer(
         partialTicks: Float,
         xPosition: Float,
         yPosition: Float,
         zPosition: Float,
+        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        val mc = Client.getMinecraft()
+        //#if MC<12100
+        //$$mc.thePlayer?.let { player ->
+            //$$val x1: Double = player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTicks
+            //$$val y1: Double =  player.getEyeHeight() + player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTicks
+            //$$val z1: Double = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * partialTicks
+            //$$val yawDeg = player.rotationYaw.toDouble()
+            //$$val pitchDeg = player.rotationPitch.toDouble()
+        //#else
+        mc.player?.let { player ->
+            val x1: Double = player.lastX + (player.x - player.lastX) * partialTicks
+            val y1: Double = player.getEyeHeight(player.pose) + player.lastY + (player.y - player.lastY) * partialTicks
+            val z1: Double = player.lastZ + (player.z - player.lastZ) * partialTicks
+            val yawDeg = mc.gameRenderer.camera.yaw.toDouble()
+            val pitchDeg = mc.gameRenderer.camera.pitch.toDouble()
+            //#endif
+
+            val yawRad = Math.toRadians(yawDeg)
+            val pitchRad = Math.toRadians(pitchDeg)
+
+            val distance = 75.0
+            //#if MC<12100
+            //$$val startPos = Vector3d(
+            //$$    x1 - sin(yawRad) * cos(pitchRad) * distance,
+            //$$    y1 - sin(pitchRad) * distance,
+            //$$    z1 + cos(yawRad) * cos(pitchRad) * distance
+            //$$)
+            //#else
+            val startPos = Vec3d(0.0, 0.0, distance)
+                .rotateX(-pitchRad.toFloat())
+                .rotateY(-yawRad.toFloat())
+                .add(x1, y1, z1)
+            //#endif
+
+            _drawTracer(partialTicks, startPos.x.toFloat(), startPos.y.toFloat(), startPos.z.toFloat(), xPosition, yPosition, zPosition, color, disableDepth, lineThickness)
+        }
+    }
+
+    abstract fun _drawTracer(
+        partialTicks: Float,
+        startPosX: Float,
+        startPosY: Float,
+        startPosZ: Float,
+        endPosX: Float,
+        endPosY: Float,
+        endPosZ: Float,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         disableDepth: Boolean = false,
         lineThickness: Float = 1f,

@@ -364,6 +364,12 @@ object RenderUtils {
     fun normal(x: Double, y: Double, z: Double) = apply {
         normal(x.toFloat(), y.toFloat(), z.toFloat())
     }
+    @JvmStatic
+    fun normal(vector: Vector3f?) = apply {
+        vector?.let {
+            normal(it.x, it.y, it.z)
+        }
+    }
 
     @JvmStatic
     fun overlay(u: Int, v: Int) = apply {
@@ -874,7 +880,14 @@ object RenderUtils {
         return message.toString().replace("(?<!\\\\)&(?![^0-9a-fk-or]|$)".toRegex(), "\u00a7")
     }
 
-    //#if MC >= 12100
+    data class WorldPositionVertex(
+        val x: Float,
+        val y: Float,
+        val z: Float,
+        val normal: Vector3f?,
+    )
+
+    //#if MC>=12100
     data class TextLines(val lines: List<OrderedText>, val width: Float, val height: Float)
 
     @JvmStatic

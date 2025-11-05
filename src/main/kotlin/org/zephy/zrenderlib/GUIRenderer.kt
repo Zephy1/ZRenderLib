@@ -8,7 +8,6 @@ package org.zephy.zrenderlib
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.text.Text
 import net.minecraft.client.texture.NativeImageBackedTexture
-import org.joml.Matrix3x2f
 //#if MC<=12105
 //$$import net.minecraft.client.font.TextRenderer
 //#else
@@ -17,6 +16,7 @@ import org.zephy.zrenderlib.renderstates.GradientGUIRenderState
 import org.zephy.zrenderlib.renderstates.TexturedGUIRenderState
 import net.minecraft.client.gui.render.state.TextGuiElementRenderState
 import net.minecraft.client.texture.TextureSetup
+import org.joml.Matrix3x2f
 //#endif
 //#endif
 
