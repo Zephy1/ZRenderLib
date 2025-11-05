@@ -1,5 +1,10 @@
 package org.zephy.zrenderlib
 
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
+
 //#if MC>=12100
 import net.minecraft.client.gui.DrawContext
 //#endif
@@ -152,7 +157,7 @@ abstract class BaseGUIRenderer {
         )
     }
 
-    abstract _drawLine(
+    abstract fun _drawLine(
         //#if MC>=12100
         drawContext: DrawContext,
         //#endif
@@ -256,7 +261,7 @@ abstract class BaseGUIRenderer {
         )
     }
 
-    abstract _drawRect(
+    abstract fun _drawRect(
         //#if MC>=12100
         drawContext: DrawContext,
         //#endif
@@ -457,7 +462,7 @@ abstract class BaseGUIRenderer {
         bottomRightColor: Long = RenderUtils.BLACK,
         direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT,
         zOffset: Float = 0f,
-    ) (
+    ) {
         val x2 = x + width
         val y2 = y + height
 
@@ -510,7 +515,7 @@ abstract class BaseGUIRenderer {
             //#endif
             vertexAndColorList, zOffset
         )
-    )
+    }
 
     abstract fun _drawGradient(
         //#if MC>=12100

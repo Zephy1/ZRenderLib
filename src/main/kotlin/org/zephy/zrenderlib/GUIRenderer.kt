@@ -1,28 +1,73 @@
 package org.zephy.zrenderlib
 
-//#if MC>=12100
+//#if MC==10809 || MC>=12100
+//#if MC<12100
+//$$import net.minecraft.client.renderer.texture.DynamicTexture
+//$$import org.lwjgl.opengl.GL11
+//#else
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.text.Text
-import java.awt.Color
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
-
+import net.minecraft.client.texture.NativeImageBackedTexture
+import org.joml.Matrix3x2f
 //#if MC<=12105
 //$$import net.minecraft.client.font.TextRenderer
 //#else
+import org.zephy.zrenderlib.renderstates.GUIRenderState
+import org.zephy.zrenderlib.renderstates.GradientGUIRenderState
+import org.zephy.zrenderlib.renderstates.TexturedGUIRenderState
 import net.minecraft.client.gui.render.state.TextGuiElementRenderState
 import net.minecraft.client.texture.TextureSetup
-import org.joml.Matrix3x2f
-import org.zephy.zrenderlib.renderstates.*
+//#endif
 //#endif
 
 object GUIRenderer : BaseGUIRenderer() {
-    override fun drawString(drawContext: DrawContext, text: String, xPosition: Float, yPosition: Float, color: Long, textScale: Float, renderBackground: Boolean, textShadow: Boolean, maxWidth: Int, zOffset: Float) {
+    override fun drawString(
+        //#if MC>=12100
+        drawContext: DrawContext,
+        //#endif
+        text: String,
+        xPosition: Float,
+        yPosition: Float,
+        color: Long,
+        textScale: Float,
+        renderBackground: Boolean,
+        textShadow: Boolean,
+        maxWidth: Int,
+        zOffset: Float
+    ) {
+        //#if MC<12100
+        //$$val (a, r, g, b) = RenderUtils.RGBAColor.fromLongRGBA(color).getIntComponentsARGB()
+        //$$if (a == 0) return
+        //$$val safeAlpha = if (a in 1..3) 4 else a
+        //$$val safeColorIntARGB = RenderUtils.ARGBColor(r, g, b, safeAlpha).getIntARGB()
+        //$$val backgroundColorLong = RenderUtils.ARGBColor(0, 0, 0, 150).getLongRGBA()
+        //$$val fontRenderer = RenderUtils.getTextRenderer()
+        //$$var currentY = 0f
+        //$$RenderUtils
+        //$$    .pushMatrix()
+        //$$    .translate(xPosition, yPosition, zOffset)
+        //$$    .addColor(text).split("\n").forEach { line ->
+        //$$        if (renderBackground) {
+        //$$            val textWidth = fontRenderer.getStringWidth(line)
+        //$$            drawRect(
+        //$$                xPosition - (1f * textScale),
+        //$$                yPosition + currentY - (1f * textScale),
+        //$$                (textWidth + 1f) * textScale,
+        //$$                (fontRenderer.FONT_HEIGHT + 1f) * textScale,
+        //$$                backgroundColorLong,
+        //$$                0f,
+        //$$            )
+        //$$        }
+        //$$        fontRenderer.drawString(line, 0f, currentY, safeColorIntARGB, textShadow)
+        //$$        currentY += fontRenderer.FONT_HEIGHT
+        //$$    }
+        //$$RenderUtils.popMatrix()
+        //#else
         drawString(drawContext, Text.of(text), xPosition, yPosition, color, textScale, renderBackground, textShadow, maxWidth, zOffset)
+        //#endif
     }
 
+    //#if MC>=12105
     @JvmStatic
     @JvmOverloads
     fun drawStringWithShadowRGBA(drawContext: DrawContext, text: Text, xPosition: Float, yPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, textScale: Float = 1f, renderBackground: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
@@ -55,18 +100,12 @@ object GUIRenderer : BaseGUIRenderer() {
         maxWidth: Int = 512,
         zOffset: Float = 0f, // Useless in 1.21.6+, text is drawn on top of all elements
     ) {
-        // TextRender.tweakTransparency gets called in TextRender.draw resetting the alpha value to 255 if it's less than 4
         val (a, r, g, b) = RenderUtils.RGBAColor.fromLongRGBA(color).getIntComponentsARGB()
-        if (a == 0) {
-            return
-        }
+        if (a == 0) return
         val safeAlpha = if (a in 1..3) 4 else a
-        val safeColorARGB = RenderUtils.ARGBColor(r, g, b, safeAlpha).getIntARGB()
-        val backgroundColorInt = if (renderBackground) {
-            Color(0, 0, 0, 150).rgb
-        } else {
-            0
-        }
+        val safeColorIntARGB = RenderUtils.ARGBColor(r, g, b, safeAlpha).getIntARGB()
+        val backgroundColor = RenderUtils.ARGBColor(0, 0, 0, 150)
+        val backgroundColorInt = backgroundColor.getIntARGB()
 
         val fontRenderer = RenderUtils.getTextRenderer()
         var currentY = 0f
@@ -84,7 +123,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$        line,
         //$$        0f,
         //$$        currentY,
-        //$$        safeColorARGB,
+        //$$        safeColorIntARGB,
         //$$        textShadow,
         //$$        positionMatrix,
         //$$        vertexConsumers,
@@ -98,6 +137,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$positionMatrix.scale(1f / textScale, 1f / textScale, 1f)
         //$$RenderUtils.guiEndDraw()
         //#else
+        val backgroundColorLong = backgroundColor.getLongRGBA()
         lines.forEach { line ->
             val matrix = Matrix3x2f()
             matrix.translate(xPosition, yPosition + currentY)
@@ -113,7 +153,7 @@ object GUIRenderer : BaseGUIRenderer() {
                     yPosition + currentY - (1f * textScale),
                     (textWidth + 1f) * textScale,
                     (fontRenderer.fontHeight + 1f) * textScale,
-                    RenderUtils.ARGBColor(0, 0, 0, 150).getLongRGBA(),
+                    backgroundColorLong,
                     0f,
                 )
             }
@@ -125,7 +165,7 @@ object GUIRenderer : BaseGUIRenderer() {
                 matrix,
                 0,
                 0,
-                safeColorARGB,
+                safeColorIntARGB,
                 backgroundColorInt,
                 textShadow,
                 drawContext.scissorStack.peekLast()
@@ -135,9 +175,12 @@ object GUIRenderer : BaseGUIRenderer() {
         }
         //#endif
     }
+    //#endif
 
     override fun _drawLine(
+        //#if MC>=12100
         drawContext: DrawContext,
+        //#endif
         vertexList: List<Pair<Float, Float>>,
         color: Long,
         zOffset: Float,
@@ -145,7 +188,11 @@ object GUIRenderer : BaseGUIRenderer() {
         //#if MC<=12105
         //$$RenderUtils
         //$$    .guiStartDraw()
-        //$$    .begin(RenderLayers.QUADS_ESP())
+                //#if MC<12100
+                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION)
+                //#else
+                //$$.begin(RenderLayers.QUADS_ESP())
+                //#endif
         //$$    .colorizeRGBA(color)
         //$$    .translate(0f, 0f, zOffset)
         //$$    .cameraPosList(vertexList, 0f)
@@ -168,7 +215,9 @@ object GUIRenderer : BaseGUIRenderer() {
     }
 
     override fun _drawRect(
+        //#if MC>=12100
         drawContext: DrawContext,
+        //#endif
         vertexList: List<Pair<Float, Float>>,
         color: Long,
         zOffset: Float,
@@ -176,7 +225,11 @@ object GUIRenderer : BaseGUIRenderer() {
         //#if MC<=12105
         //$$RenderUtils
         //$$    .guiStartDraw()
-        //$$    .begin(RenderLayers.QUADS())
+                //#if MC<12100
+                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION)
+                //#else
+                //$$.begin(RenderLayers.QUADS_ESP())
+                //#endif
         //$$    .colorizeRGBA(color)
         //$$    .translate(0f, 0f, zOffset)
         //$$    .cameraPosList(vertexList, 0f)
@@ -199,7 +252,9 @@ object GUIRenderer : BaseGUIRenderer() {
     }
 
     override fun _drawRoundedRect(
+        //#if MC>=12100
         drawContext: DrawContext,
+        //#endif
         x1: Float,
         y1: Float,
         x2: Float,
@@ -211,7 +266,11 @@ object GUIRenderer : BaseGUIRenderer() {
         //#if MC<=12105
         //$$RenderUtils
         //$$    .guiStartDraw()
-        //$$    .begin(RenderLayers.QUADS_ESP())
+                //#if MC<12100
+                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION)
+                //#else
+                //$$.begin(RenderLayers.QUADS_ESP())
+                //#endif
         //$$    .colorizeRGBA(color)
         //$$    .translate(0f, 0f, zOffset)
         //$$    .cameraPosList(vertexList, 0f)
@@ -240,14 +299,20 @@ object GUIRenderer : BaseGUIRenderer() {
     }
 
     override fun _drawGradient(
+        //#if MC>=12100
         drawContext: DrawContext,
-        vertexAndColorList: List<Pair<Float, Float>>,
+        //#endif
+        vertexAndColorList: List<Triple<Float, Float, Long>>,
         zOffset: Float,
     ) {
         //#if MC<=12105
         //$$RenderUtils
         //$$    .guiStartDraw()
-        //$$    .begin(RenderLayers.QUADS_ESP())
+                //#if MC<12100
+                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION)
+                //#else
+                //$$.begin(RenderLayers.QUADS_ESP())
+                //#endif
         //$$    .translate(0f, 0f, zOffset)
         //$$vertexAndColorList.forEach { (x, y, color) ->
         //$$    RenderUtils
@@ -277,7 +342,9 @@ object GUIRenderer : BaseGUIRenderer() {
     }
 
     override fun _drawCircle(
+        //#if MC>=12100
         drawContext: DrawContext,
+        //#endif
         minX: Float,
         maxX: Float,
         minY: Float,
@@ -290,7 +357,11 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$RenderUtils
         //$$    .guiStartDraw()
         //$$    .pushMatrix()
-        //$$    .begin(RenderLayers.QUADS_ESP())
+                //#if MC<12100
+                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION)
+                //#else
+                //$$.begin(RenderLayers.QUADS_ESP())
+                //#endif
         //$$    .colorizeRGBA(color)
         //$$    .translate(0f, 0f, zOffset)
         //$$    .cameraPosList(vertexList, 0f)
@@ -320,7 +391,9 @@ object GUIRenderer : BaseGUIRenderer() {
     }
 
     override fun _drawImage(
+        //#if MC>=12100
         drawContext: DrawContext,
+        //#endif
         image: Image,
         texture: Any,
         vertexList: List<Pair<Float, Float>>,
@@ -331,9 +404,15 @@ object GUIRenderer : BaseGUIRenderer() {
         //#if MC<=12105
         //$$RenderUtils
         //$$    .guiStartDraw()
-        //$$    .setShaderTexture(0, texture.glTexture)
         //$$    .scale(1f, 1f, 50f)
-        //$$    .begin(RenderLayers.TEXTURED_QUADS_ESP(textureIdentifier = image.getIdentifier()!!))
+                //#if MC<12100
+                //$$.enableTexture2D()
+                //$$.bindTexture((texture as DynamicTexture).getGlTextureId())
+                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION_TEX)
+                //#else
+                //$$.setShaderTexture(0, (texture as NativeImageBackedTexture).glTexture)
+                //$$.begin(RenderLayers.TEXTURED_QUADS_ESP(textureIdentifier = image.getIdentifier()!!))
+                //#endif
         //$$    .colorizeRGBA(color)
         //$$    .translate(0f, 0f, zOffset)
         //$$    .cameraPos(vertexList[0].first, vertexList[0].second, 0f).tex(uvList[0].first, uvList[0].second)
@@ -355,7 +434,7 @@ object GUIRenderer : BaseGUIRenderer() {
                     RenderPipelines.TEXTURED_QUADS_ESP().build(),
                     drawContext.scissorStack.peekLast()
                 ),
-                TextureSetup.withoutGlTexture(texture.glTextureView),
+                TextureSetup.withoutGlTexture((texture as NativeImageBackedTexture).glTextureView),
                 uvList,
             )
         )

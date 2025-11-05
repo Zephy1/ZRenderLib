@@ -40,6 +40,7 @@ import net.minecraft.util.Identifier
 import org.lwjgl.system.MemoryUtil
 import java.io.ByteArrayOutputStream
 import java.util.UUID
+
 class Image(var image: BufferedImage?) {
     private var texture: Texture? = null
     private var identifier: Identifier? = null

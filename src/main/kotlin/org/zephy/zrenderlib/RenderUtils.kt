@@ -1,10 +1,10 @@
 package org.zephy.zrenderlib
 
 //#if MC==10809 || MC>=12100
-import kotlin.math.abs
-import java.awt.Color
 import org.lwjgl.opengl.GL11
+import java.awt.Color
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.sin
 import kotlin.math.cos
 
@@ -161,6 +161,7 @@ object RenderUtils {
             .depthMask(false)
             .disableDepth()
             .enableLineSmooth()
+            .disableTexture2D()
     }
 
     @JvmStatic
@@ -176,6 +177,7 @@ object RenderUtils {
     @JvmStatic
     fun guiEndDraw() = apply {
         depthMask(true)
+            .enableTexture2D()
             .baseEndDraw()
     }
     @JvmStatic
@@ -278,7 +280,6 @@ object RenderUtils {
         }
     }
 
-    //#if MC>=12100
     @JvmStatic
     @JvmOverloads
     fun cameraPos(x: Float, y: Float, z: Float = 0f) = apply {
@@ -287,8 +288,12 @@ object RenderUtils {
     @JvmStatic
     @JvmOverloads
     fun cameraPos(x: Double, y: Double, z: Double = 0.0) = apply {
+        //#if MC<12100
+        //$$pos(x, y, z)
+        //#else
         val camera = Client.getMinecraft().gameRenderer.camera.pos
         pos(x + camera.x, y + camera.y, z + camera.z)
+        //#endif
     }
     @JvmStatic
     fun cameraPosList(positions: List<Triple<Float, Float, Float>>) = apply {
@@ -302,28 +307,6 @@ object RenderUtils {
             cameraPos(pos.first, pos.second, zPosition)
         }
     }
-
-//    @JvmStatic
-//    fun worldPos(x: Float, y: Float, z: Float) = apply {
-//        worldPos(x.toDouble(), y.toDouble(), z.toDouble())
-//    }
-//    @JvmStatic
-//    fun worldPos(x: Double, y: Double, z: Double) = apply {
-//        if (!began) begin()
-//        if (!firstVertex) ucRenderer.endVertex()
-//        firstVertex = false
-//
-//        //#if MC<12100
-//        //$$worldRenderer?.pos(x, y, z)
-//        //#else
-//        ucRenderer.pos(matrixStack, x, y, z)
-//        //#endif
-//
-//        vertexColor?.let {
-//            color(vertexColor!!)
-//        }
-//    }
-    //#endif
 
     @JvmStatic
     fun tex(u: Float, v: Float) = apply {
