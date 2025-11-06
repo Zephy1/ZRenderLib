@@ -46,6 +46,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$RenderUtils
         //$$    .pushMatrix()
         //$$    .translate(xPosition, yPosition, zOffset)
+        //$$    .scale(textScale, textScale, 1f)
         //$$    .addColor(text).split("\n").forEach { line ->
         //$$        if (renderBackground) {
         //$$            val textWidth = fontRenderer.getStringWidth(line)
@@ -189,7 +190,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$RenderUtils
         //$$    .guiStartDraw()
                 //#if MC<12100
-                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION)
+                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
                 //#else
                 //$$.begin(RenderLayers.QUADS_ESP())
                 //#endif
@@ -226,7 +227,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$RenderUtils
         //$$    .guiStartDraw()
                 //#if MC<12100
-                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION)
+                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
                 //#else
                 //$$.begin(RenderLayers.QUADS_ESP())
                 //#endif
@@ -267,7 +268,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$RenderUtils
         //$$    .guiStartDraw()
                 //#if MC<12100
-                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION)
+                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
                 //#else
                 //$$.begin(RenderLayers.QUADS_ESP())
                 //#endif
@@ -309,15 +310,16 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$RenderUtils
         //$$    .guiStartDraw()
                 //#if MC<12100
-                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION)
+                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
                 //#else
                 //$$.begin(RenderLayers.QUADS_ESP())
                 //#endif
-        //$$    .translate(0f, 0f, zOffset)
         //$$vertexAndColorList.forEach { (x, y, color) ->
+        //$$    val (r, g, b, a) = RenderUtils.RGBAColor.fromLongRGBA(color)
         //$$    RenderUtils
-        //$$        .colorizeRGBA(color)
-        //$$        .cameraPos(x, y, 0f)
+        //$$        .color(r, g, b, a)
+        //$$        .cameraPos(x, y, zOffset, false)
+        //$$        .endVertex()
         //$$}
         //$$RenderUtils
         //$$    .draw()
@@ -358,7 +360,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$    .guiStartDraw()
         //$$    .pushMatrix()
                 //#if MC<12100
-                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION)
+                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
                 //#else
                 //$$.begin(RenderLayers.QUADS_ESP())
                 //#endif
@@ -408,7 +410,7 @@ object GUIRenderer : BaseGUIRenderer() {
                 //#if MC<12100
                 //$$.enableTexture2D()
                 //$$.bindTexture((texture as DynamicTexture).getGlTextureId())
-                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION_TEX)
+                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION_TEX_COLOR)
                 //#else
                 //$$.setShaderTexture(0, (texture as NativeImageBackedTexture).glTexture)
                 //$$.begin(RenderLayers.TEXTURED_QUADS_ESP(textureIdentifier = image.getIdentifier()!!))
