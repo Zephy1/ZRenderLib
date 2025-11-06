@@ -1089,12 +1089,32 @@ object RenderUtils {
     fun Vector3f.setAndNormalize(x: Float, y: Float, z: Float): Vector3f {
         //#if MC<12100
         //$$this.set(x, y, z)
-        //$$tempNormal.normalize()
-        //$$return tempNormal
+        //$$this.normalize()
+        //$$return this
         //#else
         return this.set(x, y, z).normalize()
         //#endif
     }
+    fun Vector3f.setAndNormalize(vec: Vector3f): Vector3f {
+        //#if MC<12100
+        //$$this.set(vec)
+        //$$this.normalize()
+        //$$return this
+        //#else
+        return this.set(vec).normalize()
+        //#endif
+    }
+    fun Vector3f.setAndNormalize(from: Vector3f, to: Vector3f): Vector3f {
+        //#if MC<12100
+        //$$this.set(to)
+        //$$this.sub(from)
+        //$$this.normalize()
+        //$$return this
+        //#else
+        return this.set(to).sub(from).normalize()
+        //#endif
+    }
+
 
     enum class FlattenRoundedRectCorner {
         TOP_LEFT,

@@ -80,12 +80,12 @@ abstract class BaseWorldRenderer {
     ) {
         val vertexAndNormalList = mutableListOf<RenderUtils.WorldPositionVertex>()
         //#if MC<12100
-        //$$val tempNormal = null
+        //$$val vectorCopy = null
         //#else
-        tempNormal.setAndNormalize(endX - startX, endY - startY, endZ - startZ)
+        val vectorCopy = Vector3f(tempNormal.setAndNormalize(endX - startX, endY - startY, endZ - startZ))
         //#endif
-        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(startX, startY, startZ, tempNormal))
-        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(endX, endY, endZ, tempNormal))
+        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(startX, startY, startZ, vectorCopy))
+        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(endX, endY, endZ, vectorCopy))
         _drawLine(vertexAndNormalList, color, disableDepth, lineThickness)
     }
 
@@ -298,17 +298,18 @@ abstract class BaseWorldRenderer {
         }
 
         //#if MC<12100
-        //$$val tempNormal = null
+        //$$val vectorCopy = null
         //#endif
+
         for (i in 0 until vertexes.size - if (wireframe) 1 else 0) {
             val p1 = vertexes[i]
             if (wireframe) {
                 val p2 = vertexes[i + 1]
                 //#if MC>=12100
-                tempNormal.setAndNormalize(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z)
+                val vectorCopy = Vector3f(tempNormal.setAndNormalize(p1, p2))
                 //#endif
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p1.x, p1.y, p1.z, tempNormal))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p2.x, p2.y, p2.z, tempNormal))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p1.x, p1.y, p1.z, vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p2.x, p2.y, p2.z, vectorCopy))
             } else {
                 vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p1.x, p1.y, p1.z, null))
             }
@@ -491,10 +492,61 @@ abstract class BaseWorldRenderer {
         val cache = RenderUtils.getTrigCache(segments)
 
         //#if MC<12100
-        //$$val tempNormal = null
+        //$$val vectorCopy = null
         //#endif
 
-        if (!wireframe) {
+        if (wireframe) {
+            for (lat in 1 until segments) {
+                val sinPhi = cache.sinPhi[lat]
+                val cosPhi = cache.cosPhi[lat]
+                val y = yPosition + yScale * cosPhi
+                for (lon in 0 until (segments * 2)) {
+                    val cosTheta1 = cache.cosTheta[lon]
+                    val sinTheta1 = cache.sinTheta[lon]
+                    val cosTheta2 = cache.cosTheta[lon + 1]
+                    val sinTheta2 = cache.sinTheta[lon + 1]
+
+                    val x1 = xPosition + xScale * sinPhi * cosTheta1
+                    val z1 = zPosition + zScale * sinPhi * sinTheta1
+
+                    val x2 = xPosition + xScale * sinPhi * cosTheta2
+                    val z2 = zPosition + zScale * sinPhi * sinTheta2
+
+                    //#if MC>=12100
+                    val vectorCopy = Vector3f(tempNormal.setAndNormalize(x2 - x1, 0f, z2 - z1))
+                    //#endif
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x1, y, z1, vectorCopy))
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x2, y, z2, vectorCopy))
+                }
+            }
+
+            for (lon in 0 until (segments * 2)) {
+                val cosTheta = cache.cosTheta[lon]
+                val sinTheta = cache.sinTheta[lon]
+
+                for (lat in 0 until segments) {
+                    val sinPhi1 = cache.sinPhi[lat]
+                    val cosPhi1 = cache.cosPhi[lat]
+                    val sinPhi2 = cache.sinPhi[lat + 1]
+                    val cosPhi2 = cache.cosPhi[lat + 1]
+
+                    val x1 = xPosition + xScale * sinPhi1 * cosTheta
+                    val y1 = yPosition + yScale * cosPhi1
+                    val z1 = zPosition + zScale * sinPhi1 * sinTheta
+
+                    val x2 = xPosition + xScale * sinPhi2 * cosTheta
+                    val y2 = yPosition + yScale * cosPhi2
+                    val z2 = zPosition + zScale * sinPhi2 * sinTheta
+
+                    //#if MC>=12100
+                    val vectorCopy = Vector3f(tempNormal.setAndNormalize(x2 - x1, y2 - y1, z2 - z1))
+                    //#endif
+
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x1, y1, z1, vectorCopy))
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x2, y2, z2, vectorCopy))
+                }
+            }
+        } else {
             for (phi in 0 until segments) {
                 val sinPhi1 = cache.sinPhi[phi]
                 val cosPhi1 = cache.cosPhi[phi]
@@ -523,84 +575,10 @@ abstract class BaseWorldRenderer {
                     val y4 = yPosition + yScale * cosPhi1
                     val z4 = zPosition + zScale * sinPhi1 * sinTheta2
 
-                    //#if MC>=12100
-                    tempNormal.setAndNormalize(x1 - xPosition, y1 - yPosition, z1 - zPosition)
-                    //#endif
-                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x1, y1, z1, tempNormal))
-
-                    //#if MC>=12100
-                    tempNormal.setAndNormalize(x2 - xPosition, y2 - yPosition, z2 - zPosition)
-                    //#endif
-                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x2, y2, z2, tempNormal))
-
-                    //#if MC>=12100
-                    tempNormal.setAndNormalize(x3 - xPosition, y3 - yPosition, z3 - zPosition)
-                    //#endif
-                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x3, y3, z3, tempNormal))
-
-                    //#if MC>=12100
-                    tempNormal.setAndNormalize(x4 - xPosition, y4 - yPosition, z4 - zPosition)
-                    //#endif
-                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x4, y4, z4, tempNormal))
-                }
-            }
-        } else {
-            for (phi in 1 until segments) {
-                val sinPhi = cache.sinPhi[phi]
-                val cosPhi = cache.cosPhi[phi]
-                val y = yPosition + yScale * cosPhi
-
-                for (theta in 0 until (segments * 2)) {
-                    val cosTheta1 = cache.cosTheta[theta]
-                    val sinTheta1 = cache.sinTheta[theta]
-                    val cosTheta2 = cache.cosTheta[theta + 1]
-                    val sinTheta2 = cache.sinTheta[theta + 1]
-
-                    val x1 = xPosition + xScale * sinPhi * cosTheta1
-                    val z1 = zPosition + zScale * sinPhi * sinTheta1
-
-                    val x2 = xPosition + xScale * sinPhi * cosTheta2
-                    val z2 = zPosition + zScale * sinPhi * sinTheta2
-
-                    //#if MC>=12100
-                    tempNormal.setAndNormalize(x1 - xPosition, y - yPosition, z1 - zPosition)
-                    //#endif
-                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x1, y, z1, tempNormal))
-
-                    //#if MC>=12100
-                    tempNormal.setAndNormalize(x2 - xPosition, y - yPosition, z2 - zPosition)
-                    //#endif
-                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x2, y, z2, tempNormal))
-                }
-            }
-
-            for (theta in 0 until (segments * 2)) {
-                val cosTheta = cache.cosTheta[theta]
-                val sinTheta = cache.sinTheta[theta]
-
-                for (phi in 0 until segments) {
-                    val sinPhi1 = cache.sinPhi[phi]
-                    val cosPhi1 = cache.cosPhi[phi]
-                    val sinPhi2 = cache.sinPhi[phi + 1]
-                    val cosPhi2 = cache.cosPhi[phi + 1]
-
-                    val x1 = xPosition + xScale * sinPhi1 * cosTheta
-                    val y1 = yPosition + yScale * cosPhi1
-                    val z1 = zPosition + zScale * sinPhi1 * sinTheta
-
-                    val x2 = xPosition + xScale * sinPhi2 * cosTheta
-                    val y2 = yPosition + yScale * cosPhi2
-                    val z2 = zPosition + zScale * sinPhi2 * sinTheta
-
-                    //#if MC>=12100
-                    tempNormal.setAndNormalize(x1 - xPosition, y1 - yPosition, z1 - zPosition)
-                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x1, y1, z1, tempNormal))
-                    //#endif
-
-                    //#if MC>=12100
-                    tempNormal.setAndNormalize(x2 - xPosition, y2 - yPosition, z2 - zPosition)
-                    //#endif
-                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x2, y2, z2, tempNormal))
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x1, y1, z1, null))
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x2, y2, z2, null))
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x3, y3, z3, null))
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x4, y4, z4, null))
                 }
             }
         }
@@ -873,16 +851,13 @@ abstract class BaseWorldRenderer {
         zPosition: Float,
         radius: Float = 1f,
         height: Float = 2f,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
+        color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         segments: Int = 64,
         disableDepth: Boolean = false,
         wireframe: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
+        drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, color, segments, disableDepth, wireframe, lineThickness)
     }
 
     @JvmOverloads
@@ -920,6 +895,7 @@ abstract class BaseWorldRenderer {
         lineThickness: Float = 1f,
     ) {
         val vertexAndNormalList = mutableListOf<RenderUtils.WorldPositionVertex>()
+
         val bottomX = FloatArray(segments + 1)
         val bottomY = yPosition
         val bottomZ = FloatArray(segments + 1)
@@ -939,31 +915,34 @@ abstract class BaseWorldRenderer {
             topZ[i] = zPosition + topRadius * sinA
         }
 
-        for (i in 0 until segments) {
-            val next = (i + 1) % segments
-            if (wireframe) {
-                //#if MC<12100
-                //$$val tempNormal = null
-                //#else
-                tempNormal.setAndNormalize(bottomX[i] - xPosition, 0f, bottomZ[i] - zPosition)
+        //#if MC<12100
+        //$$val vectorCopy = null
+        //#endif
+
+        if (wireframe) {
+            for (i in 0 until segments) {
+                val next = (i + 1) % segments
+                //#if MC>=12100
+                var vectorCopy = Vector3f(tempNormal.setAndNormalize(topX[next] - topX[i], 0f, topZ[next] - topZ[i]))
                 //#endif
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], tempNormal))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[i], topY, topZ[i], vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[next], topY, topZ[next], vectorCopy))
 
                 //#if MC>=12100
-                tempNormal.setAndNormalize(topX[i] - xPosition, 0f, topZ[i] - zPosition)
+                vectorCopy = Vector3f(tempNormal.setAndNormalize(bottomX[next] - bottomX[i], 0f, bottomZ[next] - bottomZ[i]))
                 //#endif
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[i], topY, topZ[i], tempNormal))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[next], bottomY, bottomZ[next], vectorCopy))
 
                 //#if MC>=12100
-                tempNormal.setAndNormalize(topX[next] - xPosition, 0f, topZ[next] - zPosition)
+                vectorCopy = Vector3f(tempNormal.setAndNormalize(topX[i] - bottomX[i], topY - bottomY, topZ[i] - bottomZ[i]))
                 //#endif
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[next], topY, topZ[next], tempNormal))
-
-                //#if MC>=12100
-                tempNormal.setAndNormalize(bottomX[next] - xPosition, 0f, bottomZ[next] - zPosition)
-                //#endif
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[next], bottomY, bottomZ[next], tempNormal))
-            } else {
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[i], topY, topZ[i], vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], vectorCopy))
+            }
+        } else {
+            for (i in 0 until segments) {
+                val next = (i + 1) % segments
                 vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], null))
                 vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[next], bottomY, bottomZ[next], null))
                 vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[next], topY, topZ[next], null))
@@ -971,29 +950,25 @@ abstract class BaseWorldRenderer {
             }
         }
 
-        val caps = listOf(
-            Triple(bottomY, bottomX, bottomZ),
-            Triple(topY, topX, topZ)
-        )
-        val normalsY = listOf(-1f, 1f)
-        for (index in caps.indices) {
-            val (y, xRing, zRing) = caps[index]
-            val normalY = normalsY[index]
-            val normalVector = Vector3f(0f, normalY, 0f)
+        //#if MC>=12100
+        var vectorCopy = Vector3f(tempNormal.set(0f, -1f, 0f))
+        //#endif
+        for (i in 0 until segments) {
+            val next = (i + 1) % segments
+            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, bottomY, zPosition, vectorCopy))
+            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[next], bottomY, bottomZ[next], vectorCopy))
+            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], vectorCopy))
+        }
 
-            for (i in 0 until segments) {
-                val next = (i + 1) % segments
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, y, zPosition, normalVector))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xRing[next], y, zRing[next], normalVector))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xRing[i], y, zRing[i], normalVector))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, y, zPosition, normalVector))
-            }
-
-            for (i in 0 until segments) {
-                val next = (i + 1) % segments
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xRing[i], y, zRing[i], normalVector))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xRing[next], y, zRing[next], normalVector))
-            }
+        //#if MC>=12100
+        vectorCopy = Vector3f(tempNormal.set(0f, 1f, 0f))
+        //#endif
+        for (i in 0 until segments) {
+            val next = (i + 1) % segments
+            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, topY, zPosition, vectorCopy))
+            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[next], topY, topZ[next], vectorCopy))
+            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[i], topY, topZ[i], vectorCopy))
+            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, topY, zPosition, vectorCopy))
         }
 
         _drawCylinder(vertexAndNormalList, color, disableDepth, wireframe, lineThickness)
@@ -1165,39 +1140,54 @@ abstract class BaseWorldRenderer {
 
         val x0 = xPosition - halfX
         val x1 = xPosition + halfX
+        val y0 = yPosition
+        val y1 = yPosition + yScale
         val z0 = zPosition - halfZ
         val z1 = zPosition + halfZ
 
-        val yBase = yPosition
-        val tipX = xPosition
-        val tipY = yPosition + yScale
-        val tipZ = zPosition
+        val apex = Vector3f(xPosition, y1, zPosition)
+        val base00 = Vector3f(x0, y0, z0)
+        val base10 = Vector3f(x1, y0, z0)
+        val base11 = Vector3f(x1, y0, z1)
+        val base01 = Vector3f(x0, y0, z1)
 
-        //#if MC<12100
-        //$$val tempNormal = null
-        //#endif
-
-        // Normals are a bit wrong here, fine enough
-        fun triangle(ax: Float, ay: Float, az: Float, bx: Float, by: Float, bz: Float, cx: Float, cy: Float, cz: Float) {
-            //#if MC>=12100
-            tempNormal.setAndNormalize(
-                (bx - ax) * (cy - ay) - (cx - ax) * (by - ay),
-                (bz - az) * (cy - ay) - (cz - az) * (by - ay),
-                (cx - ax) * (by - ay) - (bx - ax) * (cy - ay),
+        val vertexes = if (wireframe) {
+            listOf(
+                base00, base10, base11, base01, base00,
+                base00, apex,
+                base10, apex,
+                base11, apex,
+                base01, apex
             )
-            //#endif
-            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(ax, ay, az, tempNormal))
-            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bx, by, bz, tempNormal))
-            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(cx, cy, cz, tempNormal))
+        } else {
+            listOf(
+                base00, base10, base11,
+                base00, base11, base01,
+
+                apex, base00, base10,
+                apex, base10, base11,
+                apex, base11, base01,
+                apex, base01, base00
+            )
         }
 
-        triangle(tipX, tipY, tipZ, x0, yBase, z0, x1, yBase, z0)
-        triangle(tipX, tipY, tipZ, x1, yBase, z0, x1, yBase, z1)
-        triangle(tipX, tipY, tipZ, x1, yBase, z1, x0, yBase, z1)
-        triangle(tipX, tipY, tipZ, x0, yBase, z1, x0, yBase, z0)
+        //#if MC<12100
+        //$$val vectorCopy = null
+        //#endif
 
-        triangle(x0, yBase, z0, x1, yBase, z0, x1, yBase, z1)
-        triangle(x0, yBase, z0, x1, yBase, z1, x0, yBase, z1)
+        for (i in 0 until vertexes.size - if (wireframe) 1 else 0) {
+            val p1 = vertexes[i]
+            if (wireframe) {
+                val p2 = vertexes[i + 1]
+                //#if MC>=12100
+                val vectorCopy = Vector3f(tempNormal.setAndNormalize(p1, p2))
+                //#endif
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p1.x, p1.y, p1.z, vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p2.x, p2.y, p2.z, vectorCopy))
+            } else {
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p1.x, p1.y, p1.z, null))
+            }
+        }
 
         _drawPyramid(vertexAndNormalList, color, disableDepth, wireframe, lineThickness)
     }
