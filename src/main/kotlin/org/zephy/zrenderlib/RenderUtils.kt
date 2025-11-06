@@ -188,7 +188,6 @@ object RenderUtils {
     }
 
     private fun _begin() = apply {
-        pushMatrix()
         colorized = null
         vertexColor = null
         firstVertex = true
@@ -238,6 +237,7 @@ object RenderUtils {
         if (!began) return this
         began = false
 
+        endVertex()
         //#if MC<12100
         //$$tessellator.draw()
         //#else
@@ -246,18 +246,17 @@ object RenderUtils {
     }
 
     @JvmStatic
-    fun pos(x: Float, y: Float, z: Float) = apply {
-        pos(x.toDouble(), y.toDouble(), z.toDouble())
+    fun pos(x: Float, y: Float, z: Float, endVertex: Boolean = true) = apply {
+        pos(x.toDouble(), y.toDouble(), z.toDouble(), endVertex)
     }
     @JvmStatic
-    fun pos(x: Double, y: Double, z: Double) = apply {
+    fun pos(x: Double, y: Double, z: Double, endVertex: Boolean = true) = apply {
         if (!began) begin()
+        if (!firstVertex && endVertex) endVertex()
 
         //#if MC<12100
-        //$$if (!firstVertex) worldRenderer?.endVertex()
         //$$worldRenderer?.pos(x, y, z)
         //#else
-        if (!firstVertex) ucRenderer.endVertex()
         val camera = Client.getMinecraft().gameRenderer.camera.pos
         ucRenderer.pos(matrixStack, x - camera.x, y - camera.y, z - camera.z)
         //#endif
@@ -282,17 +281,17 @@ object RenderUtils {
 
     @JvmStatic
     @JvmOverloads
-    fun cameraPos(x: Float, y: Float, z: Float = 0f) = apply {
-        cameraPos(x.toDouble(), y.toDouble(), z.toDouble())
+    fun cameraPos(x: Float, y: Float, z: Float = 0f, endVertex: Boolean = true) = apply {
+        cameraPos(x.toDouble(), y.toDouble(), z.toDouble(), endVertex)
     }
     @JvmStatic
     @JvmOverloads
-    fun cameraPos(x: Double, y: Double, z: Double = 0.0) = apply {
+    fun cameraPos(x: Double, y: Double, z: Double = 0.0, endVertex: Boolean = true) = apply {
         //#if MC<12100
-        //$$pos(x, y, z)
+        //$$pos(x, y, z, endVertex)
         //#else
         val camera = Client.getMinecraft().gameRenderer.camera.pos
-        pos(x + camera.x, y + camera.y, z + camera.z)
+        pos(x + camera.x, y + camera.y, z + camera.z, endVertex)
         //#endif
     }
     @JvmStatic
@@ -306,6 +305,13 @@ object RenderUtils {
         for (pos in positions) {
             cameraPos(pos.first, pos.second, zPosition)
         }
+    }
+
+    @JvmStatic
+    fun endVertex() = apply {
+        //#if MC<12100
+        //$$worldRenderer?.endVertex()
+        //#endif
     }
 
     @JvmStatic
@@ -785,7 +791,7 @@ object RenderUtils {
         colorized = RGBAColor(red, green, blue, alpha).getLong()
         vertexColor = Color(red, green, blue, alpha)
 
-        //#if MC<=12100
+        //#if MC<12100
         //$$GlStateManager.color(r, g, b, a)
         //#elseif MC<=12105
         //$$RenderSystem.setShaderColor(
@@ -1114,7 +1120,6 @@ object RenderUtils {
         return this.set(to).sub(from).normalize()
         //#endif
     }
-
 
     enum class FlattenRoundedRectCorner {
         TOP_LEFT,

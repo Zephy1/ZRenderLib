@@ -2,7 +2,7 @@ package org.zephy.zrenderlib
 
 //#if MC==10809 || MC>=12100
 //#if MC<12100
-import org.lwjgl.opengl.GL11
+//$$import org.lwjgl.opengl.GL11
 //#else
 import java.awt.Color
 import org.joml.Matrix4f
@@ -167,8 +167,9 @@ object WorldRenderer : BaseWorldRenderer() {
         val renderLayer = getLineRenderLayer(disableDepth)
         //#endif
 
+        RenderUtils.baseStartDraw()
+        if (disableDepth) RenderUtils.disableDepth()
         RenderUtils
-            .baseStartDraw()
             .lineWidth(lineThickness)
             //#if MC<12100
             //$$.disableTexture2D()
@@ -177,7 +178,7 @@ object WorldRenderer : BaseWorldRenderer() {
             //$$    -cameraPos.y,
             //$$    -cameraPos.z,
             //$$)
-            //$$.begin(drawMode, VertexFormat.POSITION)
+            //$$.begin(drawMode, VertexFormat.POSITION_COLOR)
             //#else
             .begin(renderLayer)
             //#endif
@@ -202,7 +203,7 @@ object WorldRenderer : BaseWorldRenderer() {
         lineThickness: Float,
     ) {
         //#if MC<12100
-        //$$val drawMode = if (wireframe) GL11.GL_LINE_STRIP else GL11.GL_TRIANGLE_STRIP
+        //$$val drawMode = if (wireframe) GL11.GL_LINES else GL11.GL_TRIANGLE_STRIP
         //$$val cameraPos = RenderUtils.getCameraPos()
         //#else
         val renderLayer = when {
@@ -211,8 +212,9 @@ object WorldRenderer : BaseWorldRenderer() {
         }
         //#endif
 
+        RenderUtils.baseStartDraw()
+        if (disableDepth) RenderUtils.disableDepth()
         RenderUtils
-            .baseStartDraw()
             .lineWidth(lineThickness)
             //#if MC<12100
             //$$.disableTexture2D()
@@ -221,7 +223,7 @@ object WorldRenderer : BaseWorldRenderer() {
             //$$    -cameraPos.y,
             //$$    -cameraPos.z,
             //$$)
-            //$$.begin(drawMode, VertexFormat.POSITION)
+            //$$.begin(drawMode, VertexFormat.POSITION_COLOR)
             //#else
             .begin(renderLayer)
             //#endif
@@ -247,7 +249,7 @@ object WorldRenderer : BaseWorldRenderer() {
         lineThickness: Float,
     ) {
         //#if MC<12100
-        //$$val drawMode = if (wireframe) GL11.GL_LINE_STRIP else GL11.GL_QUADS
+        //$$val drawMode = if (wireframe) GL11.GL_LINES else GL11.GL_QUADS
         //$$val cameraPos = RenderUtils.getCameraPos()
         //#else
         val renderLayer = when {
@@ -256,8 +258,9 @@ object WorldRenderer : BaseWorldRenderer() {
         }
         //#endif
 
+        RenderUtils.baseStartDraw()
+        if (disableDepth) RenderUtils.disableDepth()
         RenderUtils
-            .baseStartDraw()
             .lineWidth(lineThickness)
             //#if MC<12100
             //$$.disableTexture2D()
@@ -266,7 +269,7 @@ object WorldRenderer : BaseWorldRenderer() {
             //$$    -cameraPos.y,
             //$$    -cameraPos.z,
             //$$)
-            //$$.begin(drawMode, VertexFormat.POSITION)
+            //$$.begin(drawMode, VertexFormat.POSITION_COLOR)
             //#else
             .begin(renderLayer)
             //#endif
@@ -292,7 +295,7 @@ object WorldRenderer : BaseWorldRenderer() {
         lineThickness: Float,
     ) {
         //#if MC<12100
-        //$$val drawMode = if (wireframe) GL11.GL_LINE_STRIP else GL11.GL_QUADS
+        //$$val drawMode = if (wireframe) GL11.GL_LINES else GL11.GL_QUADS
         //$$val cameraPos = RenderUtils.getCameraPos()
         //#else
         val renderLayer = when {
@@ -301,21 +304,22 @@ object WorldRenderer : BaseWorldRenderer() {
         }
         //#endif
 
+        RenderUtils.baseStartDraw()
+        if (disableDepth) RenderUtils.disableDepth()
         RenderUtils
-            .baseStartDraw()
             .lineWidth(lineThickness)
-        //#if MC<12100
-        //$$.disableTexture2D()
-        //$$.translate(
-        //$$    -cameraPos.x,
-        //$$    -cameraPos.y,
-        //$$    -cameraPos.z,
-        //$$)
-        //$$.begin(drawMode, VertexFormat.POSITION)
-        //#else
-        .begin(renderLayer)
-        //#endif
-        .colorizeRGBA(color)
+            //#if MC<12100
+            //$$.disableTexture2D()
+            //$$.translate(
+            //$$    -cameraPos.x,
+            //$$    -cameraPos.y,
+            //$$    -cameraPos.z,
+            //$$)
+            //$$.begin(drawMode, VertexFormat.POSITION_COLOR)
+            //#else
+            .begin(renderLayer)
+            //#endif
+            .colorizeRGBA(color)
         vertexAndNormalList.forEach { (x, y, z, normalVector) ->
             RenderUtils
                 .pos(x, y, z)
@@ -336,7 +340,7 @@ object WorldRenderer : BaseWorldRenderer() {
         lineThickness: Float,
     ) {
         //#if MC<12100
-        //$$val drawMode = if (wireframe) GL11.GL_LINE_STRIP else GL11.GL_TRIANGLES
+        //$$val drawMode = if (wireframe) GL11.GL_LINES else GL11.GL_TRIANGLES
         //$$val cameraPos = RenderUtils.getCameraPos()
         //#else
         val renderLayer = when {
@@ -345,8 +349,9 @@ object WorldRenderer : BaseWorldRenderer() {
         }
         //#endif
 
+        RenderUtils.baseStartDraw()
+        if (disableDepth) RenderUtils.disableDepth()
         RenderUtils
-            .baseStartDraw()
             .lineWidth(lineThickness)
             //#if MC<12100
             //$$.disableTexture2D()
@@ -355,7 +360,7 @@ object WorldRenderer : BaseWorldRenderer() {
             //$$    -cameraPos.y,
             //$$    -cameraPos.z,
             //$$)
-            //$$.begin(drawMode, VertexFormat.POSITION)
+            //$$.begin(drawMode, VertexFormat.POSITION_COLOR)
             //#else
             .begin(renderLayer)
             //#endif

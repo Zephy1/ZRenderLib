@@ -76,7 +76,7 @@ abstract class BaseWorldRenderer {
         endZ: Float,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
         disableDepth: Boolean = false,
-        lineThickness: Float = 1f
+        lineThickness: Float = 1f,
     ) {
         val vertexAndNormalList = mutableListOf<RenderUtils.WorldPositionVertex>()
         //#if MC<12100
@@ -301,10 +301,10 @@ abstract class BaseWorldRenderer {
         //$$val vectorCopy = null
         //#endif
 
-        for (i in 0 until vertexes.size - if (wireframe) 1 else 0) {
+        for (i in 0 until vertexes.size) {
             val p1 = vertexes[i]
             if (wireframe) {
-                val p2 = vertexes[i + 1]
+                val p2 = vertexes[(i + 1) % vertexes.size]
                 //#if MC>=12100
                 val vectorCopy = Vector3f(tempNormal.setAndNormalize(p1, p2))
                 //#endif
@@ -958,6 +958,7 @@ abstract class BaseWorldRenderer {
             vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, bottomY, zPosition, vectorCopy))
             vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[next], bottomY, bottomZ[next], vectorCopy))
             vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], vectorCopy))
+            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, bottomY, zPosition, vectorCopy))
         }
 
         //#if MC>=12100
@@ -1157,7 +1158,7 @@ abstract class BaseWorldRenderer {
                 base00, apex,
                 base10, apex,
                 base11, apex,
-                base01, apex
+                base01, apex,
             )
         } else {
             listOf(
@@ -1167,7 +1168,7 @@ abstract class BaseWorldRenderer {
                 apex, base00, base10,
                 apex, base10, base11,
                 apex, base11, base01,
-                apex, base01, base00
+                apex, base01, base00,
             )
         }
 
