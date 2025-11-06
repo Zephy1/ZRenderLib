@@ -179,9 +179,9 @@ object WorldRenderer : BaseWorldRenderer() {
             //$$)
             //$$.begin(drawMode, VertexFormat.POSITION)
             //#else
-                .begin(renderLayer)
+            .begin(renderLayer)
             //#endif
-                .colorizeRGBA(color)
+            .colorizeRGBA(color)
         vertexAndNormalList.forEach { (x, y, z, normalVector) ->
             RenderUtils
                 .pos(x, y, z)
@@ -223,9 +223,9 @@ object WorldRenderer : BaseWorldRenderer() {
             //$$)
             //$$.begin(drawMode, VertexFormat.POSITION)
             //#else
-                .begin(renderLayer)
+            .begin(renderLayer)
             //#endif
-                .colorizeRGBA(color)
+            .colorizeRGBA(color)
         vertexAndNormalList.forEach { (x, y, z, normalVector) ->
             RenderUtils
                 .pos(x, y, z)
@@ -268,9 +268,9 @@ object WorldRenderer : BaseWorldRenderer() {
             //$$)
             //$$.begin(drawMode, VertexFormat.POSITION)
             //#else
-                .begin(renderLayer)
+            .begin(renderLayer)
             //#endif
-                .colorizeRGBA(color)
+            .colorizeRGBA(color)
         vertexAndNormalList.forEach { (x, y, z, normalVector) ->
             RenderUtils
                 .pos(x, y, z)
@@ -313,9 +313,9 @@ object WorldRenderer : BaseWorldRenderer() {
         //$$)
         //$$.begin(drawMode, VertexFormat.POSITION)
         //#else
-            .begin(renderLayer)
+        .begin(renderLayer)
         //#endif
-            .colorizeRGBA(color)
+        .colorizeRGBA(color)
         vertexAndNormalList.forEach { (x, y, z, normalVector) ->
             RenderUtils
                 .pos(x, y, z)
@@ -357,9 +357,9 @@ object WorldRenderer : BaseWorldRenderer() {
             //$$)
             //$$.begin(drawMode, VertexFormat.POSITION)
             //#else
-                .begin(renderLayer)
+            .begin(renderLayer)
             //#endif
-                .colorizeRGBA(color)
+            .colorizeRGBA(color)
         vertexAndNormalList.forEach { (x, y, z, normalVector) ->
             RenderUtils
                 .pos(x, y, z)
