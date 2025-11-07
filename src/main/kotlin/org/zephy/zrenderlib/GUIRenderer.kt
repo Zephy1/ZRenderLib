@@ -311,18 +311,20 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$    .guiStartDraw()
                 //#if MC<12100
                 //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
+                //$$.shadeModel(GL11.GL_SMOOTH)
                 //#else
                 //$$.begin(RenderLayers.QUADS_ESP())
                 //#endif
         //$$vertexAndColorList.forEach { (x, y, color) ->
-        //$$    val (r, g, b, a) = RenderUtils.RGBAColor.fromLongRGBA(color)
         //$$    RenderUtils
-        //$$        .color(r, g, b, a)
-        //$$        .cameraPos(x, y, zOffset, false)
-        //$$        .endVertex()
+        //$$        .colorizeRGBA(color)
+        //$$        .cameraPos(x, y, zOffset)
         //$$}
         //$$RenderUtils
         //$$    .draw()
+        //#if MC<12100
+        //$$    .shadeModel(GL11.GL_FLAT)
+        //#endif
         //$$    .guiEndDraw()
         //#else
         val boundsList = vertexAndColorList.map { (x, y, _) -> Pair(x, y) }

@@ -328,37 +328,6 @@ object RenderUtils {
     }
 
     @JvmStatic
-    @JvmOverloads
-    fun color(r: Float, g: Float, b: Float, a: Float = 1f) = apply {
-        //#if MC<12100
-        //$$worldRenderer?.color(r, g, b, a)
-        //#else
-        ucRenderer.color(r, g, b, a)
-        //#endif
-    }
-
-    @JvmStatic
-    @JvmOverloads
-    fun color(r: Int, g: Int, b: Int, a: Int = 255) = apply {
-        color(r / 255f, g / 255f, b / 255f, a / 255f)
-    }
-
-    @JvmStatic
-    fun color(color: Long) = apply {
-        val awtColor = Color(color.toInt(), true)
-        val r = awtColor.red
-        val g = awtColor.green
-        val b = awtColor.blue
-        val a = awtColor.alpha
-        color(r, g, b, a)
-    }
-
-    @JvmStatic
-    fun color(color: Color) = apply {
-        color(color.red, color.green, color.blue, color.alpha)
-    }
-
-    @JvmStatic
     fun normal(x: Float, y: Float, z: Float) = apply {
         //#if MC<12100
         //$$worldRenderer?.normal(x, y, z)
@@ -550,6 +519,13 @@ object RenderUtils {
         //$$GlStateManager.blendFunc(srcFactor, dstFactor)
         //#else
         blendFunc(getSourceFactorFromInt(srcFactor), getDestFactorFromInt(dstFactor))
+        //#endif
+    }
+
+    @JvmStatic
+    fun shadeModel(model: Int) = apply {
+        //#if MC<12100
+        //$$GlStateManager.shadeModel(model)
         //#endif
     }
 
@@ -811,6 +787,37 @@ object RenderUtils {
             b.coerceIn(0, 255) / 255f,
             a.coerceIn(0, 255) / 255f,
         )
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun color(r: Float, g: Float, b: Float, a: Float = 1f) = apply {
+        //#if MC<12100
+        //$$worldRenderer?.color(r, g, b, a)
+        //#else
+        ucRenderer.color(r, g, b, a)
+        //#endif
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun color(r: Int, g: Int, b: Int, a: Int = 255) = apply {
+        color(r / 255f, g / 255f, b / 255f, a / 255f)
+    }
+
+    @JvmStatic
+    fun color(color: Long) = apply {
+        val awtColor = Color(color.toInt(), true)
+        val r = awtColor.red
+        val g = awtColor.green
+        val b = awtColor.blue
+        val a = awtColor.alpha
+        color(r, g, b, a)
+    }
+
+    @JvmStatic
+    fun color(color: Color) = apply {
+        color(color.red, color.green, color.blue, color.alpha)
     }
 
     //#if MC>=12106
