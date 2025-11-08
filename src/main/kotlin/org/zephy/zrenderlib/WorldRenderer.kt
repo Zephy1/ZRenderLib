@@ -42,21 +42,22 @@ object WorldRenderer : BaseWorldRenderer() {
         //$$    .depthMask(false)
         //$$    .enableBlend()
         //$$    .tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0)
+        //$$val xOffset = if (centered) -j else 0f
         //$$if (renderBackground) {
         //$$    RenderUtils
         //$$        .disableTexture2D()
         //$$        .begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
         //$$        .colorize_01(0.0f, 0.0f, 0.0f, 0.25f)
-        //$$        .pos((-j - 1).toDouble(), (-1).toDouble(), 0.0)
-        //$$        .pos((-j - 1).toDouble(), 8.toDouble(), 0.0)
-        //$$        .pos((j + 1).toDouble(), 8.toDouble(), 0.0)
-        //$$        .pos((j + 1).toDouble(), (-1).toDouble(), 0.0)
+        //$$        .pos(xOffset - 1f, -1f, 0f)
+        //$$        .pos(xOffset - 1f, 8f, 0f)
+        //$$        .pos(xOffset + 1f, 8f, 0f)
+        //$$        .pos(xOffset + 1f, -1f, 0f)
         //$$        .draw()
         //$$        .enableTexture2D()
         //$$}
         //$$fontRenderer.drawString(
         //$$    text,
-        //$$    if (centered) -j else 0f,
+        //$$    xOffset,
         //$$    0f,
         //$$    RenderUtils.ARGBColor.fromLongRGBA(color).getLong().toInt(),
         //$$    textShadow
