@@ -189,11 +189,11 @@ object GUIRenderer : BaseGUIRenderer() {
         //#if MC<=12105
         //$$RenderUtils
         //$$    .guiStartDraw()
-                //#if MC<12100
-                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
-                //#else
-                //$$.begin(RenderLayers.QUADS_ESP())
-                //#endif
+        //#if MC<12100
+        //$$    .begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
+        //#else
+        //$$    .begin(RenderLayers.QUADS_ESP())
+        //#endif
         //$$    .colorizeRGBA(color)
         //$$    .translate(0f, 0f, zOffset)
         //$$    .cameraPosList(vertexList, 0f)
@@ -226,11 +226,11 @@ object GUIRenderer : BaseGUIRenderer() {
         //#if MC<=12105
         //$$RenderUtils
         //$$    .guiStartDraw()
-                //#if MC<12100
-                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
-                //#else
-                //$$.begin(RenderLayers.QUADS_ESP())
-                //#endif
+        //#if MC<12100
+        //$$    .begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
+        //#else
+        //$$    .begin(RenderLayers.QUADS_ESP())
+        //#endif
         //$$    .colorizeRGBA(color)
         //$$    .translate(0f, 0f, zOffset)
         //$$    .cameraPosList(vertexList, 0f)
@@ -267,11 +267,11 @@ object GUIRenderer : BaseGUIRenderer() {
         //#if MC<=12105
         //$$RenderUtils
         //$$    .guiStartDraw()
-                //#if MC<12100
-                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
-                //#else
-                //$$.begin(RenderLayers.QUADS_ESP())
-                //#endif
+        //#if MC<12100
+        //$$    .begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
+        //#else
+        //$$    .begin(RenderLayers.QUADS_ESP())
+        //#endif
         //$$    .colorizeRGBA(color)
         //$$    .translate(0f, 0f, zOffset)
         //$$    .cameraPosList(vertexList, 0f)
@@ -309,12 +309,12 @@ object GUIRenderer : BaseGUIRenderer() {
         //#if MC<=12105
         //$$RenderUtils
         //$$    .guiStartDraw()
-                //#if MC<12100
-                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
-                //$$.shadeModel(GL11.GL_SMOOTH)
-                //#else
-                //$$.begin(RenderLayers.QUADS_ESP())
-                //#endif
+        //#if MC<12100
+        //$$    .begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
+        //$$    .shadeModel(GL11.GL_SMOOTH)
+        //#else
+        //$$    .begin(RenderLayers.QUADS_ESP())
+        //#endif
         //$$vertexAndColorList.forEach { (x, y, color) ->
         //$$    RenderUtils
         //$$        .colorizeRGBA(color)
@@ -361,11 +361,11 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$RenderUtils
         //$$    .guiStartDraw()
         //$$    .pushMatrix()
-                //#if MC<12100
-                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
-                //#else
-                //$$.begin(RenderLayers.QUADS_ESP())
-                //#endif
+        //#if MC<12100
+        //$$    .begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
+        //#else
+        //$$    .begin(RenderLayers.QUADS_ESP())
+        //#endif
         //$$    .colorizeRGBA(color)
         //$$    .translate(0f, 0f, zOffset)
         //$$    .cameraPosList(vertexList, 0f)
@@ -398,8 +398,12 @@ object GUIRenderer : BaseGUIRenderer() {
         //#if MC>=12100
         drawContext: DrawContext,
         //#endif
+        //#if MC<12100
+        //$$texture: DynamicTexture,
+        //#else
         image: Image,
-        texture: Any,
+        texture: NativeImageBackedTexture,
+        //#endif
         vertexList: List<Pair<Float, Float>>,
         uvList: List<Pair<Float, Float>>,
         color: Long,
@@ -409,20 +413,25 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$RenderUtils
         //$$    .guiStartDraw()
         //$$    .scale(1f, 1f, 50f)
-                //#if MC<12100
-                //$$.enableTexture2D()
-                //$$.bindTexture((texture as DynamicTexture).getGlTextureId())
-                //$$.begin(GL11.GL_QUADS, VertexFormat.POSITION_TEX_COLOR)
-                //#else
-                //$$.setShaderTexture(0, (texture as NativeImageBackedTexture).glTexture)
-                //$$.begin(RenderLayers.TEXTURED_QUADS_ESP(textureIdentifier = image.getIdentifier()!!))
-                //#endif
-        //$$    .colorizeRGBA(color)
+        //#if MC<12100
+        //$$    .bindTexture(texture.getGlTextureId())
+        //$$    .enableTexture2D()
+        //$$    .resetColor()
+        //$$    .begin(GL11.GL_QUADS, VertexFormat.POSITION_TEX_COLOR)
+        //#else
+        //$$    .setShaderTexture(0, texture.glTexture)
+        //$$    .begin(RenderLayers.TEXTURED_QUADS_ESP(textureIdentifier = image.getIdentifier()!!))
+        //#endif
         //$$    .translate(0f, 0f, zOffset)
-        //$$    .cameraPos(vertexList[0].first, vertexList[0].second, 0f).tex(uvList[0].first, uvList[0].second)
-        //$$    .cameraPos(vertexList[1].first, vertexList[1].second, 0f).tex(uvList[1].first, uvList[1].second)
-        //$$    .cameraPos(vertexList[2].first, vertexList[2].second, 0f).tex(uvList[2].first, uvList[2].second)
-        //$$    .cameraPos(vertexList[3].first, vertexList[3].second, 0f).tex(uvList[3].first, uvList[3].second)
+        //$$uvList.forEachIndexed { index, (u, v) ->
+        //$$    val (x, y) = vertexList[index]
+        //$$    RenderUtils
+        //$$        .cameraPos(x, y, 0f, false)
+        //$$        .tex(u, v)
+        //$$        .colorRGBA(color)
+        //$$        .endVertex()
+        //$$}
+        //$$RenderUtils
         //$$    .draw()
         //$$    .guiEndDraw()
         //#else
@@ -438,7 +447,7 @@ object GUIRenderer : BaseGUIRenderer() {
                     RenderPipelines.TEXTURED_QUADS_ESP().build(),
                     drawContext.scissorStack.peekLast()
                 ),
-                TextureSetup.withoutGlTexture((texture as NativeImageBackedTexture).glTextureView),
+                TextureSetup.withoutGlTexture(texture.glTextureView),
                 uvList,
             )
         )

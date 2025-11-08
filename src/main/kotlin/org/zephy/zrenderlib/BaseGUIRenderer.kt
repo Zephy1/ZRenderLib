@@ -1,15 +1,18 @@
 package org.zephy.zrenderlib
 
+//#if MC==10809 || MC>=12100
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-//#if MC>=12100
+//#if MC<12100
+//$$import net.minecraft.client.renderer.texture.DynamicTexture
+//#else
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.texture.NativeImageBackedTexture
 //#endif
 
-//#if MC==10809 || MC>=12100
 abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawStringWithShadowRGBA(
@@ -723,17 +726,20 @@ abstract class BaseGUIRenderer {
         _drawImage(
             //#if MC>=12100
             drawContext,
+            image,
             //#endif
-            image, texture, vertexList, uvList, color, zOffset
+            texture, vertexList, uvList, color, zOffset
         )
     }
 
     abstract fun _drawImage(
         //#if MC>=12100
         drawContext: DrawContext,
-        //#endif
         image: Image,
-        texture: Any,
+        texture: NativeImageBackedTexture,
+        //#else
+        //$$texture: DynamicTexture,
+        //#endif
         vertexList: List<Pair<Float, Float>>,
         uvList: List<Pair<Float, Float>>,
         color: Long = RenderUtils.WHITE,
