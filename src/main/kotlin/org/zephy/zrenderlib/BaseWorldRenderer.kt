@@ -950,26 +950,31 @@ abstract class BaseWorldRenderer {
             }
         }
 
-        //#if MC>=12100
-        var vectorCopy = Vector3f(tempNormal.set(0f, -1f, 0f))
-        //#endif
-        for (i in 0 until segments) {
-            val next = (i + 1) % segments
-            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, bottomY, zPosition, vectorCopy))
-            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[next], bottomY, bottomZ[next], vectorCopy))
-            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], vectorCopy))
-            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, bottomY, zPosition, vectorCopy))
+        if (bottomRadius > 0f) {
+            //#if MC>=12100
+            val vectorCopy = Vector3f(0f, -1f, 0f)
+            //#endif
+            for (i in 0 until segments) {
+                val next = (i + 1) % segments
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, bottomY, zPosition, vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[next], bottomY, bottomZ[next], vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, bottomY, zPosition, vectorCopy))
+            }
         }
 
-        //#if MC>=12100
-        vectorCopy = Vector3f(tempNormal.set(0f, 1f, 0f))
-        //#endif
-        for (i in 0 until segments) {
-            val next = (i + 1) % segments
-            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, topY, zPosition, vectorCopy))
-            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[next], topY, topZ[next], vectorCopy))
-            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[i], topY, topZ[i], vectorCopy))
-            vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, topY, zPosition, vectorCopy))
+
+        if (topRadius > 0f) {
+            //#if MC>=12100
+            val vectorCopy = Vector3f(0f, 1f, 0f)
+            //#endif
+            for (i in 0 until segments) {
+                val next = (i + 1) % segments
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, topY, zPosition, vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[next], topY, topZ[next], vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[i], topY, topZ[i], vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, topY, zPosition, vectorCopy))
+            }
         }
 
         _drawCylinder(vertexAndNormalList, color, disableDepth, wireframe, lineThickness)
