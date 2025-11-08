@@ -791,7 +791,7 @@ object RenderUtils {
 
     @JvmStatic
     @JvmOverloads
-    fun color(r: Float, g: Float, b: Float, a: Float = 1f) = apply {
+    fun color_01(r: Float, g: Float, b: Float, a: Float = 1f) = apply {
         //#if MC<12100
         //$$worldRenderer?.color(r, g, b, a)
         //#else
@@ -801,23 +801,25 @@ object RenderUtils {
 
     @JvmStatic
     @JvmOverloads
-    fun color(r: Int, g: Int, b: Int, a: Int = 255) = apply {
-        color(r / 255f, g / 255f, b / 255f, a / 255f)
-    }
-
-    @JvmStatic
-    fun color(color: Long) = apply {
-        val awtColor = Color(color.toInt(), true)
-        val r = awtColor.red
-        val g = awtColor.green
-        val b = awtColor.blue
-        val a = awtColor.alpha
-        color(r, g, b, a)
+    fun color_255(r: Int, g: Int, b: Int, a: Int = 255) = apply {
+        color_01(r / 255f, g / 255f, b / 255f, a / 255f)
     }
 
     @JvmStatic
     fun color(color: Color) = apply {
-        color(color.red, color.green, color.blue, color.alpha)
+        color_255(color.red, color.green, color.blue, color.alpha)
+    }
+
+    @JvmStatic
+    fun colorRGBA(color: Long) = apply {
+        val (r, g, b, a) = RGBAColor.fromLongRGBA(color).getIntComponentsRGBA()
+        color_255(r, g, b, a)
+    }
+
+    @JvmStatic
+    fun colorARGB(color: Long) = apply {
+        val (a, r, g, b) = RGBAColor.fromLongRGBA(color).getIntComponentsRGBA()
+        color_255(r, g, b, a)
     }
 
     //#if MC>=12106
