@@ -51,10 +51,10 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$        if (renderBackground) {
         //$$            val textWidth = fontRenderer.getStringWidth(line)
         //$$            drawRect(
-        //$$                xPosition - (1f * textScale),
-        //$$                yPosition + currentY - (1f * textScale),
-        //$$                (textWidth + 1f) * textScale,
-        //$$                (fontRenderer.FONT_HEIGHT + 1f) * textScale,
+        //$$                -1f,
+        //$$                currentY - 1f,
+        //$$                textWidth + 1f,
+        //$$                fontRenderer.FONT_HEIGHT + 1f,
         //$$                backgroundColorLong,
         //$$                0f,
         //$$            )
@@ -105,7 +105,11 @@ object GUIRenderer : BaseGUIRenderer() {
         if (a == 0) return
         val safeAlpha = if (a in 1..3) 4 else a
         val safeColorIntARGB = RenderUtils.ARGBColor(r, g, b, safeAlpha).getIntARGB()
-        val backgroundColor = RenderUtils.ARGBColor(0, 0, 0, 150)
+        val backgroundColor = if (renderBackground) {
+            RenderUtils.ARGBColor(0, 0, 0, 150)
+        } else {
+            RenderUtils.ARGBColor(0, 0, 0, 0)
+        }
         val backgroundColorInt = backgroundColor.getIntARGB()
 
         val fontRenderer = RenderUtils.getTextRenderer()
