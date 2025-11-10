@@ -768,14 +768,14 @@ object RenderUtils {
         vertexColor = Color(red, green, blue, alpha)
 
         //#if MC<12100
-        //$$GlStateManager.color(r, g, b, a)
+        //$$//GlStateManager.color(r, g, b, a)
         //#elseif MC<=12105
-        //$$RenderSystem.setShaderColor(
-        //$$    vertexColor!!.red / 255f,
-        //$$    vertexColor!!.green / 255f,
-        //$$    vertexColor!!.blue / 255f,
-        //$$    vertexColor!!.alpha / 255f,
-        //$$)
+        //$$//RenderSystem.setShaderColor(
+        //$$//    vertexColor!!.red / 255f,
+        //$$//    vertexColor!!.green / 255f,
+        //$$//    vertexColor!!.blue / 255f,
+        //$$//    vertexColor!!.alpha / 255f,
+        //$$//)
         //#endif
     }
 
