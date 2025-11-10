@@ -6,7 +6,7 @@ plugins {
     id("gg.essential.defaults")
 }
 
-group = "com.zephy.zrenderlib"
+group = "org.zephy.zrenderlib"
 
 loom {
     runConfigs {
