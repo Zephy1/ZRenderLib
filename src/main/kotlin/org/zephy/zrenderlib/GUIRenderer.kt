@@ -166,7 +166,7 @@ object GUIRenderer : BaseGUIRenderer() {
 
             val textState = TextGuiElementRenderState(
                 fontRenderer,
-                line,
+                line.asOrderedText(),
                 matrix,
                 0,
                 0,

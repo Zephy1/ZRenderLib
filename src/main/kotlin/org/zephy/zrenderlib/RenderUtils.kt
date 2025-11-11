@@ -25,10 +25,11 @@ import com.mojang.blaze3d.systems.RenderSystem
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
 import net.minecraft.client.render.RenderLayer
-import net.minecraft.text.OrderedText
 import net.minecraft.text.Text
 import org.joml.Quaternionf
 import org.joml.Vector3f
+import java.util.Optional
+import net.minecraft.text.Style
 //#endif
 
 //#if MC>=12100
@@ -38,7 +39,7 @@ import org.joml.Vector3f
     import com.mojang.blaze3d.textures.GpuTextureView
     import org.joml.Matrix3x2f
     import org.joml.Matrix4f
-    //#endif
+//#endif
 //#endif
 
 object RenderUtils {
@@ -903,18 +904,28 @@ object RenderUtils {
     )
 
     //#if MC>=12100
-    data class TextLines(val lines: List<OrderedText>, val width: Float, val height: Float)
+    data class TextLines(val lines: List<Text>, val width: Float, val height: Float)
 
     @JvmStatic
     fun splitText(text: Text, maxWidth: Int): TextLines {
         val renderer = getTextRenderer()
-        val wrappedLines = renderer.wrapLines(text, maxWidth)
+        val wrappedLines = renderer.textHandler.wrapLines(text, maxWidth, Style.EMPTY)
 
-        return TextLines(
-            wrappedLines,
-            wrappedLines.maxOf { getTextRenderer().getWidth(it) }.toFloat(),
-            (getTextRenderer().fontHeight * wrappedLines.size + (wrappedLines.size - 1)).toFloat(),
-        )
+        val textLines = wrappedLines.map { visitable ->
+            val builder = Text.empty()
+            visitable.visit({ style, content ->
+                if (content != null) {
+                    builder.append(Text.literal(content).setStyle(style))
+                }
+                Optional.empty<Unit>()
+            }, Style.EMPTY)
+            builder
+        }
+
+        val width = textLines.maxOfOrNull { renderer.getWidth(it).toFloat() } ?: 0f
+        val height = (renderer.fontHeight * textLines.size + (textLines.size - 1)).toFloat()
+
+        return TextLines(textLines, width, height)
     }
     //#endif
 
