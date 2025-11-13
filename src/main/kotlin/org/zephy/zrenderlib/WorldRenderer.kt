@@ -64,7 +64,7 @@ object WorldRenderer : BaseWorldRenderer() {
         //$$)
         //$$RenderUtils.worldEndDraw()
         //#else
-        drawString(Text.of(text), xPosition, yPosition, zPosition, color, scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
+        drawText(Text.literal(text), xPosition, yPosition, zPosition, color, scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
         //#endif
     }
 
@@ -83,13 +83,13 @@ object WorldRenderer : BaseWorldRenderer() {
 
     @JvmStatic
     @JvmOverloads
-    fun drawStringRGBA(text: Text, xPosition: Float, yPosition: Float, zPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, scale: Float = 1f, renderBackground: Boolean = false, centered: Boolean = false, textShadow: Boolean = true, disableDepth: Boolean = false, maxWidth: Int = 512) {
-        drawString(text, xPosition, yPosition, zPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
+    fun drawTextRGBA(text: Text, xPosition: Float, yPosition: Float, zPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, scale: Float = 1f, renderBackground: Boolean = false, centered: Boolean = false, textShadow: Boolean = true, disableDepth: Boolean = false, maxWidth: Int = 512) {
+        drawText(text, xPosition, yPosition, zPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
     }
 
     @JvmStatic
     @JvmOverloads
-    fun drawString(
+    fun drawText(
         text: Text,
         xPosition: Float,
         yPosition: Float,

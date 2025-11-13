@@ -64,32 +64,32 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$    }
         //$$RenderUtils.popMatrix()
         //#else
-        drawString(drawContext, Text.of(text), xPosition, yPosition, color, textScale, renderBackground, textShadow, maxWidth, zOffset)
+        drawText(drawContext, Text.literal(text), xPosition, yPosition, color, textScale, renderBackground, textShadow, maxWidth, zOffset)
         //#endif
     }
 
     //#if MC>=12105
     @JvmStatic
     @JvmOverloads
-    fun drawStringWithShadowRGBA(drawContext: DrawContext, text: Text, xPosition: Float, yPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, textScale: Float = 1f, renderBackground: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
-        drawString(drawContext, text, xPosition, yPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), textScale, renderBackground, true, maxWidth, zOffset)
+    fun drawTextWithShadowRGBA(drawContext: DrawContext, text: Text, xPosition: Float, yPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, textScale: Float = 1f, renderBackground: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
+        drawText(drawContext, text, xPosition, yPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), textScale, renderBackground, true, maxWidth, zOffset)
     }
 
     @JvmStatic
     @JvmOverloads
-    fun drawStringWithShadow(drawContext: DrawContext, text: Text, xPosition: Float, yPosition: Float, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, textScale: Float = 1f, renderBackground: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
-        drawString(drawContext, text, xPosition, yPosition, color, textScale, renderBackground, true, maxWidth, zOffset)
+    fun drawTextWithShadow(drawContext: DrawContext, text: Text, xPosition: Float, yPosition: Float, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, textScale: Float = 1f, renderBackground: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
+        drawText(drawContext, text, xPosition, yPosition, color, textScale, renderBackground, true, maxWidth, zOffset)
     }
 
     @JvmStatic
     @JvmOverloads
-    fun drawStringRGBA(drawContext: DrawContext, text: Text, xPosition: Float, yPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, textScale: Float = 1f, renderBackground: Boolean = false, textShadow: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
-        drawString(drawContext, text, xPosition, yPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), textScale, renderBackground, textShadow, maxWidth, zOffset)
+    fun drawTextRGBA(drawContext: DrawContext, text: Text, xPosition: Float, yPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, textScale: Float = 1f, renderBackground: Boolean = false, textShadow: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
+        drawText(drawContext, text, xPosition, yPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), textScale, renderBackground, textShadow, maxWidth, zOffset)
     }
 
     @JvmStatic
     @JvmOverloads
-    fun drawString(
+    fun drawText(
         drawContext: DrawContext,
         text: Text,
         xPosition: Float,
@@ -112,7 +112,7 @@ object GUIRenderer : BaseGUIRenderer() {
         }
         val backgroundColorInt = backgroundColor.getIntARGB()
 
-        val fontRenderer = RenderUtils.getTextRenderer()
+        val textRenderer = RenderUtils.getTextRenderer()
         var currentY = 0f
         val lines = RenderUtils.splitText(text, maxWidth).lines
 
@@ -124,7 +124,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$val positionMatrix = RenderUtils.matrixStack.peek().model
         //$$positionMatrix.scale(textScale, textScale, 1f)
         //$$lines.forEach { line ->
-        //$$    fontRenderer.draw(
+        //$$    textRenderer.draw(
         //$$        line,
         //$$        0f,
         //$$        currentY,
@@ -136,7 +136,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$        backgroundColorInt,
         //$$        0xF000F0,
         //$$    )
-        //$$    currentY += fontRenderer.fontHeight
+        //$$    currentY += textRenderer.fontHeight
         //$$}
         //$$vertexConsumers.draw()
         //$$positionMatrix.scale(1f / textScale, 1f / textScale, 1f)
@@ -151,13 +151,13 @@ object GUIRenderer : BaseGUIRenderer() {
             // backgroundColor isn't rendered on 1.21.9+?
             //#if MC>=12109
             if (renderBackground) {
-                val textWidth = fontRenderer.getWidth(line)
+                val textWidth = textRenderer.getWidth(line)
                 drawRect(
                     drawContext,
                     xPosition - (1f * textScale),
                     yPosition + currentY - (1f * textScale),
                     (textWidth + 1f) * textScale,
-                    (fontRenderer.fontHeight + 1f) * textScale,
+                    (textRenderer.fontHeight + 1f) * textScale,
                     backgroundColorLong,
                     0f,
                 )
@@ -165,7 +165,7 @@ object GUIRenderer : BaseGUIRenderer() {
             //#endif
 
             val textState = TextGuiElementRenderState(
-                fontRenderer,
+                textRenderer,
                 line.asOrderedText(),
                 matrix,
                 0,
@@ -176,7 +176,7 @@ object GUIRenderer : BaseGUIRenderer() {
                 drawContext.scissorStack.peekLast()
             )
             drawContext.state.addText(textState)
-            currentY += fontRenderer.fontHeight * textScale
+            currentY += textRenderer.fontHeight * textScale
         }
         //#endif
     }
