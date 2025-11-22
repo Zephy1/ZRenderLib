@@ -251,9 +251,9 @@ abstract class BaseGUIRenderer {
         val y2 = yPosition + height
         val vertexList = listOf(
             Pair(x1, y1),
-            Pair(x2, y1),
+            Pair(x1, y2),
             Pair(x2, y2),
-            Pair(x1, y2)
+            Pair(x2, y1),
         )
 
         _drawRect(

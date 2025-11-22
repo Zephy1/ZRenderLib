@@ -124,5 +124,21 @@ object RenderPipelines {
         vertexFormat: VertexFormat = VertexFormat.POSITION_TEXTURE_COLOR,
         snippet: RenderSnippet = RenderSnippet.POSITION_TEX_COLOR_SNIPPET,
     ): PipelineBuilder = createESPPipelineBuilder("textured_quads_esp", drawMode, vertexFormat, snippet)
+
+    @JvmStatic
+    fun GUI_MINIMAL(
+        drawMode: DrawMode = DrawMode.QUADS,
+        vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR,
+        snippet: RenderSnippet = RenderSnippet.GUI_SNIPPET,
+    ): PipelineBuilder {
+        // Match vanilla exactly - no layering, no extra settings
+        return PipelineBuilder
+            .begin(drawMode, vertexFormat, snippet)
+            .setLocation("gui_minimal")
+            .setBufferSize(786432)  // Match vanilla buffer size
+//            .setLayering(RenderPhase.VIEW_OFFSET_Z_LAYERING)
+//            .disableCull()
+//            .enableBlend()
+    }
 }
 //#endif

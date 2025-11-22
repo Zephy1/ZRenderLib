@@ -10,6 +10,7 @@ import net.minecraft.text.Text
 import net.minecraft.client.texture.NativeImageBackedTexture
 //#if MC<=12105
 //$$import net.minecraft.client.font.TextRenderer
+//$$import org.lwjgl.opengl.GL11
 //#else
 import org.zephy.zrenderlib.renderstates.GUIRenderState
 import org.zephy.zrenderlib.renderstates.GradientGUIRenderState
@@ -228,18 +229,28 @@ object GUIRenderer : BaseGUIRenderer() {
         zOffset: Float,
     ) {
         //#if MC<=12105
+        //$$drawContext.fill(
+        //$$    vertexList[0].first.toInt() + 8,
+        //$$    vertexList[0].second.toInt() + 8,
+        //$$    vertexList[2].first.toInt() + 8,
+        //$$    vertexList[2].second.toInt() + 8,
+        //$$    0x800000FF.toInt()
+        //$$)
+        //$$val stack = gg.essential.universal.UMatrixStack(drawContext.matrices)
         //$$RenderUtils
-        //$$    .guiStartDraw()
+        //$$    .setMatrixStack(stack)
+        //$$    .pushMatrix(stack)
+        //$$    .translate(0f, 0f, zOffset)
         //#if MC<12100
         //$$    .begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
         //#else
-        //$$    .begin(RenderLayers.QUADS_ESP())
+        //$$    .begin(RenderLayers.QUADS(snippet = RenderSnippet.GUI_SNIPPET))
         //#endif
         //$$    .colorizeRGBA(color)
-        //$$    .translate(0f, 0f, zOffset)
         //$$    .cameraPosList(vertexList, 0f)
         //$$    .draw()
-        //$$    .guiEndDraw()
+        //$$    //.guiEndDraw()
+        //$$    .popMatrix()
         //#else
         val boundsList = vertexList.toList()
         drawContext.state.addSimpleElement(
