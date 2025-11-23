@@ -196,7 +196,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //#if MC<12100
         //$$    .begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
         //#else
-        //$$    .begin(RenderLayers.QUADS_ESP())
+        //$$    .begin(RenderLayers.QUADS())
         //#endif
         //$$    .colorizeRGBA(color)
         //$$    .translate(0f, 0f, zOffset)
@@ -212,7 +212,7 @@ object GUIRenderer : BaseGUIRenderer() {
                 boundsList,
                 zOffset,
                 RenderUtils.RGBAColor.fromLongRGBA(color),
-                RenderPipelines.QUADS_ESP().build(),
+                RenderPipelines.QUADS().build(),
                 drawContext.scissorStack.peekLast(),
             )
         )
@@ -249,7 +249,7 @@ object GUIRenderer : BaseGUIRenderer() {
                 boundsList,
                 zOffset,
                 RenderUtils.RGBAColor.fromLongRGBA(color),
-                RenderPipelines.QUADS_ESP().build(),
+                RenderPipelines.QUADS().build(),
                 drawContext.scissorStack.peekLast(),
             )
         )
@@ -274,7 +274,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //#if MC<12100
         //$$    .begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
         //#else
-        //$$    .begin(RenderLayers.QUADS_ESP())
+        //$$    .begin(RenderLayers.QUADS())
         //#endif
         //$$    .colorizeRGBA(color)
         //$$    .translate(0f, 0f, zOffset)
@@ -296,7 +296,7 @@ object GUIRenderer : BaseGUIRenderer() {
                 boundsList,
                 zOffset,
                 RenderUtils.RGBAColor.fromLongRGBA(color),
-                RenderPipelines.QUADS_ESP().build(),
+                RenderPipelines.QUADS().build(),
                 drawContext.scissorStack.peekLast(),
             )
         )
@@ -317,7 +317,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$    .begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
         //$$    .shadeModel(GL11.GL_SMOOTH)
         //#else
-        //$$    .begin(RenderLayers.QUADS_ESP())
+        //$$    .begin(RenderLayers.QUADS())
         //#endif
         //$$vertexAndColorList.forEach { (x, y, color) ->
         //$$    RenderUtils
@@ -340,7 +340,7 @@ object GUIRenderer : BaseGUIRenderer() {
                     boundsList,
                     zOffset,
                     RenderUtils.RGBAColor(255, 255, 255, 255),
-                    RenderPipelines.QUADS_ESP().build(),
+                    RenderPipelines.QUADS().build(),
                     drawContext.scissorStack.peekLast(),
                 ),
                 vertexAndColorList,
@@ -368,7 +368,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //#if MC<12100
         //$$    .begin(GL11.GL_QUADS, VertexFormat.POSITION_COLOR)
         //#else
-        //$$    .begin(RenderLayers.QUADS_ESP())
+        //$$    .begin(RenderLayers.QUADS())
         //#endif
         //$$    .colorizeRGBA(color)
         //$$    .translate(0f, 0f, zOffset)
@@ -391,7 +391,7 @@ object GUIRenderer : BaseGUIRenderer() {
                 boundsList,
                 zOffset,
                 RenderUtils.RGBAColor.fromLongRGBA(color),
-                RenderPipelines.QUADS_ESP().build(),
+                RenderPipelines.QUADS().build(),
                 drawContext.scissorStack.peekLast(),
             )
         )
@@ -424,7 +424,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$    .begin(GL11.GL_QUADS, VertexFormat.POSITION_TEX_COLOR)
         //#else
         //$$    .setShaderTexture(0, texture.glTexture)
-        //$$    .begin(RenderLayers.TEXTURED_QUADS_ESP(textureIdentifier = image.getIdentifier()!!))
+        //$$    .begin(RenderLayers.TEXTURED_QUADS(textureIdentifier = image.getIdentifier()!!))
         //#endif
         //$$    .translate(0f, 0f, zOffset)
         //$$uvList.forEachIndexed { index, (u, v) ->
@@ -448,7 +448,7 @@ object GUIRenderer : BaseGUIRenderer() {
                     boundsList,
                     zOffset,
                     RenderUtils.RGBAColor.fromLongRGBA(color),
-                    RenderPipelines.TEXTURED_QUADS_ESP().build(),
+                    RenderPipelines.TEXTURED_QUADS().build(),
                     drawContext.scissorStack.peekLast()
                 ),
                 TextureSetup.withoutGlTexture(texture.glTextureView),

@@ -173,7 +173,7 @@ object RenderUtils {
     fun guiStartDraw() = apply {
         baseStartDraw()
             .depthMask(false)
-            .disableDepth()
+//            .disableDepth()
             .enableLineSmooth()
             .disableTexture2D()
     }
