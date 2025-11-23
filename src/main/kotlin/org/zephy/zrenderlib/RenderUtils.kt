@@ -35,10 +35,11 @@ import net.minecraft.text.Style
 //#if MC>=12100
     //#if MC<=12105
     //$$import com.mojang.blaze3d.textures.GpuTexture
+    //$$import net.minecraft.client.util.math.MatrixStack
     //#else
     import com.mojang.blaze3d.textures.GpuTextureView
-import gg.essential.universal.UChat
-import org.joml.Matrix3x2f
+    import org.joml.Matrix3x2fStack
+    import org.joml.Matrix3x2f
     import org.joml.Matrix4f
 //#endif
 //#endif
@@ -84,6 +85,17 @@ object RenderUtils {
     fun setMatrixStack(stack: UMatrixStack) = apply {
         matrixStack = stack
     }
+
+    //#if MC<=12105
+    //$$@JvmStatic
+    //$$fun setMatrixStack(stack: MatrixStack) = apply {
+    //$$    matrixStack = UMatrixStack(stack)
+    //$$}
+    //#else
+    fun setMatrixStack(stack: Matrix3x2fStack) = apply {
+        matrixStack = UMatrixStack(stack)
+    }
+    //#endif
     //#endif
 
     @JvmField val BLACK = RGBAColor(0, 0, 0, 255).getLong()
