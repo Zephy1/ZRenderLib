@@ -212,16 +212,5 @@ object RenderLayers {
             .setTexture(textureIdentifier)
             .layer()
     }
-
-    @JvmStatic
-    fun GUI_MINIMAL(
-        drawMode: DrawMode = DrawMode.QUADS,
-        vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR,
-        snippet: RenderSnippet = RenderSnippet.GUI_SNIPPET,
-    ): RenderLayer {
-        return RenderPipelines
-            .GUI_MINIMAL(drawMode, vertexFormat, snippet)
-            .layer()
-    }
 }
 //#endif
