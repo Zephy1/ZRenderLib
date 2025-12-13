@@ -86,16 +86,14 @@ object RenderUtils {
         matrixStack = stack
     }
 
+    @JvmStatic
     //#if MC<=12105
-    //$$@JvmStatic
     //$$fun setMatrixStack(stack: MatrixStack) = apply {
-    //$$    matrixStack = UMatrixStack(stack)
-    //$$}
     //#else
     fun setMatrixStack(stack: Matrix3x2fStack) = apply {
+    //#endif
         matrixStack = UMatrixStack(stack)
     }
-    //#endif
     //#endif
 
     @JvmField val BLACK = RGBAColor(0, 0, 0, 255).getLong()
