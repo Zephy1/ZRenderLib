@@ -172,9 +172,9 @@ object PipelineBuilder {
             //$$val layerBuilder = RenderType.CompositeState.builder()
             //$$if (textureIdentifier != null) {
             //#if MC<=12105
-            //$$    layerBuilder.setTextureState(RenderStateShard.TextureStateShard(textureIdentifier, TriState.FALSE, false))
+            //$$    layerBuilder.setTextureState(RenderStateShard.TextureStateShard(textureIdentifier!!, TriState.FALSE, false))
             //#else
-            //$$    layerBuilder.setTextureState(RenderStateShard.TextureStateShard(textureIdentifier, false))
+            //$$    layerBuilder.setTextureState(RenderStateShard.TextureStateShard(textureIdentifier!!, false))
             //#endif
             //$$}
             //$$if (lineWidth != null) {
@@ -204,18 +204,18 @@ object PipelineBuilder {
                         OptionalDouble.empty(),
                     )
                 }
-                mc.bindTexture("zrenderlib/custom/textures/${location ?: hashCode()}", RenderSystem.getDevice().createTextureView(texture), RenderTypes.MOVING_BLOCK_SAMPLER.get())
+                mc.bindTexture("zrenderlib/custom/textures/${location ?: hashCode()}", RenderSystem.getDevice().createTextureView(texture!!), RenderTypes.MOVING_BLOCK_SAMPLER.get())
             }
             if (layering != null) {
                 layerBuilder.setLayeringTransform(layering!!)
+            }
+            if (blendFunction != null) {
+                layerBuilder.sortOnUpload()
             }
             val layer = createRenderLayer(
                 "zrenderlib/custom/layers/${location ?: hashCode()}",
                 layerBuilder.createRenderSetup(),
             )
-            if (blendFunction != null) {
-                layerBuilder.sortOnUpload()
-            }
             //#endif
 
             layerList[state()] = layer
@@ -269,7 +269,7 @@ object PipelineBuilder {
                 "textureIdentifier=${textureIdentifier}, " +
                 "bufferSize=${bufferSize}, " +
                 //#if MC<=12110
-                //$$"lineWidth=$lineWidth" +
+                //$$"lineWidth=${lineWidth}" +
                 //#else
                 "texture=${texture}" +
                 //#endif
