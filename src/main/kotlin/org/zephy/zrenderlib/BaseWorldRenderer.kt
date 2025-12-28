@@ -7,7 +7,7 @@ package org.zephy.zrenderlib
 //$$import kotlin.math.cos
 //$$import kotlin.math.sin
 //#else
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f
 import org.zephy.zrenderlib.RenderUtils.setAndNormalize
 import org.zephy.zrenderlib.RenderUtils.tempNormal

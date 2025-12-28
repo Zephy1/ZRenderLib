@@ -44,28 +44,28 @@ object RenderPipelines {
     fun LINES(
         drawMode: DrawMode = DrawMode.LINES,
         vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR_NORMAL,
-        snippet: RenderSnippet = RenderSnippet.RENDERTYPE_LINES_SNIPPET,
+        snippet: RenderSnippet = RenderSnippet.LINES_SNIPPET,
     ): PipelineBuilder = createPipelineBuilder("lines", drawMode, vertexFormat, snippet)
 
     @JvmStatic
     fun LINES_ESP(
         drawMode: DrawMode = DrawMode.LINES,
         vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR_NORMAL,
-        snippet: RenderSnippet = RenderSnippet.RENDERTYPE_LINES_SNIPPET,
+        snippet: RenderSnippet = RenderSnippet.LINES_SNIPPET,
     ): PipelineBuilder = createESPPipelineBuilder("lines_esp", drawMode, vertexFormat, snippet)
 
     @JvmStatic
     fun LINE_STRIP(
         drawMode: DrawMode = DrawMode.LINE_STRIP,
         vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR_NORMAL,
-        snippet: RenderSnippet = RenderSnippet.RENDERTYPE_LINES_SNIPPET,
+        snippet: RenderSnippet = RenderSnippet.LINES_SNIPPET,
     ): PipelineBuilder = createPipelineBuilder("line_strip", drawMode, vertexFormat, snippet)
 
     @JvmStatic
     fun LINE_STRIP_ESP(
         drawMode: DrawMode = DrawMode.LINE_STRIP,
         vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR_NORMAL,
-        snippet: RenderSnippet = RenderSnippet.RENDERTYPE_LINES_SNIPPET,
+        snippet: RenderSnippet = RenderSnippet.LINES_SNIPPET,
     ): PipelineBuilder = createESPPipelineBuilder("line_strip_esp", drawMode, vertexFormat, snippet)
 
     @JvmStatic

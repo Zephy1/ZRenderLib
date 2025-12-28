@@ -1,22 +1,22 @@
 package org.zephy.zrenderlib
 
 //#if MC>=12100
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.util.Identifier
+import net.minecraft.client.renderer.rendertype.RenderType
+import net.minecraft.resources.Identifier
 
 object RenderLayers {
     @JvmStatic
     fun getRenderLayer(
         drawMode: DrawMode,
         vertexFormat: VertexFormat? = null,
-    ): RenderLayer? {
+    ): RenderType? {
         if (vertexFormat != null) {
             return getRenderLayerFunction_DrawModeVertexFormat(drawMode)?.invoke(drawMode, vertexFormat)
         }
         return getRenderLayerFunction_DrawMode(drawMode)?.invoke(drawMode)
     }
 
-    private fun getRenderLayerFunction_DrawModeVertexFormat(drawMode: DrawMode): ((DrawMode, VertexFormat) -> RenderLayer)? {
+    private fun getRenderLayerFunction_DrawModeVertexFormat(drawMode: DrawMode): ((DrawMode, VertexFormat) -> RenderType)? {
         return when (drawMode) {
             DrawMode.LINES -> ::LINES
             DrawMode.LINE_STRIP -> ::LINE_STRIP
@@ -27,7 +27,7 @@ object RenderLayers {
         }
     }
 
-    private fun getRenderLayerFunction_DrawMode(drawMode: DrawMode): ((DrawMode) -> RenderLayer)? {
+    private fun getRenderLayerFunction_DrawMode(drawMode: DrawMode): ((DrawMode) -> RenderType)? {
         return when (drawMode) {
             DrawMode.LINES -> ::LINES
             DrawMode.LINE_STRIP -> ::LINE_STRIP
@@ -38,7 +38,7 @@ object RenderLayers {
         }
     }
 
-    private fun getRenderLayerFunction(drawMode: DrawMode): (() -> RenderLayer)? {
+    private fun getRenderLayerFunction(drawMode: DrawMode): (() -> RenderType)? {
         return when (drawMode) {
             DrawMode.LINES -> ::LINES
             DrawMode.LINE_STRIP -> ::LINE_STRIP
@@ -59,7 +59,7 @@ object RenderLayers {
         //#endif
         snippet: RenderSnippet = RenderSnippet.LINES_SNIPPET,
         lineThickness: Float = 1.0f,
-    ): RenderLayer {
+    ): RenderType {
         return RenderPipelines
             .LINES(drawMode, vertexFormat, snippet)
             .setLineWidth(lineThickness)
@@ -76,7 +76,7 @@ object RenderLayers {
         //#endif
         snippet: RenderSnippet = RenderSnippet.LINES_SNIPPET,
         lineThickness: Float = 1.0f,
-    ): RenderLayer {
+    ): RenderType {
         return RenderPipelines
             .LINES_ESP(drawMode, vertexFormat, snippet)
             .setLineWidth(lineThickness)
@@ -93,7 +93,7 @@ object RenderLayers {
         //#endif
         snippet: RenderSnippet = RenderSnippet.LINES_SNIPPET,
         lineThickness: Float = 1.0f,
-    ): RenderLayer {
+    ): RenderType {
         return RenderPipelines
             .LINE_STRIP(drawMode, vertexFormat, snippet)
             .setLineWidth(lineThickness)
@@ -110,7 +110,7 @@ object RenderLayers {
         //#endif
         snippet: RenderSnippet = RenderSnippet.LINES_SNIPPET,
         lineThickness: Float = 1.0f,
-    ): RenderLayer {
+    ): RenderType {
         return RenderPipelines
             .LINE_STRIP_ESP(drawMode, vertexFormat, snippet)
             .setLineWidth(lineThickness)
@@ -122,7 +122,7 @@ object RenderLayers {
         drawMode: DrawMode = DrawMode.TRIANGLES,
         vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR,
         snippet: RenderSnippet = RenderSnippet.POSITION_COLOR_SNIPPET,
-    ): RenderLayer {
+    ): RenderType {
         return RenderPipelines
             .TRIANGLES(drawMode, vertexFormat, snippet)
             .layer()
@@ -133,7 +133,7 @@ object RenderLayers {
         drawMode: DrawMode = DrawMode.TRIANGLES,
         vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR,
         snippet: RenderSnippet = RenderSnippet.POSITION_COLOR_SNIPPET,
-    ): RenderLayer {
+    ): RenderType {
         return RenderPipelines
             .TRIANGLES_ESP(drawMode, vertexFormat, snippet)
             .layer()
@@ -144,7 +144,7 @@ object RenderLayers {
         drawMode: DrawMode = DrawMode.TRIANGLE_STRIP,
         vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR,
         snippet: RenderSnippet = RenderSnippet.POSITION_COLOR_SNIPPET,
-    ): RenderLayer {
+    ): RenderType {
         return RenderPipelines
             .TRIANGLE_STRIP(drawMode, vertexFormat, snippet)
             .layer()
@@ -155,7 +155,7 @@ object RenderLayers {
         drawMode: DrawMode = DrawMode.TRIANGLE_STRIP,
         vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR,
         snippet: RenderSnippet = RenderSnippet.POSITION_COLOR_SNIPPET,
-    ): RenderLayer {
+    ): RenderType {
         return RenderPipelines
             .TRIANGLE_STRIP_ESP(drawMode, vertexFormat, snippet)
             .layer()
@@ -166,7 +166,7 @@ object RenderLayers {
         drawMode: DrawMode = DrawMode.TRIANGLE_FAN,
         vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR,
         snippet: RenderSnippet = RenderSnippet.POSITION_COLOR_SNIPPET,
-    ): RenderLayer {
+    ): RenderType {
         return RenderPipelines
             .TRIANGLE_FAN(drawMode, vertexFormat, snippet)
             .layer()
@@ -177,7 +177,7 @@ object RenderLayers {
         drawMode: DrawMode = DrawMode.TRIANGLE_FAN,
         vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR,
         snippet: RenderSnippet = RenderSnippet.POSITION_COLOR_SNIPPET,
-    ): RenderLayer {
+    ): RenderType {
         return RenderPipelines
             .TRIANGLE_FAN_ESP(drawMode, vertexFormat, snippet)
             .layer()
@@ -188,7 +188,7 @@ object RenderLayers {
         drawMode: DrawMode = DrawMode.QUADS,
         vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR,
         snippet: RenderSnippet = RenderSnippet.POSITION_COLOR_SNIPPET,
-    ): RenderLayer {
+    ): RenderType {
         return RenderPipelines
             .QUADS(drawMode, vertexFormat, snippet)
             .layer()
@@ -199,7 +199,7 @@ object RenderLayers {
         drawMode: DrawMode = DrawMode.QUADS,
         vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR,
         snippet: RenderSnippet = RenderSnippet.POSITION_COLOR_SNIPPET,
-    ): RenderLayer {
+    ): RenderType {
         return RenderPipelines
             .QUADS_ESP(drawMode, vertexFormat, snippet)
             .layer()
@@ -210,7 +210,7 @@ object RenderLayers {
         vertexFormat: VertexFormat = VertexFormat.POSITION_TEXTURE_COLOR,
         snippet: RenderSnippet = RenderSnippet.POSITION_TEX_COLOR_SNIPPET,
         textureIdentifier: Identifier,
-    ): RenderLayer {
+    ): RenderType {
         return RenderPipelines
             .TEXTURED_QUADS(drawMode, vertexFormat, snippet)
             .setTexture(textureIdentifier)
@@ -222,7 +222,7 @@ object RenderLayers {
         vertexFormat: VertexFormat = VertexFormat.POSITION_TEXTURE_COLOR,
         snippet: RenderSnippet = RenderSnippet.POSITION_TEX_COLOR_SNIPPET,
         textureIdentifier: Identifier,
-    ): RenderLayer {
+    ): RenderType {
         return RenderPipelines
             .TEXTURED_QUADS(drawMode, vertexFormat, snippet)
             .setTexture(textureIdentifier)

@@ -38,7 +38,7 @@ package org.zephy.zrenderlib
 //#else
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.minecraft.client.MinecraftClient
+import net.minecraft.client.Minecraft
 
 object Client : ClientModInitializer {
     override fun onInitializeClient() {
@@ -65,7 +65,7 @@ object Client : ClientModInitializer {
     //#if MC<12100
     //$$fun getMinecraft(): Minecraft = Minecraft.getMinecraft()
     //#else
-    fun getMinecraft(): MinecraftClient = MinecraftClient.getInstance()
+    fun getMinecraft(): Minecraft = Minecraft.getInstance()
     //#endif
 
     @JvmStatic

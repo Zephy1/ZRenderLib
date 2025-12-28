@@ -5,25 +5,31 @@ package org.zephy.zrenderlib
 //$$import net.minecraft.client.renderer.texture.DynamicTexture
 //$$import org.lwjgl.opengl.GL11
 //#else
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.text.Text
-import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.network.chat.Component
+import net.minecraft.client.renderer.texture.DynamicTexture
 //#if MC<=12105
-//$$import net.minecraft.client.font.TextRenderer
+//$$import net.minecraft.client.gui.Font
 //#else
 import org.zephy.zrenderlib.renderstates.GUIRenderState
 import org.zephy.zrenderlib.renderstates.GradientGUIRenderState
 import org.zephy.zrenderlib.renderstates.TexturedGUIRenderState
-import net.minecraft.client.gui.render.state.TextGuiElementRenderState
-import net.minecraft.client.texture.TextureSetup
+import net.minecraft.client.gui.render.state.GuiTextRenderState
+import net.minecraft.client.gui.render.TextureSetup
 import org.joml.Matrix3x2f
 //#endif
+//#endif
+
+//#if MC>=12111
+import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.textures.AddressMode
+import com.mojang.blaze3d.textures.FilterMode
 //#endif
 
 object GUIRenderer : BaseGUIRenderer() {
     override fun drawString(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         text: String,
         xPosition: Float,
@@ -64,34 +70,34 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$    }
         //$$RenderUtils.popMatrix()
         //#else
-        drawText(drawContext, Text.literal(text), xPosition, yPosition, color, textScale, renderBackground, textShadow, maxWidth, zOffset)
+        drawText(drawContext, Component.literal(text), xPosition, yPosition, color, textScale, renderBackground, textShadow, maxWidth, zOffset)
         //#endif
     }
 
     //#if MC>=12105
     @JvmStatic
     @JvmOverloads
-    fun drawTextWithShadowRGBA(drawContext: DrawContext, text: Text, xPosition: Float, yPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, textScale: Float = 1f, renderBackground: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
+    fun drawTextWithShadowRGBA(drawContext: GuiGraphics, text: Component, xPosition: Float, yPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, textScale: Float = 1f, renderBackground: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
         drawText(drawContext, text, xPosition, yPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), textScale, renderBackground, true, maxWidth, zOffset)
     }
 
     @JvmStatic
     @JvmOverloads
-    fun drawTextWithShadow(drawContext: DrawContext, text: Text, xPosition: Float, yPosition: Float, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, textScale: Float = 1f, renderBackground: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
+    fun drawTextWithShadow(drawContext: GuiGraphics, text: Component, xPosition: Float, yPosition: Float, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, textScale: Float = 1f, renderBackground: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
         drawText(drawContext, text, xPosition, yPosition, color, textScale, renderBackground, true, maxWidth, zOffset)
     }
 
     @JvmStatic
     @JvmOverloads
-    fun drawTextRGBA(drawContext: DrawContext, text: Text, xPosition: Float, yPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, textScale: Float = 1f, renderBackground: Boolean = false, textShadow: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
+    fun drawTextRGBA(drawContext: GuiGraphics, text: Component, xPosition: Float, yPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, textScale: Float = 1f, renderBackground: Boolean = false, textShadow: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
         drawText(drawContext, text, xPosition, yPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), textScale, renderBackground, textShadow, maxWidth, zOffset)
     }
 
     @JvmStatic
     @JvmOverloads
     fun drawText(
-        drawContext: DrawContext,
-        text: Text,
+        drawContext: GuiGraphics,
+        text: Component,
         xPosition: Float,
         yPosition: Float,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
@@ -117,14 +123,14 @@ object GUIRenderer : BaseGUIRenderer() {
         val lines = RenderUtils.splitText(text, maxWidth).lines
 
         //#if MC<=12105
-        //$$val vertexConsumers = Client.getMinecraft().bufferBuilders.entityVertexConsumers
+        //$$val vertexConsumers = Client.getMinecraft().renderBuffers().bufferSource()
         //$$RenderUtils
         //$$    .pushMatrix()
         //$$    .translate(xPosition, yPosition, zOffset)
         //$$val positionMatrix = RenderUtils.matrixStack.peek().model
         //$$positionMatrix.scale(textScale, textScale, 1f)
         //$$lines.forEach { line ->
-        //$$    textRenderer.draw(
+        //$$    textRenderer.drawInBatch(
         //$$        line,
         //$$        0f,
         //$$        currentY,
@@ -132,13 +138,13 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$        textShadow,
         //$$        positionMatrix,
         //$$        vertexConsumers,
-        //$$        TextRenderer.TextLayerType.NORMAL,
+        //$$        Font.DisplayMode.NORMAL,
         //$$        backgroundColorInt,
         //$$        0xF000F0,
         //$$    )
-        //$$    currentY += textRenderer.fontHeight
+        //$$    currentY += textRenderer.lineHeight
         //$$}
-        //$$vertexConsumers.draw()
+        //$$vertexConsumers.endBatch()
         //$$positionMatrix.scale(1f / textScale, 1f / textScale, 1f)
         //$$RenderUtils.guiEndDraw()
         //#else
@@ -148,25 +154,24 @@ object GUIRenderer : BaseGUIRenderer() {
             matrix.translate(xPosition, yPosition + currentY)
             matrix.scale(textScale, textScale)
 
-            // backgroundColor isn't rendered on 1.21.9+?
             //#if MC>=12109
             if (renderBackground) {
-                val textWidth = textRenderer.getWidth(line)
+                val textWidth = textRenderer.width(line)
                 drawRect(
                     drawContext,
                     xPosition - (1f * textScale),
                     yPosition + currentY - (1f * textScale),
                     (textWidth + 1f) * textScale,
-                    (textRenderer.fontHeight + 1f) * textScale,
+                    (textRenderer.lineHeight + 1f) * textScale,
                     backgroundColorLong,
                     0f,
                 )
             }
             //#endif
 
-            val textState = TextGuiElementRenderState(
+            val textState = GuiTextRenderState(
                 textRenderer,
-                line.asOrderedText(),
+                line.visualOrderText,
                 matrix,
                 0,
                 0,
@@ -178,8 +183,8 @@ object GUIRenderer : BaseGUIRenderer() {
                 //#endif
                 drawContext.scissorStack.peek()
             )
-            drawContext.state.addText(textState)
-            currentY += textRenderer.fontHeight * textScale
+            drawContext.guiRenderState.submitText(textState)
+            currentY += textRenderer.lineHeight * textScale
         }
         //#endif
     }
@@ -187,7 +192,7 @@ object GUIRenderer : BaseGUIRenderer() {
 
     override fun _drawLine(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         vertexList: List<Pair<Float, Float>>,
         color: Long,
@@ -208,15 +213,15 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$    .guiEndDraw()
         //#else
         val boundsList = vertexList.toList()
-        drawContext.state.addSimpleElement(
+        drawContext.guiRenderState.submitGuiElement(
             GUIRenderState(
-                drawContext.matrices,
+                drawContext.pose(),
                 vertexList,
                 boundsList,
                 zOffset,
                 RenderUtils.RGBAColor.fromLongRGBA(color),
                 RenderPipelines.QUADS().build(),
-                drawContext.scissorStack.peekLast(),
+                drawContext.scissorStack.peek(),
             )
         )
         //#endif
@@ -224,7 +229,7 @@ object GUIRenderer : BaseGUIRenderer() {
 
     override fun _drawRect(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         vertexList: List<Pair<Float, Float>>,
         color: Long,
@@ -245,15 +250,15 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$    .guiEndDraw()
         //#else
         val boundsList = vertexList.toList()
-        drawContext.state.addSimpleElement(
+        drawContext.guiRenderState.submitGuiElement(
             GUIRenderState(
-                drawContext.matrices,
+                drawContext.pose(),
                 vertexList,
                 boundsList,
                 zOffset,
                 RenderUtils.RGBAColor.fromLongRGBA(color),
                 RenderPipelines.QUADS().build(),
-                drawContext.scissorStack.peekLast(),
+                drawContext.scissorStack.peek(),
             )
         )
         //#endif
@@ -261,7 +266,7 @@ object GUIRenderer : BaseGUIRenderer() {
 
     override fun _drawRoundedRect(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         x1: Float,
         y1: Float,
@@ -292,15 +297,15 @@ object GUIRenderer : BaseGUIRenderer() {
             Pair(x1, y2)
         )
 
-        drawContext.state.addSimpleElement(
+        drawContext.guiRenderState.submitGuiElement(
             GUIRenderState(
-                drawContext.matrices,
+                drawContext.pose(),
                 vertexList,
                 boundsList,
                 zOffset,
                 RenderUtils.RGBAColor.fromLongRGBA(color),
                 RenderPipelines.QUADS().build(),
-                drawContext.scissorStack.peekLast(),
+                drawContext.scissorStack.peek(),
             )
         )
         //#endif
@@ -308,7 +313,7 @@ object GUIRenderer : BaseGUIRenderer() {
 
     override fun _drawGradient(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         vertexAndColorList: List<Triple<Float, Float, Long>>,
         zOffset: Float,
@@ -335,16 +340,16 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$    .guiEndDraw()
         //#else
         val boundsList = vertexAndColorList.map { (x, y, _) -> Pair(x, y) }
-        drawContext.state.addSimpleElement(
+        drawContext.guiRenderState.submitGuiElement(
             GradientGUIRenderState(
                 GUIRenderState(
-                    drawContext.matrices,
+                    drawContext.pose(),
                     listOf(),
                     boundsList,
                     zOffset,
                     RenderUtils.RGBAColor(255, 255, 255, 255),
                     RenderPipelines.QUADS().build(),
-                    drawContext.scissorStack.peekLast(),
+                    drawContext.scissorStack.peek(),
                 ),
                 vertexAndColorList,
             )
@@ -354,7 +359,7 @@ object GUIRenderer : BaseGUIRenderer() {
 
     override fun _drawCircle(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         minX: Float,
         maxX: Float,
@@ -387,15 +392,15 @@ object GUIRenderer : BaseGUIRenderer() {
             Pair(minX, maxY)
         )
 
-        drawContext.state.addSimpleElement(
+        drawContext.guiRenderState.submitGuiElement(
             GUIRenderState(
-                drawContext.matrices,
+                drawContext.pose(),
                 vertexList,
                 boundsList,
                 zOffset,
                 RenderUtils.RGBAColor.fromLongRGBA(color),
                 RenderPipelines.QUADS().build(),
-                drawContext.scissorStack.peekLast(),
+                drawContext.scissorStack.peek(),
             )
         )
         //#endif
@@ -422,7 +427,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$    .resetColor()
         //$$    .begin(GL11.GL_QUADS, VertexFormat.POSITION_TEX_COLOR)
         //#else
-        //$$    .setShaderTexture(0, texture.glTexture)
+        //$$    .setShaderTexture(0, texture.texture)
         //$$    .begin(RenderLayers.TEXTURED_QUADS(textureIdentifier = image.getIdentifier()!!))
         //#endif
         //$$    .translate(0f, 0f, zOffset)
@@ -448,16 +453,16 @@ object GUIRenderer : BaseGUIRenderer() {
         )
         //#endif
         val boundsList = vertexList.toList()
-        drawContext.state.addSimpleElement(
+        drawContext.guiRenderState.submitGuiElement(
             TexturedGUIRenderState(
                 GUIRenderState(
-                    drawContext.matrices,
+                    drawContext.pose(),
                     vertexList,
                     boundsList,
                     zOffset,
                     RenderUtils.RGBAColor.fromLongRGBA(color),
                     RenderPipelines.TEXTURED_QUADS().build(),
-                    drawContext.scissorStack.peekLast()
+                    drawContext.scissorStack.peek()
                 ),
                 //#if MC<=12110
                 //$$TextureSetup.singleTexture(texture.textureView),

@@ -22,26 +22,33 @@ import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.platform.DepthTestFunction
 import com.mojang.blaze3d.platform.DestFactor
 import com.mojang.blaze3d.platform.SourceFactor
-import com.mojang.blaze3d.systems.RenderSystem
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.text.Text
+import net.minecraft.client.renderer.rendertype.RenderType
+import net.minecraft.network.chat.Component
 import org.joml.Quaternionf
 import org.joml.Vector3f
 import java.util.Optional
-import net.minecraft.text.Style
-//#endif
+import net.minecraft.network.chat.Style
+import com.mojang.blaze3d.vertex.BufferBuilder
+import com.mojang.blaze3d.vertex.VertexFormat
+import net.minecraft.client.Camera
+import net.minecraft.world.phys.Vec3
 
-//#if MC>=12100
-    //#if MC<=12105
+//#if MC<=12105
     //$$import com.mojang.blaze3d.textures.GpuTexture
-    //$$import net.minecraft.client.util.math.MatrixStack
-    //#else
+    //$$import com.mojang.blaze3d.vertex.PoseStack
+//#else
     import com.mojang.blaze3d.textures.GpuTextureView
     import org.joml.Matrix3x2fStack
     import org.joml.Matrix3x2f
     import org.joml.Matrix4f
+//#endif
+
+//#if MC<=12110
+    //$$import com.mojang.blaze3d.systems.RenderSystem
+    //$$import com.mojang.blaze3d.opengl.GlTexture
+    //$$import com.mojang.blaze3d.textures.TextureFormat
 //#endif
 //#endif
 
@@ -53,7 +60,7 @@ object RenderUtils {
     //#if MC<12100
     //$$fun getTextRenderer() = Client.getMinecraft().fontRendererObj
     //#else
-    fun getTextRenderer() = Client.getMinecraft().textRenderer
+    fun getTextRenderer(): net.minecraft.client.gui.Font = Client.getMinecraft().font
     //#endif
 
     @JvmField
@@ -88,7 +95,7 @@ object RenderUtils {
 
     @JvmStatic
     //#if MC<=12105
-    //$$fun setMatrixStack(stack: MatrixStack) = apply {
+    //$$fun setMatrixStack(stack: PoseStack) = apply {
     //#else
     fun setMatrixStack(stack: Matrix3x2fStack) = apply {
     //#endif
@@ -343,7 +350,7 @@ object RenderUtils {
         //#if MC<12100
         //$$worldRenderer?.pos(x, y, z)
         //#else
-        val camera = Client.getMinecraft().gameRenderer.camera.pos
+        val cameraPos = getCameraPos()
         posInternal(matrixStack, x - cameraPos.x, y - cameraPos.y, z - cameraPos.z)
         //#endif
 
@@ -376,8 +383,8 @@ object RenderUtils {
         //#if MC<12100
         //$$pos(x, y, z, endVertex)
         //#else
-        val camera = Client.getMinecraft().gameRenderer.camera.pos
-        pos(x + camera.x, y + camera.y, z + camera.z, endVertex)
+        val cameraPos = getCameraPos()
+        pos(x + cameraPos.x, y + cameraPos.y, z + cameraPos.z, endVertex)
         //#endif
     }
     @JvmStatic
@@ -409,7 +416,7 @@ object RenderUtils {
         //#if MC<12100
         //$$worldRenderer?.tex(u, v)
         //#else
-        ucRenderer.tex(u, v)
+        texInternal(u, v)
         //#endif
     }
 
@@ -747,7 +754,7 @@ object RenderUtils {
     //$$}
     //#else
     fun deleteTexture(texture: Image) = apply {
-        GL11.glDeleteTextures(texture.getTexture()?.image?.imageId()?.toInt() ?: 0)
+        GL11.glDeleteTextures(texture.getTexture()?.pixels?.pointer?.toInt() ?: 0)
     }
     //#endif
 
@@ -765,7 +772,6 @@ object RenderUtils {
         //#else
         PipelineBuilder.setTexture(texture?.texture())
         //#endif
-        RenderSystem.setShaderTexture(textureIndex, texture)
     }
     //#endif
 
@@ -1036,26 +1042,26 @@ object RenderUtils {
     )
 
     //#if MC>=12100
-    data class TextLines(val lines: List<Text>, val width: Float, val height: Float)
+    data class TextLines(val lines: List<Component>, val width: Float, val height: Float)
 
     @JvmStatic
-    fun splitText(text: Text, maxWidth: Int): TextLines {
+    fun splitText(text: Component, maxWidth: Int): TextLines {
         val renderer = getTextRenderer()
-        val wrappedLines = renderer.textHandler.wrapLines(text, maxWidth, Style.EMPTY)
+        val wrappedLines = renderer.splitter.splitLines(text, maxWidth, Style.EMPTY)
 
         val textLines = wrappedLines.map { visitable ->
-            val builder = Text.empty()
+            val builder = Component.empty()
             visitable.visit({ style, content ->
                 if (content != null) {
-                    builder.append(Text.literal(content).setStyle(style))
+                    builder.append(Component.literal(content).setStyle(style))
                 }
                 Optional.empty<Unit>()
             }, Style.EMPTY)
             builder
         }
 
-        val width = textLines.maxOfOrNull { renderer.getWidth(it).toFloat() } ?: 0f
-        val height = (renderer.fontHeight * textLines.size + (textLines.size - 1)).toFloat()
+        val width = textLines.maxOfOrNull { renderer.width(it).toFloat() } ?: 0f
+        val height = (renderer.lineHeight * textLines.size + (textLines.size - 1)).toFloat()
 
         return TextLines(textLines, width, height)
     }
@@ -1338,9 +1344,9 @@ object RenderUtils {
         //$$fun getHeight(): Int = ScaledResolution(Client.getMinecraft()).scaledHeight
         //$$fun getScale(): Double = ScaledResolution(Client.getMinecraft()).scaleFactor.toDouble()
         //#else
-        fun getWidth(): Int = Client.getMinecraft().window.scaledWidth
-        fun getHeight(): Int = Client.getMinecraft().window.scaledHeight
-        fun getScale(): Double = Client.getMinecraft().window.scaleFactor.toDouble()
+        fun getWidth(): Int = Client.getMinecraft().window.guiScaledWidth
+        fun getHeight(): Int = Client.getMinecraft().window.guiScaledHeight
+        fun getScale(): Double = Client.getMinecraft().window.guiScale.toDouble()
         //#endif
     }
 }

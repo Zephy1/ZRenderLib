@@ -9,15 +9,15 @@ import kotlin.math.sqrt
 //#if MC<12100
 //$$import net.minecraft.client.renderer.texture.DynamicTexture
 //#else
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.renderer.texture.DynamicTexture
 //#endif
 
 abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawStringWithShadowRGBA(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         text: String,
         xPosition: Float,
@@ -42,7 +42,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawStringWithShadow(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         text: String,
         xPosition: Float,
@@ -64,7 +64,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawStringRGBA(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         text: String,
         xPosition: Float,
@@ -89,7 +89,7 @@ abstract class BaseGUIRenderer {
 
     abstract fun drawString(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         text: String,
         xPosition: Float,
@@ -105,7 +105,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawLineRGBA(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         startX: Float,
         startY: Float,
@@ -129,7 +129,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawLine(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         startX: Float,
         startY: Float,
@@ -162,7 +162,7 @@ abstract class BaseGUIRenderer {
 
     abstract fun _drawLine(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         vertexList: List<Pair<Float, Float>>,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
@@ -172,7 +172,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawSquareRGBA(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         xPosition: Float,
         yPosition: Float,
@@ -194,7 +194,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawSquare(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         xPosition: Float,
         yPosition: Float,
@@ -213,7 +213,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawRectRGBA(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         xPosition: Float,
         yPosition: Float,
@@ -236,7 +236,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawRect(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         xPosition: Float,
         yPosition: Float,
@@ -266,7 +266,7 @@ abstract class BaseGUIRenderer {
 
     abstract fun _drawRect(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         vertexList: List<Pair<Float, Float>>,
         color: Long = RenderUtils.colorized ?: RenderUtils.WHITE,
@@ -276,7 +276,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawRoundedRectRGBA(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         xPosition: Float,
         yPosition: Float,
@@ -302,7 +302,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawRoundedRect(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         xPosition: Float,
         yPosition: Float,
@@ -386,7 +386,7 @@ abstract class BaseGUIRenderer {
 
     abstract fun _drawRoundedRect(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         x1: Float,
         y1: Float,
@@ -400,7 +400,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawSimpleGradientRGBA(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         x: Float,
         y: Float,
@@ -430,7 +430,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawSimpleGradient(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         x: Float,
         y: Float,
@@ -453,7 +453,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawGradient(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         x: Float,
         y: Float,
@@ -522,7 +522,7 @@ abstract class BaseGUIRenderer {
 
     abstract fun _drawGradient(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         vertexAndColorList: List<Triple<Float, Float, Long>>,
         zOffset: Float = 0f,
@@ -531,7 +531,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawSimpleCircleRGBA(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         xPosition: Float,
         yPosition: Float,
@@ -554,7 +554,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawSimpleCircle(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         xPosition: Float,
         yPosition: Float,
@@ -574,7 +574,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawCircleRGBA(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         xPosition: Float,
         yPosition: Float,
@@ -601,7 +601,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawCircle(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         xPosition: Float,
         yPosition: Float,
@@ -659,7 +659,7 @@ abstract class BaseGUIRenderer {
 
     abstract fun _drawCircle(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         minX: Float,
         maxX: Float,
@@ -673,7 +673,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawImageRGBA(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         image: Image,
         xPosition: Float,
@@ -697,7 +697,7 @@ abstract class BaseGUIRenderer {
     @JvmOverloads
     fun drawImage(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         image: Image,
         xPosition: Float,
@@ -734,7 +734,7 @@ abstract class BaseGUIRenderer {
 
     abstract fun _drawImage(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         image: Image,
         //#endif
         texture: DynamicTexture,

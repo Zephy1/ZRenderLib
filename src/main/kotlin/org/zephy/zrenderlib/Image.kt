@@ -33,10 +33,10 @@ import javax.imageio.ImageIO
 //$$    }
 //#else
 import java.nio.ByteBuffer
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.texture.NativeImageBackedTexture
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.renderer.texture.DynamicTexture
+import com.mojang.blaze3d.platform.NativeImage
+import net.minecraft.resources.Identifier
 import org.lwjgl.system.MemoryUtil
 import java.io.ByteArrayOutputStream
 import java.util.UUID
@@ -52,7 +52,7 @@ class Image(var image: BufferedImage?) {
     }
 
     fun getIdentifier(): Identifier? = identifier
-    fun getTexture(): NativeImageBackedTexture? = texture?.texture
+    fun getTexture(): DynamicTexture? = texture?.texture
 //#endif
     private val textureWidth = image?.width ?: 0
     private val textureHeight = image?.height ?: 0
@@ -70,8 +70,8 @@ class Image(var image: BufferedImage?) {
         texture = tex
         //#if MC>=12100
         if (texture == null) return
-        identifier = Identifier.of("zrenderlib", texture!!.uniqueName)
-        Client.getMinecraft().textureManager.registerTexture(identifier!!, texture!!.texture)
+        identifier = Identifier.fromNamespaceAndPath("zrenderlib", texture!!.uniqueName)
+        Client.getMinecraft().textureManager.register(identifier!!, texture!!.texture)
         //#endif
     }
 
@@ -80,7 +80,7 @@ class Image(var image: BufferedImage?) {
         //$$texture.deleteGlTexture()
         //#else
         if (identifier != null) {
-            Client.getMinecraft().textureManager.destroyTexture(identifier!!)
+            Client.getMinecraft().textureManager.release(identifier!!)
         }
         texture?.texture?.close()
         texture?.buffer?.let(MemoryUtil::memFree)
@@ -105,7 +105,7 @@ class Image(var image: BufferedImage?) {
     @JvmOverloads
     fun drawRGBA(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         xPosition: Float,
         yPosition: Float,
@@ -128,7 +128,7 @@ class Image(var image: BufferedImage?) {
     @JvmOverloads
     fun draw(
         //#if MC>=12100
-        drawContext: DrawContext,
+        drawContext: GuiGraphics,
         //#endif
         xPosition: Float,
         yPosition: Float,
@@ -148,7 +148,7 @@ class Image(var image: BufferedImage?) {
     }
 
     //#if MC>=12100
-    data class Texture(val texture: NativeImageBackedTexture, val buffer: ByteBuffer, val uniqueName: String)
+    data class Texture(val texture: DynamicTexture, val buffer: ByteBuffer, val uniqueName: String)
     //#endif
 
     companion object {
@@ -173,7 +173,7 @@ class Image(var image: BufferedImage?) {
 
                 val uniqueName = "image-${UUID.randomUUID()}"
                 Texture(
-                    NativeImageBackedTexture({ "zrenderlib:$uniqueName" }, NativeImage.read(buffer)),
+                    DynamicTexture({ "zrenderlib:$uniqueName" }, NativeImage.read(buffer)),
                     buffer,
                     uniqueName
                 )

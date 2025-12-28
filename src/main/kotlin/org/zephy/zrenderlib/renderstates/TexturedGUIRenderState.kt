@@ -2,22 +2,22 @@ package org.zephy.zrenderlib.renderstates
 
 //#if MC>=12106
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import net.minecraft.client.gui.ScreenRect
-import net.minecraft.client.gui.render.state.SimpleGuiElementRenderState;
-import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.texture.TextureSetup
+import com.mojang.blaze3d.vertex.VertexConsumer
+import net.minecraft.client.gui.navigation.ScreenRectangle
+import net.minecraft.client.gui.render.TextureSetup
+import net.minecraft.client.gui.render.state.GuiElementRenderState
 import org.zephy.zrenderlib.RenderUtils
 
 class TexturedGUIRenderState(
     private val base: GUIRenderState,
     val textureSetup: TextureSetup,
     val uvList: List<Pair<Float, Float>>,
-) : SimpleGuiElementRenderState {
+) : GuiElementRenderState {
     //#if MC<12110
-    //$$override fun setupVertices(vertices: VertexConsumer, depth: Float) {
+    //$$override fun buildVertices(vertices: VertexConsumer, depth: Float) {
     //$$    val zPosition = depth + base.zOffset
     //#else
-    override fun setupVertices(vertices: VertexConsumer) {
+    override fun buildVertices(vertices: VertexConsumer) {
         val zPosition = base.zOffset
     //#endif
         val newMatrix = RenderUtils.getGUIMatrix(base.matrix)
@@ -26,15 +26,19 @@ class TexturedGUIRenderState(
         base.vertexList.forEachIndexed { index, (x, y) ->
             val (u, v) = uvList.getOrNull(index) ?: Pair(0f, 0f)
             vertices
-                .vertex(newMatrix, x, y, zPosition)
-                .color(r, g, b, a)
-                .texture(u, v)
+                //#if MC<12110
+                //$$.addVertexWith2DPose(newMatrix, x, y, zPosition)
+                //#else
+                .addVertex(newMatrix, x, y, zPosition)
+                //#endif
+                .setColor(r, g, b, a)
+                .setUv(u, v)
         }
     }
 
     override fun pipeline(): RenderPipeline = base.pipeline
     override fun textureSetup(): TextureSetup = textureSetup
-    override fun scissorArea(): ScreenRect? = base.scissorArea
-    override fun bounds(): ScreenRect? = base.bounds()
+    override fun scissorArea(): ScreenRectangle? = base.scissorArea
+    override fun bounds(): ScreenRectangle? = base.bounds()
 }
 //#endif

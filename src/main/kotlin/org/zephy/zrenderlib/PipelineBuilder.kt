@@ -24,7 +24,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 //#endif
 
 object PipelineBuilder {
-    private val layerList = mutableMapOf<String, RenderLayer>()
+    private val layerList = mutableMapOf<String, RenderType>()
     private val pipelineList = mutableMapOf<String, RenderPipeline>()
     private var cull: Boolean? = null
     private var depthTestFunction: DepthTestFunction? = null
@@ -154,7 +154,6 @@ object PipelineBuilder {
                 DepthTestFunction.NO_DEPTH_TEST -> basePipeline.withDepthWrite(false)
                 else -> basePipeline.withDepthWrite(true)
             }
-
             basePipeline.withDepthTestFunction(it)
         }
 
@@ -165,7 +164,7 @@ object PipelineBuilder {
     }
 
     @JvmStatic
-    fun layer(): RenderLayer {
+    fun layer(): RenderType {
         try {
             if (layerList.containsKey(state())) return layerList[state()]!!
 

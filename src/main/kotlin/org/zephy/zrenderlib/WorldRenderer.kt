@@ -6,9 +6,9 @@ package org.zephy.zrenderlib
 //#else
 import java.awt.Color
 import org.joml.Matrix4f
-import net.minecraft.text.Text
-import net.minecraft.client.render.LightmapTextureManager
-import net.minecraft.client.font.TextRenderer
+import net.minecraft.network.chat.Component
+import net.minecraft.client.renderer.LightTexture
+import net.minecraft.client.gui.Font
 //#endif
 
 object WorldRenderer : BaseWorldRenderer() {
@@ -64,7 +64,7 @@ object WorldRenderer : BaseWorldRenderer() {
         //$$)
         //$$RenderUtils.worldEndDraw()
         //#else
-        drawText(Text.literal(text), xPosition, yPosition, zPosition, color, scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
+        drawText(Component.literal(text), xPosition, yPosition, zPosition, color, scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
         //#endif
     }
 
@@ -83,14 +83,14 @@ object WorldRenderer : BaseWorldRenderer() {
 
     @JvmStatic
     @JvmOverloads
-    fun drawTextRGBA(text: Text, xPosition: Float, yPosition: Float, zPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, scale: Float = 1f, renderBackground: Boolean = false, centered: Boolean = false, textShadow: Boolean = true, disableDepth: Boolean = false, maxWidth: Int = 512) {
+    fun drawTextRGBA(text: Component, xPosition: Float, yPosition: Float, zPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, scale: Float = 1f, renderBackground: Boolean = false, centered: Boolean = false, textShadow: Boolean = true, disableDepth: Boolean = false, maxWidth: Int = 512) {
         drawText(text, xPosition, yPosition, zPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
     }
 
     @JvmStatic
     @JvmOverloads
     fun drawText(
-        text: Text,
+        text: Component,
         xPosition: Float,
         yPosition: Float,
         zPosition: Float,
@@ -104,9 +104,9 @@ object WorldRenderer : BaseWorldRenderer() {
     ) {
         val (lines, width, height) = RenderUtils.splitText(text, maxWidth)
         val fontRenderer = RenderUtils.getTextRenderer()
-        val camera = Client.getMinecraft().gameRenderer.camera
-        val cameraPos = camera.pos
-        val vertexConsumers = Client.getMinecraft().bufferBuilders.entityVertexConsumers
+        val camera = RenderUtils.getCamera()
+        val cameraPos = RenderUtils.getCameraPos()
+        val vertexConsumers = Client.getMinecraft().renderBuffers().bufferSource()
 
         val matrix = Matrix4f()
         val adjustedScale = (scale * 0.05).toFloat()
@@ -123,20 +123,20 @@ object WorldRenderer : BaseWorldRenderer() {
         for (line in lines) {
             matrix
                 .translate(
-                    (xPosition - cameraPos.getX()).toFloat(),
-                    (yPosition - cameraPos.getY() + yOffset * adjustedScale).toFloat(),
-                    (zPosition - cameraPos.getZ()).toFloat(),
+                    (xPosition - cameraPos.x).toFloat(),
+                    (yPosition - cameraPos.y + yOffset * adjustedScale).toFloat(),
+                    (zPosition - cameraPos.z).toFloat(),
                 )
-                .rotate(Client.getMinecraft().gameRenderer.camera.rotation)
+                .rotate(camera.rotation())
                 .scale(adjustedScale, -adjustedScale, adjustedScale)
 
             val centerShift = if (centered) {
-                xShift + (fontRenderer.getWidth(line) / 2f)
+                xShift + (fontRenderer.width(line) / 2f)
             } else {
                 0f
             }
 
-            fontRenderer.draw(
+            fontRenderer.drawInBatch(
                 line,
                 xShift - centerShift,
                 yShift + yOffset,
@@ -144,12 +144,12 @@ object WorldRenderer : BaseWorldRenderer() {
                 textShadow,
                 matrix,
                 vertexConsumers,
-                if (disableDepth) TextRenderer.TextLayerType.SEE_THROUGH else TextRenderer.TextLayerType.NORMAL,
+                if (disableDepth) Font.DisplayMode.SEE_THROUGH else Font.DisplayMode.NORMAL,
                 backgroundColorInt,
-                LightmapTextureManager.MAX_LIGHT_COORDINATE,
+                LightTexture.FULL_BRIGHT,
             )
 
-            yOffset += fontRenderer.fontHeight + 1
+            yOffset += fontRenderer.lineHeight + 1
         }
         RenderUtils.worldEndDraw()
     }
