@@ -225,7 +225,7 @@ object RenderUtils {
     //#if MC<12100
     //$$fun getStringWidth(text: String) = getTextRenderer().getStringWidth(addColor(text))
     //#else
-    //#if MC<=12110
+    //#if MC<=12108
     //$$fun getStringWidth(text: String) = getTextRenderer().width(addColor(text))
     //#else
     fun getStringWidth(text: String): Int {

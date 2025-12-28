@@ -80,7 +80,7 @@ object Client : ClientModInitializer {
         }
     }
 
-    //#if MC>=12111
+    //#if MC>=12110
     fun <T> synchronizedTask(task: () -> T): T {
         val mc = getMinecraft()
         if (mc.isSameThread) {
