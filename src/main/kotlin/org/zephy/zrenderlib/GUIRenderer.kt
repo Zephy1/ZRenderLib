@@ -173,7 +173,10 @@ object GUIRenderer : BaseGUIRenderer() {
                 safeColorIntARGB,
                 backgroundColorInt,
                 textShadow,
-                drawContext.scissorStack.peekLast()
+                //#if MC>=12111
+                true,
+                //#endif
+                drawContext.scissorStack.peek()
             )
             drawContext.state.addText(textState)
             currentY += textRenderer.fontHeight * textScale
@@ -400,14 +403,10 @@ object GUIRenderer : BaseGUIRenderer() {
 
     override fun _drawImage(
         //#if MC>=12100
-        drawContext: DrawContext,
-        //#endif
-        //#if MC<12100
-        //$$texture: DynamicTexture,
-        //#else
+        drawContext: GuiGraphics,
         image: Image,
-        texture: NativeImageBackedTexture,
         //#endif
+        texture: DynamicTexture,
         vertexList: List<Pair<Float, Float>>,
         uvList: List<Pair<Float, Float>>,
         color: Long,
@@ -439,6 +438,15 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$    .draw()
         //$$    .guiEndDraw()
         //#else
+        //#if MC>=12111
+        val sampler = RenderSystem.getSamplerCache().getSampler(
+            AddressMode.CLAMP_TO_EDGE,
+            AddressMode.CLAMP_TO_EDGE,
+            FilterMode.LINEAR,
+            FilterMode.NEAREST,
+            false
+        )
+        //#endif
         val boundsList = vertexList.toList()
         drawContext.state.addSimpleElement(
             TexturedGUIRenderState(
@@ -451,7 +459,11 @@ object GUIRenderer : BaseGUIRenderer() {
                     RenderPipelines.TEXTURED_QUADS().build(),
                     drawContext.scissorStack.peekLast()
                 ),
-                TextureSetup.withoutGlTexture(texture.glTextureView),
+                //#if MC<=12110
+                //$$TextureSetup.singleTexture(texture.textureView),
+                //#else
+                TextureSetup.singleTexture(texture.textureView, sampler),
+                //#endif
                 uvList,
             )
         )

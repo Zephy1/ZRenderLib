@@ -10,6 +10,10 @@ enum class DrawMode(private val mcValue: VertexFormat.DrawMode) {
     TRIANGLE_STRIP(VertexFormat.DrawMode.TRIANGLE_STRIP),
     TRIANGLE_FAN(VertexFormat.DrawMode.TRIANGLE_FAN),
     QUADS(VertexFormat.DrawMode.QUADS);
+    //#if MC<=12110
+    //$$LINE_STRIP(VertexFormat.Mode.LINE_STRIP),
+    //#else
+    LINE_STRIP(VertexFormat.Mode.DEBUG_LINE_STRIP),
 
     fun toMC() = mcValue
 

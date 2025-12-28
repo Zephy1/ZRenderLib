@@ -66,6 +66,50 @@ abstract class BaseWorldRenderer {
         drawLine(startX, startY, startZ, endX, endY, endZ, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, lineThickness)
     }
 
+    private fun getLinePositions(
+        startX: Float,
+        startY: Float,
+        startZ: Float,
+        endX: Float,
+        endY: Float,
+        endZ: Float,
+        lineThickness: Float = 1f,
+    ): List<RenderUtils.WorldPositionVertex> {
+        val vertexAndNormalList = mutableListOf<RenderUtils.WorldPositionVertex>()
+        //#if MC<12100
+        //$$val vectorCopy = null
+        //#else
+        val vectorCopy = Vector3f(tempNormal.setAndNormalize(endX - startX, endY - startY, endZ - startZ))
+        //#endif
+
+        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(startX, startY, startZ, vectorCopy, lineThickness))
+        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(endX, endY, endZ, vectorCopy, lineThickness))
+
+//        //#if MC<=12110
+//        //$$vertexAndNormalList.add(RenderUtils.WorldPositionVertex(startX, startY, startZ, vectorCopy, lineThickness))
+//        //$$vertexAndNormalList.add(RenderUtils.WorldPositionVertex(endX, endY, endZ, vectorCopy, lineThickness))
+//        //#else
+//        val cameraPos = RenderUtils.getCameraPos()
+//        val toCamera = Vector3f(
+//            cameraPos.x.toFloat() - startX,
+//            cameraPos.y.toFloat() - startY,
+//            cameraPos.z.toFloat() - startZ
+//        )
+//
+//        val perpendicular = Vector3f()
+//        vectorCopy.cross(toCamera, perpendicular)
+//        perpendicular.normalize()
+//        perpendicular.mul(lineThickness * 0.5f)
+//
+//        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(startX - perpendicular.x, startY - perpendicular.y, startZ - perpendicular.z, vectorCopy, lineThickness))
+//        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(startX + perpendicular.x, startY + perpendicular.y, startZ + perpendicular.z, vectorCopy, lineThickness))
+//        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(endX + perpendicular.x, endY + perpendicular.y, endZ + perpendicular.z, vectorCopy, lineThickness))
+//        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(endX - perpendicular.x, endY - perpendicular.y, endZ - perpendicular.z, vectorCopy, lineThickness))
+//        //#endif
+
+        return vertexAndNormalList
+    }
+
     @JvmOverloads
     fun drawLine(
         startX: Float,
@@ -78,22 +122,14 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        val vertexAndNormalList = mutableListOf<RenderUtils.WorldPositionVertex>()
-        //#if MC<12100
-        //$$val vectorCopy = null
-        //#else
-        val vectorCopy = Vector3f(tempNormal.setAndNormalize(endX - startX, endY - startY, endZ - startZ))
-        //#endif
-        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(startX, startY, startZ, vectorCopy))
-        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(endX, endY, endZ, vectorCopy))
-        _drawLine(vertexAndNormalList, color, disableDepth, lineThickness)
+        val vertexAndNormalList = getLinePositions(startX, startY, startZ, endX, endY, endZ, lineThickness)
+        _drawLine(vertexAndNormalList, color, disableDepth)
     }
 
     abstract fun _drawLine(
         vertexAndNormalList: List<RenderUtils.WorldPositionVertex>,
         color: Long,
         disableDepth: Boolean,
-        lineThickness: Float,
     )
 
     @JvmOverloads
@@ -308,14 +344,14 @@ abstract class BaseWorldRenderer {
                 //#if MC>=12100
                 val vectorCopy = Vector3f(tempNormal.setAndNormalize(p1, p2))
                 //#endif
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p1.x, p1.y, p1.z, vectorCopy))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p2.x, p2.y, p2.z, vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p1.x, p1.y, p1.z, vectorCopy, lineThickness))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p2.x, p2.y, p2.z, vectorCopy, lineThickness))
             } else {
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p1.x, p1.y, p1.z, null))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p1.x, p1.y, p1.z, null, lineThickness))
             }
         }
 
-        _drawBox(vertexAndNormalList, color, disableDepth, wireframe, lineThickness)
+        _drawBox(vertexAndNormalList, color, disableDepth, wireframe)
     }
 
     abstract fun _drawBox(
@@ -323,7 +359,6 @@ abstract class BaseWorldRenderer {
         color: Long,
         disableDepth: Boolean,
         wireframe: Boolean,
-        lineThickness: Float,
     )
 
     @JvmOverloads
@@ -515,8 +550,8 @@ abstract class BaseWorldRenderer {
                     //#if MC>=12100
                     val vectorCopy = Vector3f(tempNormal.setAndNormalize(x2 - x1, 0f, z2 - z1))
                     //#endif
-                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x1, y, z1, vectorCopy))
-                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x2, y, z2, vectorCopy))
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x1, y, z1, vectorCopy, lineThickness))
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x2, y, z2, vectorCopy, lineThickness))
                 }
             }
 
@@ -542,8 +577,8 @@ abstract class BaseWorldRenderer {
                     val vectorCopy = Vector3f(tempNormal.setAndNormalize(x2 - x1, y2 - y1, z2 - z1))
                     //#endif
 
-                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x1, y1, z1, vectorCopy))
-                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x2, y2, z2, vectorCopy))
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x1, y1, z1, vectorCopy, lineThickness))
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x2, y2, z2, vectorCopy, lineThickness))
                 }
             }
         } else {
@@ -575,15 +610,15 @@ abstract class BaseWorldRenderer {
                     val y4 = yPosition + yScale * cosPhi1
                     val z4 = zPosition + zScale * sinPhi1 * sinTheta2
 
-                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x1, y1, z1, null))
-                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x2, y2, z2, null))
-                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x3, y3, z3, null))
-                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x4, y4, z4, null))
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x1, y1, z1, null, lineThickness))
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x2, y2, z2, null, lineThickness))
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x3, y3, z3, null, lineThickness))
+                    vertexAndNormalList.add(RenderUtils.WorldPositionVertex(x4, y4, z4, null, lineThickness))
                 }
             }
         }
 
-        _drawSphere(vertexAndNormalList, color, disableDepth, wireframe, lineThickness)
+        _drawSphere(vertexAndNormalList, color, disableDepth, wireframe)
     }
 
     abstract fun _drawSphere(
@@ -591,7 +626,6 @@ abstract class BaseWorldRenderer {
         color: Long,
         disableDepth: Boolean,
         wireframe: Boolean,
-        lineThickness: Float,
     )
 
     @JvmOverloads
@@ -925,28 +959,28 @@ abstract class BaseWorldRenderer {
                 //#if MC>=12100
                 var vectorCopy = Vector3f(tempNormal.setAndNormalize(topX[next] - topX[i], 0f, topZ[next] - topZ[i]))
                 //#endif
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[i], topY, topZ[i], vectorCopy))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[next], topY, topZ[next], vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[i], topY, topZ[i], vectorCopy, lineThickness))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[next], topY, topZ[next], vectorCopy, lineThickness))
 
                 //#if MC>=12100
                 vectorCopy = Vector3f(tempNormal.setAndNormalize(bottomX[next] - bottomX[i], 0f, bottomZ[next] - bottomZ[i]))
                 //#endif
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], vectorCopy))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[next], bottomY, bottomZ[next], vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], vectorCopy, lineThickness))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[next], bottomY, bottomZ[next], vectorCopy, lineThickness))
 
                 //#if MC>=12100
                 vectorCopy = Vector3f(tempNormal.setAndNormalize(topX[i] - bottomX[i], topY - bottomY, topZ[i] - bottomZ[i]))
                 //#endif
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[i], topY, topZ[i], vectorCopy))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[i], topY, topZ[i], vectorCopy, lineThickness))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], vectorCopy, lineThickness))
             }
         } else {
             for (i in 0 until segments) {
                 val next = (i + 1) % segments
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], null))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[next], bottomY, bottomZ[next], null))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[next], topY, topZ[next], null))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[i], topY, topZ[i], null))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], null, lineThickness))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[next], bottomY, bottomZ[next], null, lineThickness))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[next], topY, topZ[next], null, lineThickness))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[i], topY, topZ[i], null, lineThickness))
             }
         }
 
@@ -956,10 +990,10 @@ abstract class BaseWorldRenderer {
             //#endif
             for (i in 0 until segments) {
                 val next = (i + 1) % segments
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, bottomY, zPosition, vectorCopy))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[next], bottomY, bottomZ[next], vectorCopy))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], vectorCopy))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, bottomY, zPosition, vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, bottomY, zPosition, vectorCopy, lineThickness))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[next], bottomY, bottomZ[next], vectorCopy, lineThickness))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(bottomX[i], bottomY, bottomZ[i], vectorCopy, lineThickness))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, bottomY, zPosition, vectorCopy, lineThickness))
             }
         }
 
@@ -970,14 +1004,14 @@ abstract class BaseWorldRenderer {
             //#endif
             for (i in 0 until segments) {
                 val next = (i + 1) % segments
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, topY, zPosition, vectorCopy))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[next], topY, topZ[next], vectorCopy))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[i], topY, topZ[i], vectorCopy))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, topY, zPosition, vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, topY, zPosition, vectorCopy, lineThickness))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[next], topY, topZ[next], vectorCopy, lineThickness))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(topX[i], topY, topZ[i], vectorCopy, lineThickness))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(xPosition, topY, zPosition, vectorCopy, lineThickness))
             }
         }
 
-        _drawCylinder(vertexAndNormalList, color, disableDepth, wireframe, lineThickness)
+        _drawCylinder(vertexAndNormalList, color, disableDepth, wireframe)
     }
 
     abstract fun _drawCylinder(
@@ -985,7 +1019,6 @@ abstract class BaseWorldRenderer {
         color: Long,
         disableDepth: Boolean,
         wireframe: Boolean,
-        lineThickness: Float,
     )
 
     @JvmOverloads
@@ -1188,14 +1221,14 @@ abstract class BaseWorldRenderer {
                 //#if MC>=12100
                 val vectorCopy = Vector3f(tempNormal.setAndNormalize(p1, p2))
                 //#endif
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p1.x, p1.y, p1.z, vectorCopy))
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p2.x, p2.y, p2.z, vectorCopy))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p1.x, p1.y, p1.z, vectorCopy, lineThickness))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p2.x, p2.y, p2.z, vectorCopy, lineThickness))
             } else {
-                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p1.x, p1.y, p1.z, null))
+                vertexAndNormalList.add(RenderUtils.WorldPositionVertex(p1.x, p1.y, p1.z, null, lineThickness))
             }
         }
 
-        _drawPyramid(vertexAndNormalList, color, disableDepth, wireframe, lineThickness)
+        _drawPyramid(vertexAndNormalList, color, disableDepth, wireframe)
     }
 
     abstract fun _drawPyramid(
@@ -1203,7 +1236,6 @@ abstract class BaseWorldRenderer {
         color: Long,
         disableDepth: Boolean,
         wireframe: Boolean,
-        lineThickness: Float,
     )
 
     @JvmOverloads
@@ -1242,11 +1274,12 @@ abstract class BaseWorldRenderer {
             //$$val pitchDeg = player.rotationPitch.toDouble()
         //#else
         mc.player?.let { player ->
-            val x1: Double = player.lastX + (player.x - player.lastX) * partialTicks
-            val y1: Double = player.getEyeHeight(player.pose) + player.lastY + (player.y - player.lastY) * partialTicks
-            val z1: Double = player.lastZ + (player.z - player.lastZ) * partialTicks
-            val yawDeg = mc.gameRenderer.camera.yaw.toDouble()
-            val pitchDeg = mc.gameRenderer.camera.pitch.toDouble()
+            val x1: Double = player.xo + (player.x - player.xo) * partialTicks
+            val y1: Double = player.getEyeHeight(player.pose) + player.yo + (player.y - player.yo) * partialTicks
+            val z1: Double = player.zo + (player.z - player.zo) * partialTicks
+            val camera = RenderUtils.getCamera()
+            val yawDeg = camera.yRot().toDouble()
+            val pitchDeg = camera.xRot().toDouble()
             //#endif
 
             val yawRad = Math.toRadians(yawDeg)
@@ -1260,9 +1293,9 @@ abstract class BaseWorldRenderer {
             //$$    z1 + cos(yawRad) * cos(pitchRad) * distance
             //$$)
             //#else
-            val startPos = Vec3d(0.0, 0.0, distance)
-                .rotateX(-pitchRad.toFloat())
-                .rotateY(-yawRad.toFloat())
+            val startPos = Vec3(0.0, 0.0, distance)
+                .xRot(-pitchRad.toFloat())
+                .yRot(-yawRad.toFloat())
                 .add(x1, y1, z1)
             //#endif
 

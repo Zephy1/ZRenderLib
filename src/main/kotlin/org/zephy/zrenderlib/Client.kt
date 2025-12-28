@@ -79,5 +79,28 @@ object Client : ClientModInitializer {
             tasks.add(Task(delay, callback))
         }
     }
+
+    //#if MC>=12111
+    fun <T> synchronizedTask(task: () -> T): T {
+        val mc = getMinecraft()
+        if (mc.isSameThread) {
+            return task()
+        }
+
+        val latch = java.util.concurrent.CountDownLatch(1)
+        var result: T? = null
+
+        mc.execute {
+            try {
+                result = task()
+            } finally {
+                latch.countDown()
+            }
+        }
+
+        latch.await()
+        return result!!
+    }
+    //#endif
 }
 //#endif

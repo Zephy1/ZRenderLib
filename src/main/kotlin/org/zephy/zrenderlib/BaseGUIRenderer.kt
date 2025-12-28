@@ -736,10 +736,8 @@ abstract class BaseGUIRenderer {
         //#if MC>=12100
         drawContext: DrawContext,
         image: Image,
-        texture: NativeImageBackedTexture,
-        //#else
-        //$$texture: DynamicTexture,
         //#endif
+        texture: DynamicTexture,
         vertexList: List<Pair<Float, Float>>,
         uvList: List<Pair<Float, Float>>,
         color: Long = RenderUtils.WHITE,

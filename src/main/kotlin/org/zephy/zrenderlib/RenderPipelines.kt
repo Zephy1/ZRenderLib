@@ -1,7 +1,12 @@
 package org.zephy.zrenderlib
 
 //#if MC>=12100
-import net.minecraft.client.render.RenderPhase
+//#if MC<=12110
+//$$import net.minecraft.client.renderer.RenderType
+//#else
+import net.minecraft.client.renderer.rendertype.LayeringTransform
+
+//#endif
 
 object RenderPipelines {
     private fun createPipelineBuilder(
@@ -13,7 +18,11 @@ object RenderPipelines {
         return PipelineBuilder
             .begin(drawMode, vertexFormat, snippet)
             .setLocation(location)
-            .setLayering(RenderPhase.VIEW_OFFSET_Z_LAYERING)
+            //#if MC<=12110
+            //$$.setLayering(RenderType.VIEW_OFFSET_Z_LAYERING)
+            //#else
+            .setLayering(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
+            //#endif
             .disableCull()
             .enableBlend()
     }
@@ -24,7 +33,11 @@ object RenderPipelines {
         vertexFormat: VertexFormat = VertexFormat.POSITION_TEXTURE_COLOR,
         snippet: RenderSnippet = RenderSnippet.POSITION_TEX_COLOR_SNIPPET,
     ): PipelineBuilder = createPipelineBuilder(location, drawMode, vertexFormat, snippet)
-        .setLayering(RenderPhase.NO_LAYERING)
+        //#if MC<=12110
+        //$$.setLayering(RenderType.NO_LAYERING)
+        //#else
+        .setLayering(LayeringTransform.NO_LAYERING)
+        //#endif
         .disableDepth()
 
     @JvmStatic

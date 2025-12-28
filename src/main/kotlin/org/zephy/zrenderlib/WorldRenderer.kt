@@ -159,7 +159,6 @@ object WorldRenderer : BaseWorldRenderer() {
         vertexAndNormalList: List<RenderUtils.WorldPositionVertex>,
         color: Long,
         disableDepth: Boolean,
-        lineThickness: Float,
     ) {
         //#if MC<12100
         //$$val drawMode = GL11.GL_LINE_STRIP
@@ -171,7 +170,6 @@ object WorldRenderer : BaseWorldRenderer() {
         RenderUtils.baseStartDraw()
         if (disableDepth) RenderUtils.disableDepth()
         RenderUtils
-            .lineWidth(lineThickness)
             //#if MC<12100
             //$$.disableTexture2D()
             //$$.translate(
@@ -184,9 +182,10 @@ object WorldRenderer : BaseWorldRenderer() {
             .begin(renderLayer)
             //#endif
             .colorizeRGBA(color)
-        vertexAndNormalList.forEach { (x, y, z, normalVector) ->
+        vertexAndNormalList.forEach { (x, y, z, normalVector, lineWidth) ->
             RenderUtils
                 .pos(x, y, z)
+                .lineWidth(lineWidth)
                 //#if MC>=12100
                 .normal(normalVector)
                 //#endif
@@ -201,7 +200,6 @@ object WorldRenderer : BaseWorldRenderer() {
         color: Long,
         disableDepth: Boolean,
         wireframe: Boolean,
-        lineThickness: Float,
     ) {
         //#if MC<12100
         //$$val drawMode = if (wireframe) GL11.GL_LINES else GL11.GL_TRIANGLE_STRIP
@@ -216,7 +214,6 @@ object WorldRenderer : BaseWorldRenderer() {
         RenderUtils.baseStartDraw()
         if (disableDepth) RenderUtils.disableDepth()
         RenderUtils
-            .lineWidth(lineThickness)
             //#if MC<12100
             //$$.disableTexture2D()
             //$$.translate(
@@ -229,9 +226,10 @@ object WorldRenderer : BaseWorldRenderer() {
             .begin(renderLayer)
             //#endif
             .colorizeRGBA(color)
-        vertexAndNormalList.forEach { (x, y, z, normalVector) ->
+        vertexAndNormalList.forEach { (x, y, z, normalVector, lineWidth) ->
             RenderUtils
                 .pos(x, y, z)
+                .lineWidth(lineWidth)
                 //#if MC>=12100
                 .normal(normalVector)
                 //#endif
@@ -247,7 +245,6 @@ object WorldRenderer : BaseWorldRenderer() {
         color: Long,
         disableDepth: Boolean,
         wireframe: Boolean,
-        lineThickness: Float,
     ) {
         //#if MC<12100
         //$$val drawMode = if (wireframe) GL11.GL_LINES else GL11.GL_QUADS
@@ -262,7 +259,6 @@ object WorldRenderer : BaseWorldRenderer() {
         RenderUtils.baseStartDraw()
         if (disableDepth) RenderUtils.disableDepth()
         RenderUtils
-            .lineWidth(lineThickness)
             //#if MC<12100
             //$$.disableTexture2D()
             //$$.translate(
@@ -275,9 +271,10 @@ object WorldRenderer : BaseWorldRenderer() {
             .begin(renderLayer)
             //#endif
             .colorizeRGBA(color)
-        vertexAndNormalList.forEach { (x, y, z, normalVector) ->
+        vertexAndNormalList.forEach { (x, y, z, normalVector, lineWidth) ->
             RenderUtils
                 .pos(x, y, z)
+                .lineWidth(lineWidth)
                 //#if MC>=12100
                 .normal(normalVector)
                 //#endif
@@ -293,7 +290,6 @@ object WorldRenderer : BaseWorldRenderer() {
         color: Long,
         disableDepth: Boolean,
         wireframe: Boolean,
-        lineThickness: Float,
     ) {
         //#if MC<12100
         //$$val drawMode = if (wireframe) GL11.GL_LINES else GL11.GL_QUADS
@@ -308,7 +304,6 @@ object WorldRenderer : BaseWorldRenderer() {
         RenderUtils.baseStartDraw()
         if (disableDepth) RenderUtils.disableDepth()
         RenderUtils
-            .lineWidth(lineThickness)
             //#if MC<12100
             //$$.disableTexture2D()
             //$$.translate(
@@ -321,9 +316,10 @@ object WorldRenderer : BaseWorldRenderer() {
             .begin(renderLayer)
             //#endif
             .colorizeRGBA(color)
-        vertexAndNormalList.forEach { (x, y, z, normalVector) ->
+        vertexAndNormalList.forEach { (x, y, z, normalVector, lineWidth) ->
             RenderUtils
                 .pos(x, y, z)
+                .lineWidth(lineWidth)
                 //#if MC>=12100
                 .normal(normalVector)
                 //#endif
@@ -338,7 +334,6 @@ object WorldRenderer : BaseWorldRenderer() {
         color: Long,
         disableDepth: Boolean,
         wireframe: Boolean,
-        lineThickness: Float,
     ) {
         //#if MC<12100
         //$$val drawMode = if (wireframe) GL11.GL_LINES else GL11.GL_TRIANGLES
@@ -353,7 +348,6 @@ object WorldRenderer : BaseWorldRenderer() {
         RenderUtils.baseStartDraw()
         if (disableDepth) RenderUtils.disableDepth()
         RenderUtils
-            .lineWidth(lineThickness)
             //#if MC<12100
             //$$.disableTexture2D()
             //$$.translate(
@@ -366,9 +360,10 @@ object WorldRenderer : BaseWorldRenderer() {
             .begin(renderLayer)
             //#endif
             .colorizeRGBA(color)
-        vertexAndNormalList.forEach { (x, y, z, normalVector) ->
+        vertexAndNormalList.forEach { (x, y, z, normalVector, lineWidth) ->
             RenderUtils
                 .pos(x, y, z)
+                .lineWidth(lineWidth)
                 //#if MC>=12100
                 .normal(normalVector)
                 //#endif

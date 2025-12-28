@@ -7,6 +7,7 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sin
 import kotlin.math.cos
+import org.zephy.zrenderlib.VertexFormat as ZVertexFormat
 
 //#if MC<12100
 //$$import net.minecraft.client.renderer.GlStateManager
@@ -76,7 +77,6 @@ object RenderUtils {
     //$$    )
     //$$}
     //#else
-    private val ucRenderer = UGraphics.getFromTessellator()
     internal lateinit var matrixStack: UMatrixStack
     private val matrixStackStack = ArrayDeque<UMatrixStack>()
     internal var matrixPushCounter = 0
@@ -93,6 +93,72 @@ object RenderUtils {
     fun setMatrixStack(stack: Matrix3x2fStack) = apply {
     //#endif
         matrixStack = UMatrixStack(stack)
+    }
+
+    @JvmStatic
+    fun getCamera(): Camera {
+        return Client.getMinecraft().gameRenderer.mainCamera
+    }
+
+    @JvmStatic
+    fun getCameraPos(): Vec3 {
+        //#if MC<=12110
+        //$$return Client.getMinecraft().gameRenderer.mainCamera.position
+        //#else
+        return Client.getMinecraft().gameRenderer.mainCamera.position()
+        //#endif
+    }
+
+    private var renderLayer: RenderType? = null
+    private var vertexFormat: VertexFormat? = null
+    private var instance: BufferBuilder? = null
+    fun beginRenderLayer(renderLayer: RenderType) = apply {
+        this.renderLayer = renderLayer
+        beginInternal(renderLayer.mode(), renderLayer.format())
+    }
+    private fun beginInternal(mode: VertexFormat.Mode, format: VertexFormat) = apply {
+        vertexFormat = format
+        instance = UGraphics.getTessellator().begin(mode, format)
+    }
+    private fun drawDirect() = apply {
+        val builtBuffer = instance?.build() ?: return@apply
+        renderLayer?.draw(builtBuffer)
+    }
+    private fun posInternal(stack: UMatrixStack, x: Float, y: Float, z: Float) = apply {
+        instance?.addVertex(stack.peek().model, x, y, z)
+    }
+    private fun posInternal(stack: UMatrixStack, x: Double, y: Double, z: Double) = apply {
+        posInternal(stack, x.toFloat(), y.toFloat(), z.toFloat())
+    }
+    private fun texInternal(u: Float, v: Float) = apply {
+        instance?.setUv(u, v)
+    }
+    private fun texInternal(u: Double, v: Double) = apply {
+        texInternal(u.toFloat(), v.toFloat())
+    }
+    private fun normInternal(stack: UMatrixStack, x: Float, y: Float, z: Float) = apply {
+        val normal = stack.peek().normal.transform(x, y, z, Vector3f())
+        instance?.setNormal(normal.x(), normal.y(), normal.z())
+    }
+    private fun normInternal(stack: UMatrixStack, x: Double, y: Double, z: Double) = apply {
+        normInternal(stack, x.toFloat(), y.toFloat(), z.toFloat())
+    }
+    private fun overlayInternal(u: Int, v: Int) = apply {
+        instance?.setUv1(u, v)
+    }
+    private fun lightInternal(u: Int, v: Int) = apply {
+        instance?.setUv2(u, v)
+    }
+    private fun colorInternal(red: Float, green: Float, blue: Float, alpha: Float) = apply {
+        instance?.setColor(red, green, blue, alpha)
+    }
+    private fun lineWidthInternal(width: Double) = apply {
+        lineWidthInternal(width.toFloat())
+    }
+    private fun lineWidthInternal(width: Float) = apply {
+        //#if MC>=12111
+        instance?.setLineWidth(width)
+        //#endif
     }
     //#endif
 
@@ -152,7 +218,15 @@ object RenderUtils {
     //#if MC<12100
     //$$fun getStringWidth(text: String) = getTextRenderer().getStringWidth(addColor(text))
     //#else
-    fun getStringWidth(text: String) = getTextRenderer().getWidth(addColor(text))
+    //#if MC<=12110
+    //$$fun getStringWidth(text: String) = getTextRenderer().width(addColor(text))
+    //#else
+    fun getStringWidth(text: String): Int {
+        return Client.synchronizedTask {
+            getTextRenderer().width(addColor(text))
+        }
+    }
+    //#endif
     //#endif
 
     @JvmStatic
@@ -208,15 +282,15 @@ object RenderUtils {
 
     //#if MC>=12100
     @JvmStatic
-    fun begin(renderLayer: RenderLayer = RenderLayers.QUADS()) = apply {
+    fun begin(renderLayer: RenderType = RenderLayers.QUADS()) = apply {
         _begin()
-        ucRenderer.beginRenderLayer(renderLayer)
+        beginRenderLayer(renderLayer)
     }
 
     @JvmStatic
     fun begin(
         drawMode: DrawMode = DrawMode.QUADS,
-        vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR,
+        vertexFormat: ZVertexFormat = ZVertexFormat.POSITION_COLOR,
         snippet: RenderSnippet = RenderSnippet.POSITION_COLOR_SNIPPET,
     ) = apply {
         begin(PipelineBuilder.begin(drawMode, vertexFormat, snippet).layer())
@@ -230,7 +304,7 @@ object RenderUtils {
         //#else
         drawMode: DrawMode = DrawMode.QUADS,
         //#endif
-        vertexFormat: VertexFormat = VertexFormat.POSITION_COLOR,
+        vertexFormat: ZVertexFormat = ZVertexFormat.POSITION_COLOR,
     ) = apply {
         //#if MC<12100
         //$$_begin()
@@ -253,7 +327,7 @@ object RenderUtils {
         //#if MC<12100
         //$$tessellator.draw()
         //#else
-        ucRenderer.drawDirect()
+        drawDirect()
         //#endif
     }
 
@@ -270,7 +344,7 @@ object RenderUtils {
         //$$worldRenderer?.pos(x, y, z)
         //#else
         val camera = Client.getMinecraft().gameRenderer.camera.pos
-        ucRenderer.pos(matrixStack, x - camera.x, y - camera.y, z - camera.z)
+        posInternal(matrixStack, x - cameraPos.x, y - cameraPos.y, z - cameraPos.z)
         //#endif
 
         firstVertex = false
@@ -341,15 +415,15 @@ object RenderUtils {
 
     @JvmStatic
     fun normal(x: Float, y: Float, z: Float) = apply {
-        //#if MC<12100
-        //$$worldRenderer?.normal(x, y, z)
-        //#else
-        ucRenderer.norm(matrixStack, x, y, z)
-        //#endif
+        normal(x.toDouble(), y.toDouble(), z.toDouble())
     }
     @JvmStatic
     fun normal(x: Double, y: Double, z: Double) = apply {
-        normal(x.toFloat(), y.toFloat(), z.toFloat())
+        //#if MC<12100
+        //$$worldRenderer?.normal(x.toFloat(), y.toFloat(), z.toFloat())
+        //#else
+        normInternal(matrixStack, x, y, z)
+        //#endif
     }
     @JvmStatic
     fun normal(vector: Vector3f?) = apply {
@@ -363,7 +437,7 @@ object RenderUtils {
         //#if MC<12100
         //$$tex(u.toDouble(), v.toDouble())
         //#else
-        ucRenderer.overlay(u, v)
+        overlayInternal(u, v)
         //#endif
     }
 
@@ -372,7 +446,7 @@ object RenderUtils {
         //#if MC<12100
         //$$worldRenderer?.lightmap(u, v)
         //#else
-        ucRenderer.light(u, v)
+        lightInternal(u, v)
         //#endif
     }
 
@@ -380,8 +454,10 @@ object RenderUtils {
     fun lineWidth(width: Float) = apply {
         //#if MC<12100
         //$$GL11.glLineWidth(width)
+        //#elseif MC<=12110
+        //$$RenderSystem.lineWidth(width)
         //#else
-        RenderSystem.lineWidth(width)
+        lineWidthInternal(width)
         //#endif
     }
 
@@ -623,16 +699,45 @@ object RenderUtils {
         //#endif
     }
 
-    @JvmStatic
+    //#if MC>=12105 && MC<12111
+    //$$private class UnownedGlTexture(glId: Int) : GlTexture(
+        //#if MC>=12106
+        //$$USAGE_TEXTURE_BINDING,
+        //#endif
+        //$$"",
+        //$$TextureFormat.RGBA8,
+        //$$0,
+        //$$0,
+        //$$0,
+        //#if MC>=12106
+        //$$1,
+        //#endif
+        //$$glId
+    //$$) {
+        //$$init {
+            //$$modesDirty = false
+        //$$}
+    //$$}
+    //#endif
+
     //#if MC<12100
+    //$$@JvmStatic
     //$$fun bindTexture(textureId: Int) = apply {
     //$$    GlStateManager.bindTexture(textureId)
     //$$}
     //#else
-    @JvmOverloads
-    fun bindTexture(textureImage: Image, textureIndex: Int = 0) = apply {
-        UGraphics.bindTexture(textureIndex, textureImage.getTexture()?.image?.imageId()?.toInt() ?: 0)
-    }
+        //#if MC<12111
+        //$$@JvmStatic
+        //$$@JvmOverloads
+        //$$fun bindTexture(textureImage: Image, textureIndex: Int = 0) = apply {
+            //$$val glTextureId = textureImage.getTexture()?.pixels?.pointer?.toInt() ?: 0
+            //#if MC>=12106
+            //$$RenderSystem.setShaderTexture(textureIndex, RenderSystem.getDevice().createTextureView(UnownedGlTexture(glTextureId)))
+            //#elseif MC>=12105
+            //$$RenderSystem.setShaderTexture(textureIndex, UnownedGlTexture(glTextureId))
+            //#endif
+        //$$}
+        //#endif
     //#endif
 
     @JvmStatic
@@ -650,22 +755,37 @@ object RenderUtils {
     @JvmStatic
     //#if MC<=12105
     //$$fun setShaderTexture(textureIndex: Int, texture: GpuTexture?) = apply {
+    //#elseif MC<=12110
+    //$$fun setShaderTexture(textureIndex: Int, texture: GpuTextureView?) = apply {
     //#else
-    fun setShaderTexture(textureIndex: Int, texture: GpuTextureView?) = apply {
+    fun setShaderTexture(texture: GpuTextureView?) = apply {
+        //#endif
+        //#if MC<=12110
+        //$$RenderSystem.setShaderTexture(textureIndex, texture)
+        //#else
+        PipelineBuilder.setTexture(texture?.texture())
         //#endif
         RenderSystem.setShaderTexture(textureIndex, texture)
     }
     //#endif
 
-    //#if MC >= 12100
+    //#if MC>=12100
     @JvmStatic
-    fun setShaderTexture(textureIndex: Int, textureImage: Image) = apply {
+    //#if MC<=12110
+    //$$fun setShaderTexture(textureIndex: Int, textureImage: Image) = apply {
+    //#else
+    fun setShaderTexture(textureImage: Image) = apply {
+        //#endif
         val gpuTexture = textureImage.getTexture()
         gpuTexture?.let {
             //#if MC<=12105
-            //$$RenderSystem.setShaderTexture(textureIndex, gpuTexture.glTexture)
+            //$$RenderSystem.setShaderTexture(textureIndex, gpuTexture.texture)
             //#else
-            RenderSystem.setShaderTexture(textureIndex, gpuTexture.glTextureView)
+            //#if MC<=12110
+            //$$RenderSystem.setShaderTexture(textureIndex, gpuTexture.textureView)
+            //#else
+            PipelineBuilder.setTexture(gpuTexture.textureView.texture())
+            //#endif
             //#endif
         }
     }
@@ -807,7 +927,7 @@ object RenderUtils {
         //#if MC<12100
         //$$worldRenderer?.color(r, g, b, a)
         //#else
-        ucRenderer.color(r, g, b, a)
+        colorInternal(r, g, b, a)
         //#endif
     }
 
@@ -912,6 +1032,7 @@ object RenderUtils {
         val y: Float,
         val z: Float,
         val normal: Vector3f?,
+        val lineWidth: Float,
     )
 
     //#if MC>=12100
