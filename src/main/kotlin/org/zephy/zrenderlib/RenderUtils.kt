@@ -35,21 +35,23 @@ import com.mojang.blaze3d.vertex.VertexFormat
 import net.minecraft.client.Camera
 import net.minecraft.world.phys.Vec3
 
-//#if MC<=12105
-    //$$import com.mojang.blaze3d.textures.GpuTexture
-    //$$import com.mojang.blaze3d.vertex.PoseStack
-//#else
-    import com.mojang.blaze3d.textures.GpuTextureView
-    import org.joml.Matrix3x2fStack
-    import org.joml.Matrix3x2f
-    import org.joml.Matrix4f
-//#endif
+    //#if MC<=12105
+        //$$import com.mojang.blaze3d.textures.GpuTexture
+        //$$import com.mojang.blaze3d.vertex.PoseStack
+    //#else
+        import com.mojang.blaze3d.textures.GpuTextureView
+        import net.minecraft.client.gui.GuiGraphics
+        import net.minecraft.client.gui.navigation.ScreenRectangle
+        import org.joml.Matrix3x2fStack
+        import org.joml.Matrix3x2f
+        import org.joml.Matrix4f
+    //#endif
 
-//#if MC<=12110
-    //$$import com.mojang.blaze3d.systems.RenderSystem
-    //$$import com.mojang.blaze3d.opengl.GlTexture
-    //$$import com.mojang.blaze3d.textures.TextureFormat
-//#endif
+    //#if MC<=12110
+        //$$import com.mojang.blaze3d.opengl.GlTexture
+        //$$import com.mojang.blaze3d.textures.TextureFormat
+        //$$import com.mojang.blaze3d.systems.RenderSystem
+    //#endif
 //#endif
 
 object RenderUtils {
@@ -881,6 +883,64 @@ object RenderUtils {
     fun multiply(quaternion: Quaternionf) = apply {
         matrixStack.multiply(quaternion)
     //#endif
+    }
+
+    @JvmStatic
+    fun enableScissor(
+        //#if MC>=12106
+        drawContext: GuiGraphics,
+        //#endif
+        scissorX: Double, scissorY: Double, scissorWidth: Double, scissorHeight: Double
+    ) = apply {
+        enableScissor(
+            //#if MC>=12106
+            drawContext,
+            //#endif
+            scissorX.toInt(), scissorY.toInt(), scissorWidth.toInt(), scissorHeight.toInt()
+        )
+    }
+
+    @JvmStatic
+    fun enableScissor(
+        //#if MC>=12106
+        drawContext: GuiGraphics,
+        //#endif
+        scissorX: Float, scissorY: Float, scissorWidth: Float, scissorHeight: Float
+    ) = apply {
+        enableScissor(
+            //#if MC>=12106
+            drawContext,
+            //#endif
+            scissorX.toInt(), scissorY.toInt(), scissorWidth.toInt(), scissorHeight.toInt()
+        )
+    }
+
+    @JvmStatic
+    fun enableScissor(
+        //#if MC>=12106
+        drawContext: GuiGraphics,
+        //#endif
+        scissorX: Int, scissorY: Int, scissorWidth: Int, scissorHeight: Int
+    ) = apply {
+        //#if MC<=12105
+        //$$GL11.glEnable(GL11.GL_SCISSOR_TEST)
+        //$$GL11.glScissor(scissorX, scissorY, scissorWidth, scissorHeight)
+        //#else
+        drawContext.scissorStack?.push(ScreenRectangle(scissorX, scissorY, scissorWidth, scissorHeight))
+        //#endif
+    }
+
+    @JvmStatic
+    fun disableScissor(
+        //#if MC>=12106
+        drawContext: GuiGraphics,
+        //#endif
+    ) = apply {
+        //#if MC<=12105
+        //$$GL11.glDisable(GL11.GL_SCISSOR_TEST)
+        //#else
+        drawContext.scissorStack?.pop()
+        //#endif
     }
 
     @JvmStatic

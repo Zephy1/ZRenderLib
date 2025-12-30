@@ -37,9 +37,6 @@ object PipelineBuilder {
     private var layering: LayeringTransform? = null
     private var texture: GpuTexture? = null
     //#endif
-    //#if MC>=12106
-    private var scissorState: ScissorState? = null
-    //#endif
     private var textureIdentifier: Identifier? = null
     private var drawMode = DrawMode.QUADS
     private var vertexFormat = VertexFormat.POSITION_COLOR
@@ -93,24 +90,6 @@ object PipelineBuilder {
     fun setLocation(newValue: String?) = apply {
         location = newValue
     }
-
-    //#if MC>=12106
-    data class ScissorState(val scissorX: Int, val scissorY: Int, val scissorWidth: Int, val scissorHeight: Int) {
-        override fun toString(): String {
-            return "ScissorState(x=$scissorX, y=$scissorY, width=$scissorWidth, height=$scissorHeight)"
-        }
-    }
-
-    @JvmStatic
-    fun enableScissor(scissorX: Int, scissorY: Int, scissorWidth: Int, scissorHeight: Int) = apply {
-        this.scissorState = ScissorState(scissorX, scissorY, scissorWidth, scissorHeight)
-    }
-
-    @JvmStatic
-    fun disableScissor() = apply {
-        this.scissorState = null
-    }
-    //#endif
 
     @JvmStatic
     //#if MC<=12110
@@ -236,14 +215,6 @@ object PipelineBuilder {
                     OptionalDouble.empty(),
                 )
             }
-            if (scissorState != null) {
-                renderPass.enableScissor(
-                    scissorState!!.scissorX,
-                    scissorState!!.scissorY,
-                    scissorState!!.scissorWidth,
-                    scissorState!!.scissorHeight,
-                )
-            }
             //#if MC>=12111
             if (texture != null) {
                 renderPass.bindTexture("zrenderlib/custom/textures/${location ?: hashCode()}", RenderSystem.getDevice().createTextureView(texture!!), RenderTypes.MOVING_BLOCK_SAMPLER.get())
@@ -293,9 +264,6 @@ object PipelineBuilder {
         snippet = RenderSnippet.POSITION_COLOR_SNIPPET
         location = null
         bufferSize = null
-        //#if MC>=12106
-        scissorState = null
-        //#endif
         //#if MC<=12110
         //$$lineWidth = null
         //#else
@@ -317,9 +285,6 @@ object PipelineBuilder {
                 "snippet=${snippet.name}, " +
                 "textureIdentifier=${textureIdentifier}, " +
                 "bufferSize=${bufferSize}, " +
-                //#if MC>=12106
-                "scissorState=${scissorState}, " +
-                //#endif
                 //#if MC<=12110
                 //$$"lineWidth=${lineWidth}" +
                 //#else
