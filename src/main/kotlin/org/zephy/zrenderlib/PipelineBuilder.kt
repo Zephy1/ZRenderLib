@@ -10,6 +10,9 @@ import java.util.OptionalDouble
 
 //#if MC<=12105
 //$$import net.minecraft.util.TriState
+//#else
+import java.util.OptionalInt
+import com.mojang.blaze3d.systems.RenderSystem
 //#endif
 
 //#if MC<=12110
@@ -18,9 +21,7 @@ import java.util.OptionalDouble
 import net.minecraft.client.renderer.rendertype.LayeringTransform
 import net.minecraft.client.renderer.rendertype.RenderTypes
 import net.minecraft.client.renderer.rendertype.RenderSetup
-import java.util.OptionalInt
 import com.mojang.blaze3d.textures.GpuTexture
-import com.mojang.blaze3d.systems.RenderSystem
 //#endif
 
 object PipelineBuilder {
@@ -35,6 +36,9 @@ object PipelineBuilder {
     //#else
     private var layering: LayeringTransform? = null
     private var texture: GpuTexture? = null
+    //#endif
+    //#if MC>=12106
+    private var scissorState: ScissorState? = null
     //#endif
     private var textureIdentifier: Identifier? = null
     private var drawMode = DrawMode.QUADS
@@ -89,6 +93,24 @@ object PipelineBuilder {
     fun setLocation(newValue: String?) = apply {
         location = newValue
     }
+
+    //#if MC>=12106
+    data class ScissorState(val scissorX: Int, val scissorY: Int, val scissorWidth: Int, val scissorHeight: Int) {
+        override fun toString(): String {
+            return "ScissorState(x=$scissorX, y=$scissorY, width=$scissorWidth, height=$scissorHeight)"
+        }
+    }
+
+    @JvmStatic
+    fun enableScissor(scissorX: Int, scissorY: Int, scissorWidth: Int, scissorHeight: Int) = apply {
+        this.scissorState = ScissorState(scissorX, scissorY, scissorWidth, scissorHeight)
+    }
+
+    @JvmStatic
+    fun disableScissor() = apply {
+        this.scissorState = null
+    }
+    //#endif
 
     @JvmStatic
     //#if MC<=12110
@@ -170,19 +192,65 @@ object PipelineBuilder {
 
             //#if MC<=12110
             //$$val layerBuilder = RenderType.CompositeState.builder()
-            //$$if (textureIdentifier != null) {
-            //#if MC<=12105
-            //$$    layerBuilder.setTextureState(RenderStateShard.TextureStateShard(textureIdentifier!!, TriState.FALSE, false))
             //#else
-            //$$    layerBuilder.setTextureState(RenderStateShard.TextureStateShard(textureIdentifier!!, false))
+            val layerBuilder = RenderSetup.builder(build())
             //#endif
-            //$$}
+
+            if (textureIdentifier != null) {
+                //#if MC<=12105
+                //$$layerBuilder.setTextureState(RenderStateShard.TextureStateShard(textureIdentifier!!, TriState.FALSE, false))
+                //#elseif MC<=12110
+                //$$layerBuilder.setTextureState(RenderStateShard.TextureStateShard(textureIdentifier!!, false))
+                //#else
+                layerBuilder.withTexture("zrenderlib/custom/textures/${location ?: hashCode()}", textureIdentifier!!)
+                //#endif
+            }
+
+            //#if MC<=12105
             //$$if (lineWidth != null) {
             //$$    layerBuilder.setLineState(RenderStateShard.LineStateShard(OptionalDouble.of(lineWidth!!.toDouble())))
             //$$}
-            //$$if (layering != null) {
-            //$$    layerBuilder.setLayeringState(layering!!)
-            //$$}
+            //#endif
+
+            if (layering != null) {
+                //#if MC<=12111
+                //$$layerBuilder.setLayeringState(layering!!)
+                //#else
+                layerBuilder.setLayeringTransform(layering!!)
+                //#endif
+            }
+
+            //#if MC>=12111
+            if (blendFunction != null) {
+                layerBuilder.sortOnUpload()
+            }
+            //#endif
+
+            //#if MC>=12106
+            val renderPass = Client.getMinecraft().mainRenderTarget.let { fb ->
+                RenderSystem.getDevice().createCommandEncoder().createRenderPass(
+                    { "Immediate draw for $textureIdentifier" },
+                    RenderSystem.outputColorTextureOverride ?: fb.colorTextureView!!,
+                    OptionalInt.empty(),
+                    RenderSystem.outputDepthTextureOverride ?: fb.depthTextureView,
+                    OptionalDouble.empty(),
+                )
+            }
+            if (scissorState != null) {
+                renderPass.enableScissor(
+                    scissorState!!.scissorX,
+                    scissorState!!.scissorY,
+                    scissorState!!.scissorWidth,
+                    scissorState!!.scissorHeight,
+                )
+            }
+            //#if MC>=12111
+            if (texture != null) {
+                renderPass.bindTexture("zrenderlib/custom/textures/${location ?: hashCode()}", RenderSystem.getDevice().createTextureView(texture!!), RenderTypes.MOVING_BLOCK_SAMPLER.get())
+            }
+            //#endif
+            //#endif
+            //#if MC<=12110
             //$$val layer = RenderType.create(
             //$$    "zrenderlib/custom/layers/${location ?: hashCode()}",
             //$$    bufferSize ?: RenderType.TRANSIENT_BUFFER_SIZE,
@@ -190,28 +258,6 @@ object PipelineBuilder {
             //$$    layerBuilder.createCompositeState(false),
             //$$)
             //#else
-            val layerBuilder = RenderSetup.builder(build())
-            if (textureIdentifier != null) {
-                layerBuilder.withTexture("zrenderlib/custom/textures/${location ?: hashCode()}", textureIdentifier!!)
-            }
-            if (texture != null) {
-                val mc = Client.getMinecraft().mainRenderTarget.let { fb ->
-                    RenderSystem.getDevice().createCommandEncoder().createRenderPass(
-                        { "Immediate draw for $textureIdentifier" },
-                        RenderSystem.outputColorTextureOverride ?: fb.colorTextureView!!,
-                        OptionalInt.empty(),
-                        RenderSystem.outputDepthTextureOverride ?: fb.depthTextureView,
-                        OptionalDouble.empty(),
-                    )
-                }
-                mc.bindTexture("zrenderlib/custom/textures/${location ?: hashCode()}", RenderSystem.getDevice().createTextureView(texture!!), RenderTypes.MOVING_BLOCK_SAMPLER.get())
-            }
-            if (layering != null) {
-                layerBuilder.setLayeringTransform(layering!!)
-            }
-            if (blendFunction != null) {
-                layerBuilder.sortOnUpload()
-            }
             val layer = createRenderLayer(
                 "zrenderlib/custom/layers/${location ?: hashCode()}",
                 layerBuilder.createRenderSetup(),
@@ -247,6 +293,9 @@ object PipelineBuilder {
         snippet = RenderSnippet.POSITION_COLOR_SNIPPET
         location = null
         bufferSize = null
+        //#if MC>=12106
+        scissorState = null
+        //#endif
         //#if MC<=12110
         //$$lineWidth = null
         //#else
@@ -268,6 +317,9 @@ object PipelineBuilder {
                 "snippet=${snippet.name}, " +
                 "textureIdentifier=${textureIdentifier}, " +
                 "bufferSize=${bufferSize}, " +
+                //#if MC>=12106
+                "scissorState=${scissorState}, " +
+                //#endif
                 //#if MC<=12110
                 //$$"lineWidth=${lineWidth}" +
                 //#else
