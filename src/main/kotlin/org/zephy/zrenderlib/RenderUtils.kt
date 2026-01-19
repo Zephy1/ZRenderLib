@@ -60,7 +60,7 @@ object RenderUtils {
 
     @JvmStatic
     //#if MC<12100
-    //$$fun getTextRenderer() = Client.getMinecraft().fontRendererObj
+    //$$fun getTextRenderer(): net.minecraft.client.gui.FontRenderer = Client.getMinecraft().fontRendererObj
     //#else
     fun getTextRenderer(): net.minecraft.client.gui.Font = Client.getMinecraft().font
     //#endif
@@ -1101,13 +1101,27 @@ object RenderUtils {
         val lineWidth: Float,
     )
 
-    //#if MC>=12100
-    data class TextLines(val lines: List<Component>, val width: Float, val height: Float)
+    data class TextLines(
+        //#if MC<12100
+        //$$val lines: List<String>,
+        //#else
+        val lines: List<Component>,
+        //#endif
+        val width: Float,
+        val height: Float
+    )
 
     @JvmStatic
+    //#if MC<12100
+    //$$fun splitText(text: String, maxWidth: Int): TextLines {
+    //$$    val textRenderer = getTextRenderer()
+    //$$    val textLines = textRenderer.listFormattedStringToWidth(text, maxWidth)
+    //$$    val width = textLines.maxOfOrNull { textRenderer.getStringWidth(it).toFloat() } ?: 0f
+    //$$    val height = (textRenderer.FONT_HEIGHT * textLines.size).toFloat()
+    //#else
     fun splitText(text: Component, maxWidth: Int): TextLines {
-        val renderer = getTextRenderer()
-        val wrappedLines = renderer.splitter.splitLines(text, maxWidth, Style.EMPTY)
+        val textRenderer = getTextRenderer()
+        val wrappedLines = textRenderer.splitter.splitLines(text, maxWidth, Style.EMPTY)
 
         val textLines = wrappedLines.map { visitable ->
             val builder = Component.empty()
@@ -1120,12 +1134,11 @@ object RenderUtils {
             builder
         }
 
-        val width = textLines.maxOfOrNull { renderer.width(it).toFloat() } ?: 0f
-        val height = (renderer.lineHeight * textLines.size + (textLines.size - 1)).toFloat()
-
+        val width = textLines.maxOfOrNull { textRenderer.width(it).toFloat() } ?: 0f
+        val height = (textRenderer.lineHeight * textLines.size + (textLines.size - 1)).toFloat()
+    //#endif
         return TextLines(textLines, width, height)
     }
-    //#endif
 
     fun blendColorsRGBA(color1: Long, color2: Long): RGBAColor {
         return blendColorsRGBA(
