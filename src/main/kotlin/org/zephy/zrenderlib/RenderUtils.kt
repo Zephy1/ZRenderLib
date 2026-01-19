@@ -926,7 +926,7 @@ object RenderUtils {
         //$$GL11.glEnable(GL11.GL_SCISSOR_TEST)
         //$$GL11.glScissor(scissorX, scissorY, scissorWidth, scissorHeight)
         //#else
-        drawContext.scissorStack?.push(ScreenRectangle(scissorX, scissorY, scissorWidth, scissorHeight))
+        drawContext.scissorStack.push(ScreenRectangle(scissorX, scissorY, scissorWidth, scissorHeight))
         //#endif
     }
 
@@ -939,7 +939,7 @@ object RenderUtils {
         //#if MC<=12105
         //$$GL11.glDisable(GL11.GL_SCISSOR_TEST)
         //#else
-        drawContext.scissorStack?.pop()
+        drawContext.scissorStack.pop()
         //#endif
     }
 
