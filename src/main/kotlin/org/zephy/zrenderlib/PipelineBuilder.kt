@@ -6,20 +6,16 @@ import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.platform.DepthTestFunction
 import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.resources.Identifier
-import java.util.OptionalDouble
 
 //#if MC<=12105
 //$$import net.minecraft.util.TriState
-//#else
-import java.util.OptionalInt
-import com.mojang.blaze3d.systems.RenderSystem
+//$$import java.util.OptionalDouble
 //#endif
 
 //#if MC<=12110
 //$$import net.minecraft.client.renderer.RenderStateShard
 //#else
 import net.minecraft.client.renderer.rendertype.LayeringTransform
-import net.minecraft.client.renderer.rendertype.RenderTypes
 import net.minecraft.client.renderer.rendertype.RenderSetup
 import com.mojang.blaze3d.textures.GpuTexture
 //#endif
@@ -205,22 +201,6 @@ object PipelineBuilder {
             }
             //#endif
 
-            //#if MC>=12106
-            val renderPass = Client.getMinecraft().mainRenderTarget.let { fb ->
-                RenderSystem.getDevice().createCommandEncoder().createRenderPass(
-                    { "Immediate draw for $textureIdentifier" },
-                    RenderSystem.outputColorTextureOverride ?: fb.colorTextureView!!,
-                    OptionalInt.empty(),
-                    RenderSystem.outputDepthTextureOverride ?: fb.depthTextureView,
-                    OptionalDouble.empty(),
-                )
-            }
-            //#if MC>=12111
-            if (texture != null) {
-                renderPass.bindTexture("zrenderlib/custom/textures/${location ?: hashCode()}", RenderSystem.getDevice().createTextureView(texture!!), RenderTypes.MOVING_BLOCK_SAMPLER.get())
-            }
-            //#endif
-            //#endif
             //#if MC<=12110
             //$$val layer = RenderType.create(
             //$$    "zrenderlib/custom/layers/${location ?: hashCode()}",
