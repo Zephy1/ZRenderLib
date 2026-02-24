@@ -225,14 +225,17 @@ object RenderUtils {
 
     @JvmStatic
     //#if MC<12100
-    //$$fun getStringWidth(text: String) = getTextRenderer().getStringWidth(addColor(text))
+    //$$fun getStringWidth(text: String): Int = getTextRenderer().getStringWidth(addColor(text))
     //#else
+    fun getFormattedTextFromString(text: String): Component = Component.literal(addColor(text))
+
+    @JvmStatic
     //#if MC<=12108
-    //$$fun getStringWidth(text: String) = getTextRenderer().width(addColor(text))
+    //$$fun getStringWidth(text: String): Int = getTextRenderer().width(getFormattedTextFromString(text))
     //#else
     fun getStringWidth(text: String): Int {
         return Client.synchronizedTask {
-            getTextRenderer().width(addColor(text))
+            getTextRenderer().width(getFormattedTextFromString(text))
         }
     }
     //#endif
