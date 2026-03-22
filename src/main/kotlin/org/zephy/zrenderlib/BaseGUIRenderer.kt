@@ -12,6 +12,8 @@ import kotlin.math.sqrt
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.renderer.texture.DynamicTexture
 //#endif
+import org.zephy.zrenderlib.RenderUtils.RGBAColor
+import org.zephy.zrenderlib.RenderUtils.RenderColor
 
 abstract class BaseGUIRenderer {
     @JvmOverloads
@@ -35,7 +37,51 @@ abstract class BaseGUIRenderer {
             //#if MC>=12100
             drawContext,
             //#endif
-            text, xPosition, yPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), textScale, renderBackground, true, maxWidth, zOffset
+            text, xPosition, yPosition, RGBAColor(red, green, blue, alpha).getLong(), textScale, renderBackground, true, maxWidth, zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawStringWithShadowRGBAArray(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        text: String,
+        xPosition: Float,
+        yPosition: Float,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        textScale: Float = 1f,
+        renderBackground: Boolean = false,
+        maxWidth: Int = 512,
+        zOffset: Float = 0f,
+    ) {
+        drawString(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            text, xPosition, yPosition, RGBAColor.fromIntArray(colorArray).getLongRGBA(), textScale, renderBackground, true, maxWidth, zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawStringWithShadowRenderColor(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        text: String,
+        xPosition: Float,
+        yPosition: Float,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        textScale: Float = 1f,
+        renderBackground: Boolean = false,
+        maxWidth: Int = 512,
+        zOffset: Float = 0f,
+    ) {
+        drawString(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            text, xPosition, yPosition, color.getLongRGBA(), textScale, renderBackground, true, maxWidth, zOffset
         )
     }
 
@@ -83,7 +129,53 @@ abstract class BaseGUIRenderer {
             //#if MC>=12100
             drawContext,
             //#endif
-            text, xPosition, yPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), textScale, renderBackground, textShadow, maxWidth, zOffset
+            text, xPosition, yPosition, RGBAColor(red, green, blue, alpha).getLong(), textScale, renderBackground, textShadow, maxWidth, zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawStringRGBAArray(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        text: String,
+        xPosition: Float,
+        yPosition: Float,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        textScale: Float = 1f,
+        renderBackground: Boolean = false,
+        textShadow: Boolean = false,
+        maxWidth: Int = 512,
+        zOffset: Float = 0f,
+    ) {
+        drawString(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            text, xPosition, yPosition, RGBAColor.fromIntArray(colorArray).getLongRGBA(), textScale, renderBackground, textShadow, maxWidth, zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawStringRenderColor(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        text: String,
+        xPosition: Float,
+        yPosition: Float,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        textScale: Float = 1f,
+        renderBackground: Boolean = false,
+        textShadow: Boolean = false,
+        maxWidth: Int = 512,
+        zOffset: Float = 0f,
+    ) {
+        drawString(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            text, xPosition, yPosition, color.getLongRGBA(), textScale, renderBackground, textShadow, maxWidth, zOffset
         )
     }
 
@@ -122,7 +214,49 @@ abstract class BaseGUIRenderer {
             //#if MC>=12100
             drawContext,
             //#endif
-            startX, startY, endX, endY, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), lineThickness, zOffset
+            startX, startY, endX, endY, RGBAColor(red, green, blue, alpha).getLong(), lineThickness, zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawLineRGBAArray(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        startX: Float,
+        startY: Float,
+        endX: Float,
+        endY: Float,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        lineThickness: Float = 1f,
+        zOffset: Float = 0f,
+    ) {
+        drawLine(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            startX, startY, endX, endY, RGBAColor.fromIntArray(colorArray).getLongRGBA(), lineThickness, zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawLineRenderColor(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        startX: Float,
+        startY: Float,
+        endX: Float,
+        endY: Float,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        lineThickness: Float = 1f,
+        zOffset: Float = 0f,
+    ) {
+        drawLine(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            startX, startY, endX, endY, color.getLongRGBA(), lineThickness, zOffset
         )
     }
 
@@ -187,7 +321,45 @@ abstract class BaseGUIRenderer {
             //#if MC>=12100
             drawContext,
             //#endif
-            xPosition, yPosition, size, size, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), zOffset
+            xPosition, yPosition, size, size, RGBAColor(red, green, blue, alpha).getLong(), zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawSquareRGBAArray(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        xPosition: Float,
+        yPosition: Float,
+        size: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        zOffset: Float = 0f,
+    ) {
+        drawRect(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            xPosition, yPosition, size, size, RGBAColor.fromIntArray(colorArray).getLongRGBA(), zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawSquareRenderColor(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        xPosition: Float,
+        yPosition: Float,
+        size: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        zOffset: Float = 0f,
+    ) {
+        drawRect(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            xPosition, yPosition, size, size, color.getLongRGBA(), zOffset
         )
     }
 
@@ -229,7 +401,47 @@ abstract class BaseGUIRenderer {
             //#if MC>=12100
             drawContext,
             //#endif
-            xPosition, yPosition, width, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), zOffset
+            xPosition, yPosition, width, height, RGBAColor(red, green, blue, alpha).getLong(), zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawRectRGBAArray(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        xPosition: Float,
+        yPosition: Float,
+        width: Float = 1f,
+        height: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        zOffset: Float = 0f,
+    ) {
+        drawRect(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            xPosition, yPosition, width, height, RGBAColor.fromIntArray(colorArray).getLongRGBA(), zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawRectRenderColor(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        xPosition: Float,
+        yPosition: Float,
+        width: Float = 1f,
+        height: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        zOffset: Float = 0f,
+    ) {
+        drawRect(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            xPosition, yPosition, width, height, color.getLongRGBA(), zOffset
         )
     }
 
@@ -295,7 +507,53 @@ abstract class BaseGUIRenderer {
             //#if MC>=12100
             drawContext,
             //#endif
-            xPosition, yPosition, width, height, radius, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), flatCorners, segments, zOffset
+            xPosition, yPosition, width, height, radius, RGBAColor(red, green, blue, alpha).getLong(), flatCorners, segments, zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawRoundedRectRGBAArray(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        xPosition: Float,
+        yPosition: Float,
+        width: Float,
+        height: Float,
+        radius: Float = 4f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        flatCorners: List<RenderUtils.FlattenRoundedRectCorner> = emptyList(),
+        segments: Int = 16,
+        zOffset: Float = 0f,
+    ) {
+        drawRoundedRect(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            xPosition, yPosition, width, height, radius, RGBAColor.fromIntArray(colorArray).getLongRGBA(), flatCorners, segments, zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawRoundedRectRenderColor(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        xPosition: Float,
+        yPosition: Float,
+        width: Float = 1f,
+        height: Float = 1f,
+        radius: Float = 4f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        flatCorners: List<RenderUtils.FlattenRoundedRectCorner> = emptyList(),
+        segments: Int = 16,
+        zOffset: Float = 0f,
+    ) {
+        drawRoundedRect(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            xPosition, yPosition, width, height, radius, color.getLongRGBA(), flatCorners, segments, zOffset
         )
     }
 
@@ -417,8 +675,32 @@ abstract class BaseGUIRenderer {
         direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT,
         zOffset: Float = 0f,
     ) {
-        val startColor = RenderUtils.RGBAColor(startRed, startGreen, startBlue, startAlpha).getLong()
-        val endColor = RenderUtils.RGBAColor(endRed, endGreen, endBlue, endAlpha).getLong()
+        val startColor = RGBAColor(startRed, startGreen, startBlue, startAlpha).getLong()
+        val endColor = RGBAColor(endRed, endGreen, endBlue, endAlpha).getLong()
+        drawSimpleGradient(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            x, y, width, height, startColor, endColor, direction, zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawSimpleGradientRGBAArray(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        startColorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        endColorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        direction: RenderUtils.GradientDirection = RenderUtils.GradientDirection.TOP_LEFT_TO_BOTTOM_RIGHT,
+        zOffset: Float = 0f,
+    ) {
+        val startColor = RGBAColor.fromIntArray(startColorArray).getLong()
+        val endColor = RGBAColor.fromIntArray(endColorArray).getLong()
         drawSimpleGradient(
             //#if MC>=12100
             drawContext,
@@ -547,7 +829,47 @@ abstract class BaseGUIRenderer {
             //#if MC>=12100
             drawContext,
             //#endif
-            xPosition, yPosition, radius, radius, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), edges, 0f, 0f, 0f, zOffset
+            xPosition, yPosition, radius, radius, RGBAColor(red, green, blue, alpha).getLong(), edges, 0f, 0f, 0f, zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawSimpleCircleRGBAArray(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        xPosition: Float,
+        yPosition: Float,
+        radius: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        edges: Int = 32,
+        zOffset: Float = 0f,
+    ) {
+        drawCircle(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            xPosition, yPosition, radius, radius, RGBAColor.fromIntArray(colorArray).getLongRGBA(), edges, 0f, 0f, 0f, zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawSimpleCircleRenderColor(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        xPosition: Float,
+        yPosition: Float,
+        radius: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        edges: Int = 32,
+        zOffset: Float = 0f,
+    ) {
+        drawCircle(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            xPosition, yPosition, radius, radius, color.getLongRGBA(), edges, 0f, 0f, 0f, zOffset
         )
     }
 
@@ -594,7 +916,55 @@ abstract class BaseGUIRenderer {
             //#if MC>=12100
             drawContext,
             //#endif
-            xPosition, yPosition, xScale, yScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), edges, rotationDegrees, xRotationOffset, yRotationOffset, zOffset
+            xPosition, yPosition, xScale, yScale, RGBAColor(red, green, blue, alpha).getLong(), edges, rotationDegrees, xRotationOffset, yRotationOffset, zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawCircleRGBAArray(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        xPosition: Float,
+        yPosition: Float,
+        xScale: Float = 1f,
+        yScale: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        edges: Int = 32,
+        rotationDegrees: Float = 0f,
+        xRotationOffset: Float = 0f,
+        yRotationOffset: Float = 0f,
+        zOffset: Float = 0f,
+    ) {
+        drawCircle(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            xPosition, yPosition, xScale, yScale, RGBAColor.fromIntArray(colorArray).getLongRGBA(), edges, rotationDegrees, xRotationOffset, yRotationOffset, zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawCircleRenderColor(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        xPosition: Float,
+        yPosition: Float,
+        xScale: Float = 1f,
+        yScale: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        edges: Int = 32,
+        rotationDegrees: Float = 0f,
+        xRotationOffset: Float = 0f,
+        yRotationOffset: Float = 0f,
+        zOffset: Float = 0f,
+    ) {
+        drawCircle(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            xPosition, yPosition, xScale, yScale, color.getLongRGBA(), edges, rotationDegrees, xRotationOffset, yRotationOffset, zOffset
         )
     }
 
@@ -690,7 +1060,49 @@ abstract class BaseGUIRenderer {
             //#if MC>=12100
             drawContext,
             //#endif
-            image, xPosition, yPosition, width, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), zOffset
+            image, xPosition, yPosition, width, height, RGBAColor(red, green, blue, alpha).getLong(), zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawImageRGBAArray(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        image: Image,
+        xPosition: Float,
+        yPosition: Float,
+        width: Float? = null,
+        height: Float? = null,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        zOffset: Float = 0f,
+    ) {
+        drawImage(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            image, xPosition, yPosition, width, height, RGBAColor.fromIntArray(colorArray).getLongRGBA(), zOffset
+        )
+    }
+
+    @JvmOverloads
+    fun drawImageRenderColor(
+        //#if MC>=12100
+        drawContext: GuiGraphics,
+        //#endif
+        image: Image,
+        xPosition: Float,
+        yPosition: Float,
+        width: Float? = null,
+        height: Float? = null,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        zOffset: Float = 0f,
+    ) {
+        drawImage(
+            //#if MC>=12100
+            drawContext,
+            //#endif
+            image, xPosition, yPosition, width, height, color.getLongRGBA(), zOffset
         )
     }
 
@@ -720,7 +1132,7 @@ abstract class BaseGUIRenderer {
             Pair(0f, 1f),
             Pair(1f, 1f),
             Pair(1f, 0f),
-            Pair(0f, 0f)
+            Pair(0f, 0f),
         )
 
         _drawImage(

@@ -904,6 +904,21 @@ object RenderUtils {
     }
 
     @JvmStatic
+    fun enableScaledScissor(
+        //#if MC>=12106
+        drawContext: GuiGraphics,
+        //#endif
+        scissorX: Double, scissorY: Double, scissorWidth: Double, scissorHeight: Double
+    ) = apply {
+        enableScaledScissor(
+            //#if MC>=12106
+            drawContext,
+            //#endif
+            scissorX.toInt(), scissorY.toInt(), scissorWidth.toInt(), scissorHeight.toInt()
+        )
+    }
+
+    @JvmStatic
     fun enableScissor(
         //#if MC>=12106
         drawContext: GuiGraphics,
@@ -915,6 +930,38 @@ object RenderUtils {
             drawContext,
             //#endif
             scissorX.toInt(), scissorY.toInt(), scissorWidth.toInt(), scissorHeight.toInt()
+        )
+    }
+
+    @JvmStatic
+    fun enableScaledScissor(
+        //#if MC>=12106
+        drawContext: GuiGraphics,
+        //#endif
+        scissorX: Float, scissorY: Float, scissorWidth: Float, scissorHeight: Float
+    ) = apply {
+        enableScaledScissor(
+            //#if MC>=12106
+            drawContext,
+            //#endif
+            scissorX.toInt(), scissorY.toInt(), scissorWidth.toInt(), scissorHeight.toInt()
+        )
+    }
+
+    @JvmStatic
+    fun enableScaledScissor(
+        //#if MC>=12106
+        drawContext: GuiGraphics,
+        //#endif
+        scissorX: Int, scissorY: Int, scissorWidth: Int, scissorHeight: Int
+    ) = apply {
+        val screenHeight = screen.getHeight()
+        val screenScale = 2
+        enableScissor(
+            //#if MC>=12106
+            drawContext,
+            //#endif
+            scissorX * screenScale, (screenHeight - (scissorY + scissorHeight)) * screenScale, scissorWidth * screenScale, scissorHeight * screenScale
         )
     }
 
@@ -1160,6 +1207,8 @@ object RenderUtils {
         )
     }
 
+    val defaultARGBColor = ARGBColor(255, 255, 255, 255)
+    val defaultRGBAColor = RGBAColor(255, 255, 255, 255)
     abstract class RenderColor {
         abstract val r: Int
         abstract val g: Int
@@ -1177,10 +1226,12 @@ object RenderUtils {
         fun getIntRGBA(): Int = getLongRGBA().toColorInt()
         fun getIntComponentsRGBA(): IntArray = intArrayOf(r, g, b, a)
         fun getLongRGBA(): Long {
-            return ((r.coerceIn(0, 255) shl 24) or
-                    (g.coerceIn(0, 255) shl 16) or
-                    (b.coerceIn(0, 255) shl 8) or
-                    a.coerceIn(0, 255)).toLong() and 0xFFFFFFFFL
+            return (
+                (r.coerceIn(0, 255) shl 24) or
+                (g.coerceIn(0, 255) shl 16) or
+                (b.coerceIn(0, 255) shl 8) or
+                a.coerceIn(0, 255)
+            ).toLong() and 0xFFFFFFFFL
         }
         fun getRGBA(): FloatArray = floatArrayOf(
             r.coerceIn(0, 255) / 255f,
@@ -1192,10 +1243,12 @@ object RenderUtils {
         fun getIntARGB(): Int = getLongARGB().toColorInt()
         fun getIntComponentsARGB(): IntArray = intArrayOf(a, r, g, b)
         fun getLongARGB(): Long {
-            return ((a.coerceIn(0, 255) shl 24) or
-                    (r.coerceIn(0, 255) shl 16) or
-                    (g.coerceIn(0, 255) shl 8) or
-                    b.coerceIn(0, 255)).toLong() and 0xFFFFFFFFL
+            return (
+                (a.coerceIn(0, 255) shl 24) or
+                (r.coerceIn(0, 255) shl 16) or
+                (g.coerceIn(0, 255) shl 8) or
+                b.coerceIn(0, 255)
+            ).toLong() and 0xFFFFFFFFL
         }
         fun getARGB(): FloatArray = floatArrayOf(
             a.coerceIn(0, 255) / 255f,
@@ -1266,6 +1319,14 @@ object RenderUtils {
                 val (r, g, b, a) = parseLongARGB(color)
                 return ARGBColor(r, g, b, a)
             }
+            @JvmStatic
+            fun fromIntArray(arr: IntArray): ARGBColor {
+                val a = if (arr.size >= 1) arr[0] else 255
+                val r = if (arr.size >= 2) arr[1] else 255
+                val g = if (arr.size >= 3) arr[2] else 255
+                val b = if (arr.size >= 4) arr[3] else 255
+                return ARGBColor(a, r, g, b)
+            }
         }
     }
 
@@ -1292,6 +1353,14 @@ object RenderUtils {
             @JvmStatic
             fun fromLongARGB(color: Long): RGBAColor {
                 val (r, g, b, a) = parseLongARGB(color)
+                return RGBAColor(r, g, b, a)
+            }
+            @JvmStatic
+            fun fromIntArray(arr: IntArray): RGBAColor {
+                val r = if (arr.size >= 1) arr[0] else 255
+                val g = if (arr.size >= 2) arr[1] else 255
+                val b = if (arr.size >= 3) arr[2] else 255
+                val a = if (arr.size >= 4) arr[3] else 255
                 return RGBAColor(r, g, b, a)
             }
         }

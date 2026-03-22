@@ -7,6 +7,7 @@ plugins {
 }
 
 group = "org.zephy.zrenderlib"
+version = "1.0.0"
 
 loom {
     runConfigs {
@@ -113,4 +114,17 @@ tasks.named("build") {
 preprocess {
     vars.put("FABRIC", if (project.platform.isFabric) 1 else 0)
     vars.put("!FABRIC", if (project.platform.isFabric) 0 else 1)
+}
+
+java {
+    withSourcesJar()
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            artifact(tasks.named("remapJar"))
+            artifact(tasks.named("sourcesJar"))
+        }
+    }
 }

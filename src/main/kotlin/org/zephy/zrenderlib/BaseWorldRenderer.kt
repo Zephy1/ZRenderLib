@@ -12,6 +12,8 @@ import org.joml.Vector3f
 import org.zephy.zrenderlib.RenderUtils.setAndNormalize
 import org.zephy.zrenderlib.RenderUtils.tempNormal
 //#endif
+import org.zephy.zrenderlib.RenderUtils.RGBAColor
+import org.zephy.zrenderlib.RenderUtils.RenderColor
 
 abstract class BaseWorldRenderer {
     @JvmOverloads
@@ -31,7 +33,41 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         maxWidth: Int = 512,
     ) {
-        drawString(text, xPosition, yPosition, zPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
+        drawString(text, xPosition, yPosition, zPosition, RGBAColor(red, green, blue, alpha).getLong(), scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
+    }
+
+    @JvmOverloads
+    fun drawStringRGBAArray(
+        text: String,
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        scale: Float = 1f,
+        renderBackground: Boolean = false,
+        centered: Boolean = false,
+        textShadow: Boolean = true,
+        disableDepth: Boolean = false,
+        maxWidth: Int = 512,
+    ) {
+        drawString(text, xPosition, yPosition, zPosition, RGBAColor.fromIntArray(colorArray).getLongRGBA(), scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
+    }
+
+    @JvmOverloads
+    fun drawStringRenderColor(
+        text: String,
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        scale: Float = 1f,
+        renderBackground: Boolean = false,
+        centered: Boolean = false,
+        textShadow: Boolean = true,
+        disableDepth: Boolean = false,
+        maxWidth: Int = 512,
+    ) {
+        drawString(text, xPosition, yPosition, zPosition, color.getLongRGBA(), scale, renderBackground, centered, textShadow, disableDepth, maxWidth)
     }
 
     abstract fun drawString(
@@ -47,24 +83,6 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         maxWidth: Int = 512
     )
-
-    @JvmOverloads
-    fun drawLineRGBA(
-        startX: Float,
-        startY: Float,
-        startZ: Float,
-        endX: Float,
-        endY: Float,
-        endZ: Float,
-        red: Int = 255,
-        green: Int = 255,
-        blue: Int = 255,
-        alpha: Int = 255,
-        disableDepth: Boolean = false,
-        lineThickness: Float = 1f,
-    ) {
-        drawLine(startX, startY, startZ, endX, endY, endZ, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, lineThickness)
-    }
 
     private fun getLinePositions(
         startX: Float,
@@ -85,29 +103,55 @@ abstract class BaseWorldRenderer {
         vertexAndNormalList.add(RenderUtils.WorldPositionVertex(startX, startY, startZ, vectorCopy, lineThickness))
         vertexAndNormalList.add(RenderUtils.WorldPositionVertex(endX, endY, endZ, vectorCopy, lineThickness))
 
-//        //#if MC<=12110
-//        //$$vertexAndNormalList.add(RenderUtils.WorldPositionVertex(startX, startY, startZ, vectorCopy, lineThickness))
-//        //$$vertexAndNormalList.add(RenderUtils.WorldPositionVertex(endX, endY, endZ, vectorCopy, lineThickness))
-//        //#else
-//        val cameraPos = RenderUtils.getCameraPos()
-//        val toCamera = Vector3f(
-//            cameraPos.x.toFloat() - startX,
-//            cameraPos.y.toFloat() - startY,
-//            cameraPos.z.toFloat() - startZ
-//        )
-//
-//        val perpendicular = Vector3f()
-//        vectorCopy.cross(toCamera, perpendicular)
-//        perpendicular.normalize()
-//        perpendicular.mul(lineThickness * 0.5f)
-//
-//        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(startX - perpendicular.x, startY - perpendicular.y, startZ - perpendicular.z, vectorCopy, lineThickness))
-//        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(startX + perpendicular.x, startY + perpendicular.y, startZ + perpendicular.z, vectorCopy, lineThickness))
-//        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(endX + perpendicular.x, endY + perpendicular.y, endZ + perpendicular.z, vectorCopy, lineThickness))
-//        vertexAndNormalList.add(RenderUtils.WorldPositionVertex(endX - perpendicular.x, endY - perpendicular.y, endZ - perpendicular.z, vectorCopy, lineThickness))
-//        //#endif
-
         return vertexAndNormalList
+    }
+
+    @JvmOverloads
+    fun drawLineRGBA(
+        startX: Float,
+        startY: Float,
+        startZ: Float,
+        endX: Float,
+        endY: Float,
+        endZ: Float,
+        red: Int = 255,
+        green: Int = 255,
+        blue: Int = 255,
+        alpha: Int = 255,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawLine(startX, startY, startZ, endX, endY, endZ, RGBAColor(red, green, blue, alpha).getLong(), disableDepth, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawLineRGBAArray(
+        startX: Float,
+        startY: Float,
+        startZ: Float,
+        endX: Float,
+        endY: Float,
+        endZ: Float,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawLine(startX, startY, startZ, endX, endY, endZ, RGBAColor.fromIntArray(colorArray).getLongRGBA(), disableDepth, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawLineRenderColor(
+        startX: Float,
+        startY: Float,
+        startZ: Float,
+        endX: Float,
+        endY: Float,
+        endZ: Float,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawLine(startX, startY, startZ, endX, endY, endZ, color.getLongRGBA(), disableDepth, lineThickness)
     }
 
     @JvmOverloads
@@ -145,7 +189,33 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        drawBox(xPosition, yPosition, zPosition, size, size, size, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe = true, lineThickness)
+        drawBox(xPosition, yPosition, zPosition, size, size, size, RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe = true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawSimpleWireframeCubeRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        size: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawBox(xPosition, yPosition, zPosition, size, size, size, RGBAColor.fromIntArray(colorArray).getLongRGBA(), disableDepth, wireframe = true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawSimpleWireframeCubeRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        size: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawBox(xPosition, yPosition, zPosition, size, size, size, color.getLongRGBA(), disableDepth, wireframe = true, lineThickness)
     }
 
     @JvmOverloads
@@ -176,7 +246,37 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        drawBox(xPosition, yPosition, zPosition, width, height, depth, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe = true, lineThickness)
+        drawBox(xPosition, yPosition, zPosition, width, height, depth, RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe = true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawWireframeBoxRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        width: Float = 1f,
+        height: Float = 1f,
+        depth: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawBox(xPosition, yPosition, zPosition, width, height, depth, RGBAColor.fromIntArray(colorArray).getLongRGBA(), disableDepth, wireframe = true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawWireframeBoxRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        width: Float = 1f,
+        height: Float = 1f,
+        depth: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawBox(xPosition, yPosition, zPosition, width, height, depth, color.getLongRGBA(), disableDepth, wireframe = true, lineThickness)
     }
 
     @JvmOverloads
@@ -206,7 +306,31 @@ abstract class BaseWorldRenderer {
         alpha: Int = 255,
         disableDepth: Boolean = false,
     ) {
-        drawBox(xPosition, yPosition, zPosition, size, size, size, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe = false)
+        drawBox(xPosition, yPosition, zPosition, size, size, size, RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe = false)
+    }
+
+    @JvmOverloads
+    fun drawSimpleSolidCubeRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        size: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        disableDepth: Boolean = false,
+    ) {
+        drawBox(xPosition, yPosition, zPosition, size, size, size, RGBAColor.fromIntArray(colorArray).getLongRGBA(), disableDepth, wireframe = false)
+    }
+
+    @JvmOverloads
+    fun drawSimpleSolidCubeRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        size: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        disableDepth: Boolean = false,
+    ) {
+        drawBox(xPosition, yPosition, zPosition, size, size, size, color.getLongRGBA(), disableDepth, wireframe = false)
     }
 
     @JvmOverloads
@@ -235,7 +359,35 @@ abstract class BaseWorldRenderer {
         alpha: Int = 255,
         disableDepth: Boolean = false,
     ) {
-        drawBox(xPosition, yPosition, zPosition, width, height, depth, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe = false)
+        drawBox(xPosition, yPosition, zPosition, width, height, depth, RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe = false)
+    }
+
+    @JvmOverloads
+    fun drawSolidBoxRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        width: Float = 1f,
+        height: Float = 1f,
+        depth: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        disableDepth: Boolean = false,
+    ) {
+        drawBox(xPosition, yPosition, zPosition, width, height, depth, RGBAColor.fromIntArray(colorArray).getLongRGBA(), disableDepth, wireframe = false)
+    }
+
+    @JvmOverloads
+    fun drawSolidBoxRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        width: Float = 1f,
+        height: Float = 1f,
+        depth: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        disableDepth: Boolean = false,
+    ) {
+        drawBox(xPosition, yPosition, zPosition, width, height, depth, color.getLongRGBA(), disableDepth, wireframe = false)
     }
 
     @JvmOverloads
@@ -268,7 +420,39 @@ abstract class BaseWorldRenderer {
         wireframe: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        drawBox(xPosition, yPosition, zPosition, width, height, depth, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe, lineThickness)
+        drawBox(xPosition, yPosition, zPosition, width, height, depth, RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawBoxRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        width: Float = 1f,
+        height: Float = 1f,
+        depth: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        disableDepth: Boolean = false,
+        wireframe: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawBox(xPosition, yPosition, zPosition, width, height, depth, RGBAColor.fromIntArray(colorArray).getLongRGBA(), disableDepth, wireframe, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawBoxRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        width: Float = 1f,
+        height: Float = 1f,
+        depth: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        disableDepth: Boolean = false,
+        wireframe: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawBox(xPosition, yPosition, zPosition, width, height, depth, color.getLongRGBA(), disableDepth, wireframe, lineThickness)
     }
 
     @JvmOverloads
@@ -374,7 +558,33 @@ abstract class BaseWorldRenderer {
         segments: Int = 32,
         disableDepth: Boolean = false,
     ) {
-        drawSphere(xPosition, yPosition, zPosition, radius, radius, radius, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
+        drawSphere(xPosition, yPosition, zPosition, radius, radius, radius, RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
+    }
+
+    @JvmOverloads
+    fun drawSimpleSolidSphereRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        radius: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        segments: Int = 32,
+        disableDepth: Boolean = false,
+    ) {
+        drawSphere(xPosition, yPosition, zPosition, radius, radius, radius, RGBAColor.fromIntArray(colorArray).getLongRGBA(), segments, disableDepth, false)
+    }
+
+    @JvmOverloads
+    fun drawSimpleSolidSphereRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        radius: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        segments: Int = 32,
+        disableDepth: Boolean = false,
+    ) {
+        drawSphere(xPosition, yPosition, zPosition, radius, radius, radius, color.getLongRGBA(), segments, disableDepth, false)
     }
 
     @JvmOverloads
@@ -405,7 +615,37 @@ abstract class BaseWorldRenderer {
         segments: Int = 32,
         disableDepth: Boolean = false,
     ) {
-        drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
+        drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
+    }
+
+    @JvmOverloads
+    fun drawSolidSphereRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        xScale: Float = 1f,
+        yScale: Float = 1f,
+        zScale: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        segments: Int = 32,
+        disableDepth: Boolean = false,
+    ) {
+        drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, RGBAColor.fromIntArray(colorArray).getLongRGBA(), segments, disableDepth, false)
+    }
+
+    @JvmOverloads
+    fun drawSolidSphereRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        xScale: Float = 1f,
+        yScale: Float = 1f,
+        zScale: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        segments: Int = 32,
+        disableDepth: Boolean = false,
+    ) {
+        drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, color.getLongRGBA(), segments, disableDepth, false)
     }
 
     @JvmOverloads
@@ -437,7 +677,35 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        drawSphere(xPosition, yPosition, zPosition, radius, radius, radius, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
+        drawSphere(xPosition, yPosition, zPosition, radius, radius, radius, RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawSimpleWireframeSphereRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        radius: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        segments: Int = 32,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawSphere(xPosition, yPosition, zPosition, radius, radius, radius, RGBAColor.fromIntArray(colorArray).getLongRGBA(), segments, disableDepth, true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawSimpleWireframeSphereRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        radius: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        segments: Int = 32,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawSphere(xPosition, yPosition, zPosition, radius, radius, radius, color.getLongRGBA(), segments, disableDepth, true, lineThickness)
     }
 
     @JvmOverloads
@@ -470,7 +738,39 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
+        drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawWireframeSphereRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        xScale: Float = 1f,
+        yScale: Float = 1f,
+        zScale: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        segments: Int = 32,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, RGBAColor.fromIntArray(colorArray).getLongRGBA(), segments, disableDepth, true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawWireframeSphereRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        xScale: Float = 1f,
+        yScale: Float = 1f,
+        zScale: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        segments: Int = 32,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, color.getLongRGBA(), segments, disableDepth, true, lineThickness)
     }
 
     @JvmOverloads
@@ -506,7 +806,41 @@ abstract class BaseWorldRenderer {
         wireframe: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
+        drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawSphereRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        xScale: Float = 1f,
+        yScale: Float = 1f,
+        zScale: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        segments: Int = 32,
+        disableDepth: Boolean = false,
+        wireframe: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, RGBAColor.fromIntArray(colorArray).getLongRGBA(), segments, disableDepth, wireframe, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawSphereRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        xScale: Float = 1f,
+        yScale: Float = 1f,
+        zScale: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        segments: Int = 32,
+        disableDepth: Boolean = false,
+        wireframe: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawSphere(xPosition, yPosition, zPosition, xScale, yScale, zScale, color.getLongRGBA(), segments, disableDepth, wireframe, lineThickness)
     }
 
     @JvmOverloads
@@ -642,7 +976,35 @@ abstract class BaseWorldRenderer {
         segments: Int = 64,
         disableDepth: Boolean = false,
     ) {
-        drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
+        drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
+    }
+
+    @JvmOverloads
+    fun drawSolidConeRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        radius: Float = 1f,
+        height: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, RGBAColor.fromIntArray(colorArray).getLongRGBA(), segments, disableDepth, false)
+    }
+
+    @JvmOverloads
+    fun drawSolidConeRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        radius: Float = 1f,
+        height: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, color.getLongRGBA(), segments, disableDepth, false)
     }
 
     @JvmOverloads
@@ -674,7 +1036,37 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
+        drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawWireframeConeRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        radius: Float = 1f,
+        height: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, RGBAColor.fromIntArray(colorArray).getLongRGBA(), segments, disableDepth, true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawWireframeConeRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        radius: Float = 1f,
+        height: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, color.getLongRGBA(), segments, disableDepth, true, lineThickness)
     }
 
     @JvmOverloads
@@ -708,7 +1100,39 @@ abstract class BaseWorldRenderer {
         wireframe: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
+        drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawConeRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        radius: Float = 1f,
+        height: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+        wireframe: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, RGBAColor.fromIntArray(colorArray).getLongRGBA(), segments, disableDepth, wireframe, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawConeRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        radius: Float = 1f,
+        height: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+        wireframe: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, 0f, radius, height, color.getLongRGBA(), segments, disableDepth, wireframe, lineThickness)
     }
 
     @JvmOverloads
@@ -741,7 +1165,35 @@ abstract class BaseWorldRenderer {
         segments: Int = 64,
         disableDepth: Boolean = false,
     ) {
-        drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
+        drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
+    }
+
+    @JvmOverloads
+    fun drawSimpleSolidCylinderRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        radius: Float = 1f,
+        height: Float = 2f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RGBAColor.fromIntArray(colorArray).getLongRGBA(), segments, disableDepth, false)
+    }
+
+    @JvmOverloads
+    fun drawSimpleSolidCylinderRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        radius: Float = 1f,
+        height: Float = 2f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, color.getLongRGBA(), segments, disableDepth, false)
     }
 
     @JvmOverloads
@@ -773,7 +1225,37 @@ abstract class BaseWorldRenderer {
         segments: Int = 64,
         disableDepth: Boolean = false,
     ) {
-        drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
+        drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, false)
+    }
+
+    @JvmOverloads
+    fun drawSolidCylinderRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        topRadius: Float = 1f,
+        bottomRadius: Float = 1f,
+        height: Float = 2f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, RGBAColor.fromIntArray(colorArray).getLongRGBA(), segments, disableDepth, false)
+    }
+
+    @JvmOverloads
+    fun drawSolidCylinderRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        topRadius: Float = 1f,
+        bottomRadius: Float = 1f,
+        height: Float = 2f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, color.getLongRGBA(), segments, disableDepth, false)
     }
 
     @JvmOverloads
@@ -806,7 +1288,37 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
+        drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawSimpleWireframeCylinderRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        radius: Float = 1f,
+        height: Float = 2f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RGBAColor.fromIntArray(colorArray).getLongRGBA(), segments, disableDepth, true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawSimpleWireframeCylinderRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        radius: Float = 1f,
+        height: Float = 2f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, color.getLongRGBA(), segments, disableDepth, true, lineThickness)
     }
 
     @JvmOverloads
@@ -840,7 +1352,39 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
+        drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawWireframeCylinderRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        topRadius: Float = 1f,
+        bottomRadius: Float = 1f,
+        height: Float = 2f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, RGBAColor.fromIntArray(colorArray).getLongRGBA(), segments, disableDepth, true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawWireframeCylinderRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        topRadius: Float = 1f,
+        bottomRadius: Float = 1f,
+        height: Float = 2f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, color.getLongRGBA(), segments, disableDepth, true, lineThickness)
     }
 
     @JvmOverloads
@@ -875,7 +1419,39 @@ abstract class BaseWorldRenderer {
         wireframe: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
+        drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawSimpleCylinderRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        radius: Float = 1f,
+        height: Float = 2f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+        wireframe: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, RGBAColor.fromIntArray(colorArray).getLongRGBA(), segments, disableDepth, wireframe, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawSimpleCylinderRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        radius: Float = 1f,
+        height: Float = 2f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+        wireframe: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, radius, radius, height, color.getLongRGBA(), segments, disableDepth, wireframe, lineThickness)
     }
 
     @JvmOverloads
@@ -911,7 +1487,41 @@ abstract class BaseWorldRenderer {
         wireframe: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
+        drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, RGBAColor(red, green, blue, alpha).getLong(), segments, disableDepth, wireframe, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawCylinderRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        topRadius: Float = 1f,
+        bottomRadius: Float = 1f,
+        height: Float = 2f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+        wireframe: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, RGBAColor.fromIntArray(colorArray).getLongRGBA(), segments, disableDepth, wireframe, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawCylinderRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        topRadius: Float = 1f,
+        bottomRadius: Float = 1f,
+        height: Float = 2f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        segments: Int = 64,
+        disableDepth: Boolean = false,
+        wireframe: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawCylinder(xPosition, yPosition, zPosition, topRadius, bottomRadius, height, color.getLongRGBA(), segments, disableDepth, wireframe, lineThickness)
     }
 
     @JvmOverloads
@@ -1033,7 +1643,31 @@ abstract class BaseWorldRenderer {
         alpha: Int = 255,
         disableDepth: Boolean = false,
     ) {
-        drawPyramid(xPosition, yPosition, zPosition, size, size, size, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, false)
+        drawPyramid(xPosition, yPosition, zPosition, size, size, size, RGBAColor(red, green, blue, alpha).getLong(), disableDepth, false)
+    }
+
+    @JvmOverloads
+    fun drawSimpleSolidPyramidRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        size: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        disableDepth: Boolean = false,
+    ) {
+        drawPyramid(xPosition, yPosition, zPosition, size, size, size, RGBAColor.fromIntArray(colorArray).getLongRGBA(), disableDepth, false)
+    }
+
+    @JvmOverloads
+    fun drawSimpleSolidPyramidRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        size: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        disableDepth: Boolean = false,
+    ) {
+        drawPyramid(xPosition, yPosition, zPosition, size, size, size, color.getLongRGBA(), disableDepth, false)
     }
 
     @JvmOverloads
@@ -1062,7 +1696,35 @@ abstract class BaseWorldRenderer {
         alpha: Int = 255,
         disableDepth: Boolean = false,
     ) {
-        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, false)
+        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RGBAColor(red, green, blue, alpha).getLong(), disableDepth, false)
+    }
+
+    @JvmOverloads
+    fun drawSolidPyramidRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        xScale: Float = 1f,
+        yScale: Float = 1f,
+        zScale: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        disableDepth: Boolean = false,
+    ) {
+        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RGBAColor.fromIntArray(colorArray).getLongRGBA(), disableDepth, false)
+    }
+
+    @JvmOverloads
+    fun drawSolidPyramidRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        xScale: Float = 1f,
+        yScale: Float = 1f,
+        zScale: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        disableDepth: Boolean = false,
+    ) {
+        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, color.getLongRGBA(), disableDepth, false)
     }
 
     @JvmOverloads
@@ -1092,7 +1754,33 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        drawPyramid(xPosition, yPosition, zPosition, size, size, size, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, true, lineThickness)
+        drawPyramid(xPosition, yPosition, zPosition, size, size, size, RGBAColor(red, green, blue, alpha).getLong(), disableDepth, true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawSimpleWireframePyramidRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        size: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawPyramid(xPosition, yPosition, zPosition, size, size, size, RGBAColor.fromIntArray(colorArray).getLongRGBA(), disableDepth, true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawSimpleWireframePyramidRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        size: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawPyramid(xPosition, yPosition, zPosition, size, size, size, color.getLongRGBA(), disableDepth, true, lineThickness)
     }
 
     @JvmOverloads
@@ -1123,7 +1811,37 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, true, lineThickness)
+        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RGBAColor(red, green, blue, alpha).getLong(), disableDepth, true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawWireframePyramidRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        xScale: Float = 1f,
+        yScale: Float = 1f,
+        zScale: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RGBAColor.fromIntArray(colorArray).getLongRGBA(), disableDepth, true, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawWireframePyramidRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        xScale: Float = 1f,
+        yScale: Float = 1f,
+        zScale: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, color.getLongRGBA(), disableDepth, true, lineThickness)
     }
 
     @JvmOverloads
@@ -1157,7 +1875,39 @@ abstract class BaseWorldRenderer {
         wireframe: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe, lineThickness)
+        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RGBAColor(red, green, blue, alpha).getLong(), disableDepth, wireframe, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawPyramidRGBAArray(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        xScale: Float = 1f,
+        yScale: Float = 1f,
+        zScale: Float = 1f,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        disableDepth: Boolean = false,
+        wireframe: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, RGBAColor.fromIntArray(colorArray).getLongRGBA(), disableDepth, wireframe, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawPyramidRenderColor(
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        xScale: Float = 1f,
+        yScale: Float = 1f,
+        zScale: Float = 1f,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        disableDepth: Boolean = false,
+        wireframe: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawPyramid(xPosition, yPosition, zPosition, xScale, yScale, zScale, color.getLongRGBA(), disableDepth, wireframe, lineThickness)
     }
 
     @JvmOverloads
@@ -1251,7 +2001,33 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        drawTracer(partialTicks, xPosition, yPosition, zPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), disableDepth, lineThickness)
+        drawTracer(partialTicks, xPosition, yPosition, zPosition, RGBAColor(red, green, blue, alpha).getLong(), disableDepth, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawTracerRGBAArray(
+        partialTicks: Float,
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        colorArray: IntArray = intArrayOf(255, 255, 255, 255),
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawTracer(partialTicks, xPosition, yPosition, zPosition, RGBAColor.fromIntArray(colorArray).getLongRGBA(), disableDepth, lineThickness)
+    }
+
+    @JvmOverloads
+    fun drawTracerRenderColor(
+        partialTicks: Float,
+        xPosition: Float,
+        yPosition: Float,
+        zPosition: Float,
+        color: RenderColor = RenderUtils.defaultRGBAColor,
+        disableDepth: Boolean = false,
+        lineThickness: Float = 1f,
+    ) {
+        drawTracer(partialTicks, xPosition, yPosition, zPosition, color.getLongRGBA(), disableDepth, lineThickness)
     }
 
     @JvmOverloads
