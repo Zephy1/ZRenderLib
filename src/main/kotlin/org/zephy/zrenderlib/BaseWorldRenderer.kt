@@ -2040,43 +2040,34 @@ abstract class BaseWorldRenderer {
         disableDepth: Boolean = false,
         lineThickness: Float = 1f,
     ) {
-        val mc = Client.getMinecraft()
-        //#if MC<12100
+        //#if MC<=12100
+        //$$val mc = Client.getMinecraft()
         //$$mc.thePlayer?.let { player ->
-            //$$val x1: Double = player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTicks
-            //$$val y1: Double =  player.getEyeHeight() + player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTicks
-            //$$val z1: Double = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * partialTicks
-            //$$val yawDeg = player.rotationYaw.toDouble()
-            //$$val pitchDeg = player.rotationPitch.toDouble()
+        //$$    val x1: Double = player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTicks
+        //$$    val y1: Double = player.getEyeHeight() + player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTicks
+        //$$    val z1: Double = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * partialTicks
+        //$$    val yawRad = Math.toRadians(player.rotationYaw.toDouble())
+        //$$    val pitchRad = Math.toRadians(player.rotationPitch.toDouble())
+        //$$    val distance = 75.0
+        //$$    val startPos = Vector3d(
+        //$$        x1 - sin(yawRad) * cos(pitchRad) * distance,
+        //$$        y1 - sin(pitchRad) * distance,
+        //$$        z1 + cos(yawRad) * cos(pitchRad) * distance,
+        //$$    )
         //#else
-        mc.player?.let { player ->
-            val x1: Double = player.xo + (player.x - player.xo) * partialTicks
-            val y1: Double = player.getEyeHeight(player.pose) + player.yo + (player.y - player.yo) * partialTicks
-            val z1: Double = player.zo + (player.z - player.zo) * partialTicks
-            val camera = RenderUtils.getCamera()
-            val yawDeg = camera.yRot().toDouble()
-            val pitchDeg = camera.xRot().toDouble()
-            //#endif
-
-            val yawRad = Math.toRadians(yawDeg)
-            val pitchRad = Math.toRadians(pitchDeg)
-
-            val distance = 75.0
-            //#if MC<12100
-            //$$val startPos = Vector3d(
-            //$$    x1 - sin(yawRad) * cos(pitchRad) * distance,
-            //$$    y1 - sin(pitchRad) * distance,
-            //$$    z1 + cos(yawRad) * cos(pitchRad) * distance
-            //$$)
-            //#else
-            val startPos = Vec3(0.0, 0.0, distance)
-                .xRot(-pitchRad.toFloat())
-                .yRot(-yawRad.toFloat())
-                .add(x1, y1, z1)
-            //#endif
-
-            _drawTracer(partialTicks, startPos.x.toFloat(), startPos.y.toFloat(), startPos.z.toFloat(), xPosition, yPosition, zPosition, color, disableDepth, lineThickness)
-        }
+        val camera = RenderUtils.getCamera()
+        val lookVec = camera.forwardVector()
+        val cameraPos = RenderUtils.getCameraPos(camera)
+        val startPos = cameraPos.add(
+            lookVec.x().toDouble(),
+            lookVec.y().toDouble(),
+            lookVec.z().toDouble(),
+        )
+        //#endif
+        _drawTracer(partialTicks, startPos.x.toFloat(), startPos.y.toFloat(), startPos.z.toFloat(), xPosition, yPosition, zPosition, color, disableDepth, lineThickness)
+        //#if MC<=12100
+        //$$}
+        //#endif
     }
 
     abstract fun _drawTracer(
