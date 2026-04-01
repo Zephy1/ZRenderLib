@@ -5,19 +5,26 @@ package org.zephy.zrenderlib
 //$$import net.minecraft.client.renderer.texture.DynamicTexture
 //$$import org.lwjgl.opengl.GL11
 //#else
-import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.network.chat.Component
 import net.minecraft.client.renderer.texture.DynamicTexture
-//#if MC<=12105
-//$$import net.minecraft.client.gui.Font
-//#else
-import org.zephy.zrenderlib.renderstates.GUIRenderState
-import org.zephy.zrenderlib.renderstates.GradientGUIRenderState
-import org.zephy.zrenderlib.renderstates.TexturedGUIRenderState
-import net.minecraft.client.gui.render.state.GuiTextRenderState
-import net.minecraft.client.gui.render.TextureSetup
-import org.joml.Matrix3x2f
-//#endif
+    //#if MC<=12105
+    //$$import net.minecraft.client.gui.Font
+    //#else
+    import org.zephy.zrenderlib.renderstates.GUIRenderState
+    import org.zephy.zrenderlib.renderstates.GradientGUIRenderState
+    import org.zephy.zrenderlib.renderstates.TexturedGUIRenderState
+    import net.minecraft.client.gui.render.TextureSetup
+    import org.joml.Matrix3x2f
+    //#if MC<=12111
+    //$$import net.minecraft.client.gui.render.state.GuiTextRenderState
+    //#endif
+    //#endif
+    //#if MC<=12111
+    //$$import net.minecraft.client.gui.GuiGraphics
+    //#else
+    import net.minecraft.client.renderer.state.gui.GuiTextRenderState
+    import net.minecraft.client.gui.GuiGraphicsExtractor
+    //#endif
 //#endif
 
 //#if MC>=12111
@@ -28,8 +35,10 @@ import com.mojang.blaze3d.textures.FilterMode
 
 object GUIRenderer : BaseGUIRenderer() {
     override fun drawString(
-        //#if MC>=12100
-        drawContext: GuiGraphics,
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12000
+        //$$drawContext: GuiGraphics,
         //#endif
         text: String,
         xPosition: Float,
@@ -77,26 +86,48 @@ object GUIRenderer : BaseGUIRenderer() {
     //#if MC>=12105
     @JvmStatic
     @JvmOverloads
-    fun drawTextWithShadowRGBA(drawContext: GuiGraphics, text: Component, xPosition: Float, yPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, textScale: Float = 1f, renderBackground: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
+    fun drawTextWithShadowRGBA(
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12000
+        //$$drawContext: GuiGraphics,
+        //#endif
+        text: Component, xPosition: Float, yPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, textScale: Float = 1f, renderBackground: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
         drawText(drawContext, text, xPosition, yPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), textScale, renderBackground, true, maxWidth, zOffset)
     }
 
     @JvmStatic
     @JvmOverloads
-    fun drawTextWithShadow(drawContext: GuiGraphics, text: Component, xPosition: Float, yPosition: Float, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, textScale: Float = 1f, renderBackground: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
+    fun drawTextWithShadow(
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12000
+        //$$drawContext: GuiGraphics,
+        //#endif
+        text: Component, xPosition: Float, yPosition: Float, color: Long = RenderUtils.colorized ?: RenderUtils.WHITE, textScale: Float = 1f, renderBackground: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
         drawText(drawContext, text, xPosition, yPosition, color, textScale, renderBackground, true, maxWidth, zOffset)
     }
 
     @JvmStatic
     @JvmOverloads
-    fun drawTextRGBA(drawContext: GuiGraphics, text: Component, xPosition: Float, yPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, textScale: Float = 1f, renderBackground: Boolean = false, textShadow: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
+    fun drawTextRGBA(
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12000
+        //$$drawContext: GuiGraphics,
+        //#endif
+        text: Component, xPosition: Float, yPosition: Float, red: Int = 255, green: Int = 255, blue: Int = 255, alpha: Int = 255, textScale: Float = 1f, renderBackground: Boolean = false, textShadow: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
         drawText(drawContext, text, xPosition, yPosition, RenderUtils.RGBAColor(red, green, blue, alpha).getLong(), textScale, renderBackground, textShadow, maxWidth, zOffset)
     }
 
     @JvmStatic
     @JvmOverloads
     fun drawText(
-        drawContext: GuiGraphics,
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12000
+        //$$drawContext: GuiGraphics,
+        //#endif
         text: Component,
         xPosition: Float,
         yPosition: Float,
@@ -183,7 +214,11 @@ object GUIRenderer : BaseGUIRenderer() {
                 //#endif
                 drawContext.scissorStack.peek()
             )
-            drawContext.guiRenderState.submitText(textState)
+            //#if MC<=12111
+            //$$drawContext.guiRenderState.submitText(textState)
+            //#else
+            drawContext.guiRenderState.addText(textState)
+            //#endif
             currentY += textRenderer.lineHeight * textScale
         }
         //#endif
@@ -191,8 +226,10 @@ object GUIRenderer : BaseGUIRenderer() {
     //#endif
 
     override fun _drawLine(
-        //#if MC>=12100
-        drawContext: GuiGraphics,
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12000
+        //$$drawContext: GuiGraphics,
         //#endif
         vertexList: List<Pair<Float, Float>>,
         color: Long,
@@ -213,7 +250,11 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$    .guiEndDraw()
         //#else
         val boundsList = vertexList.toList()
-        drawContext.guiRenderState.submitGuiElement(
+        //#if MC<=12111
+        //$$drawContext.guiRenderState.submitGuiElement(
+        //#else
+        drawContext.guiRenderState.addGuiElement(
+        //#endif
             GUIRenderState(
                 drawContext.pose(),
                 vertexList,
@@ -228,8 +269,10 @@ object GUIRenderer : BaseGUIRenderer() {
     }
 
     override fun _drawRect(
-        //#if MC>=12100
-        drawContext: GuiGraphics,
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12000
+        //$$drawContext: GuiGraphics,
         //#endif
         vertexList: List<Pair<Float, Float>>,
         color: Long,
@@ -250,7 +293,11 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$    .guiEndDraw()
         //#else
         val boundsList = vertexList.toList()
-        drawContext.guiRenderState.submitGuiElement(
+        //#if MC<=12111
+        //$$drawContext.guiRenderState.submitGuiElement(
+        //#else
+        drawContext.guiRenderState.addGuiElement(
+        //#endif
             GUIRenderState(
                 drawContext.pose(),
                 vertexList,
@@ -265,8 +312,10 @@ object GUIRenderer : BaseGUIRenderer() {
     }
 
     override fun _drawRoundedRect(
-        //#if MC>=12100
-        drawContext: GuiGraphics,
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12000
+        //$$drawContext: GuiGraphics,
         //#endif
         x1: Float,
         y1: Float,
@@ -297,7 +346,11 @@ object GUIRenderer : BaseGUIRenderer() {
             Pair(x1, y2)
         )
 
-        drawContext.guiRenderState.submitGuiElement(
+        //#if MC<=12111
+        //$$drawContext.guiRenderState.submitGuiElement(
+        //#else
+        drawContext.guiRenderState.addGuiElement(
+        //#endif
             GUIRenderState(
                 drawContext.pose(),
                 vertexList,
@@ -312,8 +365,10 @@ object GUIRenderer : BaseGUIRenderer() {
     }
 
     override fun _drawGradient(
-        //#if MC>=12100
-        drawContext: GuiGraphics,
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12000
+        //$$drawContext: GuiGraphics,
         //#endif
         vertexAndColorList: List<Triple<Float, Float, Long>>,
         zOffset: Float,
@@ -340,7 +395,11 @@ object GUIRenderer : BaseGUIRenderer() {
         //$$    .guiEndDraw()
         //#else
         val boundsList = vertexAndColorList.map { (x, y, _) -> Pair(x, y) }
-        drawContext.guiRenderState.submitGuiElement(
+        //#if MC<=12111
+        //$$drawContext.guiRenderState.submitGuiElement(
+        //#else
+        drawContext.guiRenderState.addGuiElement(
+        //#endif
             GradientGUIRenderState(
                 GUIRenderState(
                     drawContext.pose(),
@@ -358,8 +417,10 @@ object GUIRenderer : BaseGUIRenderer() {
     }
 
     override fun _drawCircle(
-        //#if MC>=12100
-        drawContext: GuiGraphics,
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12000
+        //$$drawContext: GuiGraphics,
         //#endif
         minX: Float,
         maxX: Float,
@@ -392,7 +453,11 @@ object GUIRenderer : BaseGUIRenderer() {
             Pair(minX, maxY)
         )
 
-        drawContext.guiRenderState.submitGuiElement(
+        //#if MC<=12111
+        //$$drawContext.guiRenderState.submitGuiElement(
+        //#else
+        drawContext.guiRenderState.addGuiElement(
+        //#endif
             GUIRenderState(
                 drawContext.pose(),
                 vertexList,
@@ -407,8 +472,12 @@ object GUIRenderer : BaseGUIRenderer() {
     }
 
     override fun _drawImage(
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12000
+        //$$drawContext: GuiGraphics,
+        //#endif
         //#if MC>=12100
-        drawContext: GuiGraphics,
         image: Image,
         //#endif
         texture: DynamicTexture,
@@ -453,7 +522,11 @@ object GUIRenderer : BaseGUIRenderer() {
         )
         //#endif
         val boundsList = vertexList.toList()
-        drawContext.guiRenderState.submitGuiElement(
+        //#if MC<=12111
+        //$$drawContext.guiRenderState.submitGuiElement(
+        //#else
+        drawContext.guiRenderState.addGuiElement(
+        //#endif
             TexturedGUIRenderState(
                 GUIRenderState(
                     drawContext.pose(),

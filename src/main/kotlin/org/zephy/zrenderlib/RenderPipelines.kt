@@ -19,9 +19,9 @@ object RenderPipelines {
             .begin(drawMode, vertexFormat, snippet)
             .setLocation(location)
             //#if MC<=12110
-            //$$.setLayering(RenderType.VIEW_OFFSET_Z_LAYERING)
+            //$$.setLayering(RenderType.NO_LAYERING)
             //#else
-            .setLayering(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
+            .setLayering(LayeringTransform.NO_LAYERING)
             //#endif
             .disableCull()
             .enableBlend()
@@ -32,13 +32,18 @@ object RenderPipelines {
         drawMode: DrawMode = DrawMode.QUADS,
         vertexFormat: VertexFormat = VertexFormat.POSITION_TEXTURE_COLOR,
         snippet: RenderSnippet = RenderSnippet.POSITION_TEX_COLOR_SNIPPET,
-    ): PipelineBuilder = createPipelineBuilder(location, drawMode, vertexFormat, snippet)
-        //#if MC<=12110
-        //$$.setLayering(RenderType.NO_LAYERING)
-        //#else
-        .setLayering(LayeringTransform.NO_LAYERING)
-        //#endif
-        .disableDepth()
+    ): PipelineBuilder {
+        return PipelineBuilder
+            .begin(drawMode, vertexFormat, snippet)
+            .setLocation(location)
+            //#if MC<=12110
+            //$$.setLayering(RenderType.VIEW_OFFSET_Z_LAYERING)
+            //#else
+            .setLayering(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
+            //#endif
+            .disableCull()
+            .disableDepth()
+    }
 
     @JvmStatic
     fun LINES(

@@ -33,7 +33,11 @@ import javax.imageio.ImageIO
 //$$    }
 //#else
 import java.nio.ByteBuffer
-import net.minecraft.client.gui.GuiGraphics
+//#if MC<=12111
+//$$import net.minecraft.client.gui.GuiGraphics
+//#else
+import net.minecraft.client.gui.GuiGraphicsExtractor
+//#endif
 import net.minecraft.client.renderer.texture.DynamicTexture
 import com.mojang.blaze3d.platform.NativeImage
 import net.minecraft.resources.Identifier
@@ -106,8 +110,10 @@ class Image(var image: BufferedImage?) {
 
     @JvmOverloads
     fun drawRGBA(
-        //#if MC>=12100
-        drawContext: GuiGraphics,
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12000
+        //$$drawContext: GuiGraphics,
         //#endif
         xPosition: Float,
         yPosition: Float,
@@ -129,8 +135,10 @@ class Image(var image: BufferedImage?) {
 
     @JvmOverloads
     fun draw(
-        //#if MC>=12100
-        drawContext: GuiGraphics,
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12000
+        //$$drawContext: GuiGraphics,
         //#endif
         xPosition: Float,
         yPosition: Float,

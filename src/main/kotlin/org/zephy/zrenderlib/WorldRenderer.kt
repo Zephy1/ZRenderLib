@@ -7,7 +7,6 @@ package org.zephy.zrenderlib
 import java.awt.Color
 import org.joml.Matrix4f
 import net.minecraft.network.chat.Component
-import net.minecraft.client.renderer.LightTexture
 import net.minecraft.client.gui.Font
 //#endif
 
@@ -146,7 +145,7 @@ object WorldRenderer : BaseWorldRenderer() {
                 vertexConsumers,
                 if (disableDepth) Font.DisplayMode.SEE_THROUGH else Font.DisplayMode.NORMAL,
                 backgroundColorInt,
-                LightTexture.FULL_BRIGHT,
+                15728880, // FULL_BRIGHT
             )
 
             yOffset += fontRenderer.lineHeight + 1

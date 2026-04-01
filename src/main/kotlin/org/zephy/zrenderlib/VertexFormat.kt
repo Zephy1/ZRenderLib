@@ -30,7 +30,11 @@ enum class VertexFormat(private val mcValue: VertexFormat) {
     //#endif
 
     POSITION_COLOR_TEXTURE_LIGHT_NORMAL(DefaultVertexFormat.BLOCK),
-    POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL(DefaultVertexFormat.NEW_ENTITY),
+    //#if MC<=12111
+    //$$POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL(DefaultVertexFormat.NEW_ENTITY),
+    //#else
+    POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL(DefaultVertexFormat.ENTITY),
+    //#endif
     POSITION_TEXTURE_COLOR_LIGHT(DefaultVertexFormat.PARTICLE),
     POSITION(DefaultVertexFormat.POSITION),
     POSITION_COLOR(DefaultVertexFormat.POSITION_COLOR),

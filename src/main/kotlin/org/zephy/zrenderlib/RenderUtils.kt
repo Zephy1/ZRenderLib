@@ -19,7 +19,6 @@ import org.zephy.zrenderlib.VertexFormat as ZVertexFormat
 //$$import javax.vecmath.Vector3f
 //#else
 import com.mojang.blaze3d.pipeline.BlendFunction
-import com.mojang.blaze3d.platform.DepthTestFunction
 import com.mojang.blaze3d.platform.DestFactor
 import com.mojang.blaze3d.platform.SourceFactor
 import com.mojang.blaze3d.vertex.Tesselator
@@ -34,16 +33,26 @@ import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.minecraft.client.Camera
 import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.ClipContext
+import net.minecraft.world.phys.HitResult
 
     //#if MC<=12105
-        //$$import com.mojang.blaze3d.textures.GpuTexture
+    //$$import com.mojang.blaze3d.textures.GpuTexture
     //#else
-        import com.mojang.blaze3d.textures.GpuTextureView
-        import net.minecraft.client.gui.GuiGraphics
-        import net.minecraft.client.gui.navigation.ScreenRectangle
-        import org.joml.Matrix3x2fStack
-        import org.joml.Matrix3x2f
-        import org.joml.Matrix4f
+    import com.mojang.blaze3d.textures.GpuTextureView
+    import net.minecraft.client.gui.navigation.ScreenRectangle
+    import org.joml.Matrix3x2fStack
+    import org.joml.Matrix3x2f
+    import org.joml.Matrix4f
+    //#endif
+
+    //#if MC<=12111
+    //$$import net.minecraft.client.gui.GuiGraphics
+    //$$import com.mojang.blaze3d.platform.DepthTestFunction
+    //#else
+    import net.minecraft.client.gui.GuiGraphicsExtractor
+    import com.mojang.blaze3d.pipeline.DepthStencilState
+    import com.mojang.blaze3d.platform.CompareOp
     //#endif
 
     //#if MC<=12110
@@ -534,22 +543,33 @@ object RenderUtils {
 
     //#if MC>=12100
     @JvmStatic
-    fun getDepthTestFunctionFromInt(value: Int): DepthTestFunction {
+    //#if MC<=12111
+    //$$fun getDepthTestFunctionFromInt(value: Int): DepthTestFunction {
+    //$$    return when (value) {
+    //$$        0x201 -> DepthTestFunction.LESS_DEPTH_TEST // GL_LESS
+    //$$        0x202 -> DepthTestFunction.EQUAL_DEPTH_TEST // GL_EQUAL
+    //$$        0x203 -> DepthTestFunction.LEQUAL_DEPTH_TEST // GL_LEQUAL
+    //$$        0x204 -> DepthTestFunction.GREATER_DEPTH_TEST // GL_GREATER
+    //$$        0x207 -> DepthTestFunction.NO_DEPTH_TEST // GL_ALWAYS
+    //#else
+    fun getDepthTestFunctionFromInt(value: Int): DepthStencilState {
         return when (value) {
-//            0x200 -> !! // GL_NEVER
-            0x201 -> DepthTestFunction.LESS_DEPTH_TEST // GL_LESS
-            0x202 -> DepthTestFunction.EQUAL_DEPTH_TEST // GL_EQUAL
-            0x203 -> DepthTestFunction.LEQUAL_DEPTH_TEST // GL_LEQUAL
-            0x204 -> DepthTestFunction.GREATER_DEPTH_TEST // GL_GREATER
-//            0x205 -> !! // GL_NOTEQUAL
-//            0x206 -> !! // GL_GEQUAL
-            0x207 -> DepthTestFunction.NO_DEPTH_TEST // GL_ALWAYS
+            0x201 -> DepthStencilState(CompareOp.LESS_THAN, true) // GL_LESS
+            0x202 -> DepthStencilState(CompareOp.EQUAL, true) // GL_EQUAL
+            0x203 -> DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, true) // GL_LEQUAL
+            0x204 -> DepthStencilState(CompareOp.GREATER_THAN, true) // GL_GREATER
+            0x207 -> DepthStencilState(CompareOp.ALWAYS_PASS, false) // GL_ALWAYS
+    //#endif
             else -> throw IllegalArgumentException("Invalid depth test function value: $value")
         }
     }
 
     @JvmStatic
-    fun depthFunc(function: DepthTestFunction) = apply {
+    //#if MC<=12111
+    //$$fun depthFunc(function: DepthTestFunction) = apply {
+    //#else
+    fun depthFunc(function: DepthStencilState) = apply {
+    //#endif
         PipelineBuilder.setDepthTestFunction(function)
     }
     //#endif
@@ -890,8 +910,10 @@ object RenderUtils {
 
     @JvmStatic
     fun enableScissor(
-        //#if MC>=12106
-        drawContext: GuiGraphics,
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12106
+        //$$drawContext: GuiGraphics,
         //#endif
         scissorX: Double, scissorY: Double, scissorWidth: Double, scissorHeight: Double
     ) = apply {
@@ -905,8 +927,10 @@ object RenderUtils {
 
     @JvmStatic
     fun enableScaledScissor(
-        //#if MC>=12106
-        drawContext: GuiGraphics,
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12106
+        //$$drawContext: GuiGraphics,
         //#endif
         scissorX: Double, scissorY: Double, scissorWidth: Double, scissorHeight: Double
     ) = apply {
@@ -920,8 +944,10 @@ object RenderUtils {
 
     @JvmStatic
     fun enableScissor(
-        //#if MC>=12106
-        drawContext: GuiGraphics,
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12106
+        //$$drawContext: GuiGraphics,
         //#endif
         scissorX: Float, scissorY: Float, scissorWidth: Float, scissorHeight: Float
     ) = apply {
@@ -935,8 +961,10 @@ object RenderUtils {
 
     @JvmStatic
     fun enableScaledScissor(
-        //#if MC>=12106
-        drawContext: GuiGraphics,
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12106
+        //$$drawContext: GuiGraphics,
         //#endif
         scissorX: Float, scissorY: Float, scissorWidth: Float, scissorHeight: Float
     ) = apply {
@@ -950,8 +978,10 @@ object RenderUtils {
 
     @JvmStatic
     fun enableScaledScissor(
-        //#if MC>=12106
-        drawContext: GuiGraphics,
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12106
+        //$$drawContext: GuiGraphics,
         //#endif
         scissorX: Int, scissorY: Int, scissorWidth: Int, scissorHeight: Int
     ) = apply {
@@ -967,8 +997,10 @@ object RenderUtils {
 
     @JvmStatic
     fun enableScissor(
-        //#if MC>=12106
-        drawContext: GuiGraphics,
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12106
+        //$$drawContext: GuiGraphics,
         //#endif
         scissorX: Int, scissorY: Int, scissorWidth: Int, scissorHeight: Int
     ) = apply {
@@ -982,8 +1014,10 @@ object RenderUtils {
 
     @JvmStatic
     fun disableScissor(
-        //#if MC>=12106
-        drawContext: GuiGraphics,
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12106
+        //$$drawContext: GuiGraphics,
         //#endif
     ) = apply {
         //#if MC<=12105

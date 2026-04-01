@@ -3,7 +3,6 @@ package org.zephy.zrenderlib
 //#if MC>=12100
 import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.platform.DepthTestFunction
 import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.resources.Identifier
 
@@ -20,12 +19,25 @@ import net.minecraft.client.renderer.rendertype.RenderSetup
 import com.mojang.blaze3d.textures.GpuTexture
 //#endif
 
+//#if MC<=12111
+//$$import com.mojang.blaze3d.platform.DepthTestFunction
+//#else
+import com.mojang.blaze3d.pipeline.ColorTargetState
+import com.mojang.blaze3d.pipeline.DepthStencilState
+import java.util.Optional
+//#endif
+
 object PipelineBuilder {
     private val layerList = mutableMapOf<String, RenderType>()
     private val pipelineList = mutableMapOf<String, RenderPipeline>()
     private var cull: Boolean? = null
-    private var depthTestFunction: DepthTestFunction? = null
-    private var blendFunction: BlendFunction? = null
+    //#if MC<=12111
+    //$$private var depthTestFunction: DepthTestFunction? = null
+    //$$private var blendFunction: BlendFunction? = null
+    //#else
+    private var depthTestFunction: Optional<DepthStencilState> = Optional.empty()
+    private var blendFunction: Optional<BlendFunction> = Optional.empty()
+    //#endif
     //#if MC<=12110
     //$$private var lineWidth: Float? = null
     //$$private var layering: RenderStateShard.LayeringStateShard? = null
@@ -59,7 +71,11 @@ object PipelineBuilder {
 
     @JvmStatic
     fun disableBlend() = apply {
-        blendFunction = null
+        //#if MC<=12111
+        //$$blendFunction = null
+        //#else
+        blendFunction = Optional.empty()
+        //#endif
     }
 
     @JvmStatic
@@ -115,13 +131,22 @@ object PipelineBuilder {
     //#endif
 
     @JvmStatic
-    fun setDepthTestFunction(newValue: DepthTestFunction) = apply {
-        depthTestFunction = newValue
+    //#if MC<=12111
+    //$$fun setDepthTestFunction(newValue: DepthTestFunction) = apply {
+    //$$    depthTestFunction = newValue
+    //#else
+    fun setDepthTestFunction(newValue: DepthStencilState?) = apply {
+        depthTestFunction = Optional.ofNullable(newValue)
+    //#endif
     }
 
     @JvmStatic
     fun setBlendFunction(newValue: BlendFunction) = apply {
-        blendFunction = newValue
+        //#if MC<=12111
+        //$$blendFunction = newValue
+        //#else
+        blendFunction = Optional.of(newValue)
+        //#endif
     }
 
     @JvmStatic
@@ -138,21 +163,29 @@ object PipelineBuilder {
             .withLocation("zrenderlib/custom/pipelines/${location ?: hashCode()}")
             .withVertexFormat(vertexFormat.toMC(), drawMode.toMC())
 
-        blendFunction?.let {
-            basePipeline.withBlend(it)
-        } ?: basePipeline.withoutBlend()
+        //#if MC<=12111
+        //$$blendFunction?.let {
+        //$$    basePipeline.withBlend(it)
+        //$$} ?: basePipeline.withoutBlend()
+        //#else
+        basePipeline.withColorTargetState(ColorTargetState(blendFunction, 15))
+        //#endif
 
         cull?.let {
             basePipeline.withCull(cull!!)
         }
 
-        depthTestFunction?.let {
-            when (it) {
-                DepthTestFunction.NO_DEPTH_TEST -> basePipeline.withDepthWrite(false)
-                else -> basePipeline.withDepthWrite(true)
-            }
-            basePipeline.withDepthTestFunction(it)
-        }
+        //#if MC<=12111
+        //$$depthTestFunction?.let {
+        //$$    when (it) {
+        //$$        DepthTestFunction.NO_DEPTH_TEST -> basePipeline.withDepthWrite(false)
+        //$$        else -> basePipeline.withDepthWrite(true)
+        //$$    }
+        //$$    basePipeline.withDepthTestFunction(it)
+        //$$}
+        //#else
+        basePipeline.withDepthStencilState(depthTestFunction)
+        //#endif
 
         val pipeline = basePipeline.build()
         pipelineList[state()] = pipeline
@@ -188,7 +221,7 @@ object PipelineBuilder {
             //#endif
 
             if (layering != null) {
-                //#if MC<=12111
+                //#if MC<=12110
                 //$$layerBuilder.setLayeringState(layering!!)
                 //#else
                 layerBuilder.setLayeringTransform(layering!!)
@@ -196,7 +229,11 @@ object PipelineBuilder {
             }
 
             //#if MC>=12111
-            if (blendFunction != null) {
+            //#if MC<=12111
+            //$$if (blendFunction != null) {
+            //#else
+            if (blendFunction.isPresent) {
+            //#endif
                 layerBuilder.sortOnUpload()
             }
             //#endif
@@ -235,8 +272,13 @@ object PipelineBuilder {
     @JvmStatic
     private fun reset() {
         cull = null
-        depthTestFunction = null
-        blendFunction = null
+        //#if MC<=12111
+        //$$depthTestFunction = null
+        //$$blendFunction = null
+        //#else
+        depthTestFunction = Optional.empty()
+        blendFunction = Optional.empty()
+        //#endif
         layering = null
         textureIdentifier = null
         drawMode = DrawMode.QUADS

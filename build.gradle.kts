@@ -48,6 +48,9 @@ dependencies {
                     exclude(group = "net.fabricmc.fabric-api", module = "fabric-content-registries-v0")
                 }
             }
+            260100 -> {
+                modImplementation("net.fabricmc.fabric-api:fabric-api:0.145.0+26.1")
+            }
             else -> throw IllegalStateException("Unsupported MC version: ${project.platform.mcVersion}")
         }
         modImplementation("net.fabricmc:fabric-loader:0.18.5")
