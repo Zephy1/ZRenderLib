@@ -37,17 +37,9 @@ dependencies {
             12105 -> {
                 modImplementation("net.fabricmc.fabric-api:fabric-api:0.128.2+1.21.5")
             }
-            12106 -> {
-                modImplementation("net.fabricmc.fabric-api:fabric-api:0.128.2+1.21.6")
-            }
-            12107 -> {
-                modImplementation("net.fabricmc.fabric-api:fabric-api:0.129.0+1.21.7")
-            }
             12108 -> {
                 modImplementation("net.fabricmc.fabric-api:fabric-api:0.136.0+1.21.8")
             }
-            12109 -> {
-                modImplementation("net.fabricmc.fabric-api:fabric-api:0.134.0+1.21.9")
             }
             12110 -> {
                 modImplementation("net.fabricmc.fabric-api:fabric-api:0.136.0+1.21.10")
