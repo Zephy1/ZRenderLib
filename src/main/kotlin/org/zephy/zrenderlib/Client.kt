@@ -39,6 +39,8 @@ package org.zephy.zrenderlib
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.minecraft.client.Minecraft
+import net.minecraft.client.Options
+import org.lwjgl.glfw.GLFW
 
 object Client : ClientModInitializer {
     override fun onInitializeClient() {

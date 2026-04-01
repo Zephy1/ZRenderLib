@@ -74,12 +74,12 @@ object PipelineBuilder {
 
     @JvmStatic
     fun enableDepth() = apply {
-        setDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+        RenderUtils.depthFunc(RenderUtils.getDepthTestFunctionFromInt(0x203)) // LEQUAL_DEPTH_TEST, LESS_THAN_OR_EQUAL
     }
 
     @JvmStatic
     fun disableDepth() = apply {
-        setDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        RenderUtils.depthFunc(RenderUtils.getDepthTestFunctionFromInt(0x207)) // NO_DEPTH_TEST, ALWAYS_PASS
     }
 
     @JvmStatic

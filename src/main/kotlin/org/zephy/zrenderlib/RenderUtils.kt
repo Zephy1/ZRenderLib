@@ -81,7 +81,7 @@ object RenderUtils {
     //$$    return Vector3d(
     //$$        renderManager.viewerPosX,
     //$$        renderManager.viewerPosY,
-    //$$        renderManager.viewerPosZ
+    //$$        renderManager.viewerPosZ,
     //$$    )
     //$$}
     //#else
@@ -111,10 +111,14 @@ object RenderUtils {
 
     @JvmStatic
     fun getCameraPos(): Vec3 {
+        return getCameraPos(getCamera())
+    }
+    @JvmStatic
+    fun getCameraPos(camera: Camera): Vec3 {
         //#if MC<=12110
-        //$$return Client.getMinecraft().gameRenderer.mainCamera.position
+        //$$return camera.position
         //#else
-        return Client.getMinecraft().gameRenderer.mainCamera.position()
+        return camera.position()
         //#endif
     }
 
@@ -551,11 +555,11 @@ object RenderUtils {
     //#endif
 
     @JvmStatic
-    fun depthFunc(depthFunc: Int) = apply {
+    fun depthFunc(depthFuncInt: Int) = apply {
         //#if MC<12100
-        //$$GlStateManager.depthFunc(depthFunc)
+        //$$GlStateManager.depthFunc(depthFuncInt)
         //#else
-        depthFunc(getDepthTestFunctionFromInt(depthFunc))
+        depthFunc(getDepthTestFunctionFromInt(depthFuncInt))
         //#endif
     }
 
@@ -1202,6 +1206,28 @@ object RenderUtils {
             (a1 + a2) / 2
         )
     }
+
+    //#if MC>=12100
+    @JvmStatic
+    fun isVisible(targetX: Float, targetY: Float, targetZ: Float): Boolean {
+        return isVisible(targetX.toDouble(), targetY.toDouble(), targetZ.toDouble())
+    }
+    @JvmStatic
+    fun isVisible(targetX: Double, targetY: Double, targetZ: Double): Boolean {
+        val world = Client.getMinecraft().level ?: return false
+        val cameraEntity = getCamera().entity() ?: return false
+        val result = world.clip(
+            ClipContext(
+                getCameraPos(),
+                Vec3(targetX, targetY, targetZ),
+                ClipContext.Block.VISUAL,
+                ClipContext.Fluid.NONE,
+                cameraEntity,
+            )
+        )
+        return result.type == HitResult.Type.MISS
+    }
+    //#endif
 
     val defaultARGBColor = ARGBColor(255, 255, 255, 255)
     val defaultRGBAColor = RGBAColor(255, 255, 255, 255)
