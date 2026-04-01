@@ -35,31 +35,24 @@ dependencies {
     } else {
         when (project.platform.mcVersion) {
             12105 -> {
-                modCompileOnly("gg.essential:universalcraft-1.21.5-fabric:436")
                 modImplementation("net.fabricmc.fabric-api:fabric-api:0.128.2+1.21.5")
             }
             12106 -> {
-                modCompileOnly("gg.essential:universalcraft-1.21.6-fabric:436")
                 modImplementation("net.fabricmc.fabric-api:fabric-api:0.128.2+1.21.6")
             }
             12107 -> {
-                modCompileOnly("gg.essential:universalcraft-1.21.7-fabric:436")
                 modImplementation("net.fabricmc.fabric-api:fabric-api:0.129.0+1.21.7")
             }
             12108 -> {
-                modCompileOnly("gg.essential:universalcraft-1.21.7-fabric:436")
                 modImplementation("net.fabricmc.fabric-api:fabric-api:0.136.0+1.21.8")
             }
             12109 -> {
-                modCompileOnly("gg.essential:universalcraft-1.21.9-fabric:436")
                 modImplementation("net.fabricmc.fabric-api:fabric-api:0.134.0+1.21.9")
             }
             12110 -> {
-                modCompileOnly("gg.essential:universalcraft-1.21.9-fabric:436")
                 modImplementation("net.fabricmc.fabric-api:fabric-api:0.136.0+1.21.10")
             }
             12111 -> {
-                modCompileOnly("gg.essential:universalcraft-1.21.11-fabric:446")
                 modImplementation("net.fabricmc.fabric-api:fabric-api:0.140.2+1.21.11") {
                     exclude(group = "net.fabricmc.fabric-api", module = "fabric-content-registries-v0")
                 }

@@ -22,8 +22,8 @@ import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.platform.DepthTestFunction
 import com.mojang.blaze3d.platform.DestFactor
 import com.mojang.blaze3d.platform.SourceFactor
-import gg.essential.universal.UGraphics
-import gg.essential.universal.UMatrixStack
+import com.mojang.blaze3d.vertex.Tesselator
+import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.network.chat.Component
 import org.joml.Quaternionf
@@ -37,7 +37,6 @@ import net.minecraft.world.phys.Vec3
 
     //#if MC<=12105
         //$$import com.mojang.blaze3d.textures.GpuTexture
-        //$$import com.mojang.blaze3d.vertex.PoseStack
     //#else
         import com.mojang.blaze3d.textures.GpuTextureView
         import net.minecraft.client.gui.GuiGraphics
@@ -96,13 +95,14 @@ object RenderUtils {
     }
 
     @JvmStatic
-    //#if MC<=12105
-    //$$fun setMatrixStack(stack: PoseStack) = apply {
-    //#else
-    fun setMatrixStack(stack: Matrix3x2fStack) = apply {
-    //#endif
+    fun setMatrixStack(stack: PoseStack) = apply {
         matrixStack = UMatrixStack(stack)
     }
+    //#if MC>=12106
+    fun setMatrixStack(stack: Matrix3x2fStack) = apply {
+        matrixStack = UMatrixStack(stack)
+    }
+    //#endif
 
     @JvmStatic
     fun getCamera(): Camera {
@@ -127,7 +127,7 @@ object RenderUtils {
     }
     private fun beginInternal(mode: VertexFormat.Mode, format: VertexFormat) = apply {
         vertexFormat = format
-        instance = UGraphics.getTessellator().begin(mode, format)
+        instance = Tesselator.getInstance().begin(mode, format)
     }
     private fun drawDirect() = apply {
         val builtBuffer = instance?.build() ?: return@apply
@@ -500,8 +500,6 @@ object RenderUtils {
     fun enableLighting() = apply {
         //#if MC<12100
         //$$GlStateManager.enableLighting()
-        //#else
-        UGraphics.enableLighting()
         //#endif
     }
 
@@ -509,8 +507,6 @@ object RenderUtils {
     fun disableLighting() = apply {
         //#if MC<12100
         //$$GlStateManager.disableLighting()
-        //#else
-        UGraphics.disableLighting()
         //#endif
     }
 
