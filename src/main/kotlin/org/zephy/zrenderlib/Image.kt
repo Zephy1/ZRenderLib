@@ -53,6 +53,8 @@ class Image(var image: BufferedImage?) {
 
     fun getIdentifier(): Identifier? = identifier
     fun getTexture(): DynamicTexture? = texture?.texture
+
+    fun isReady(): Boolean = texture != null
 //#endif
     private val textureWidth = image?.width ?: 0
     private val textureHeight = image?.height ?: 0

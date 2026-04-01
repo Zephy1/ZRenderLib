@@ -68,6 +68,27 @@ object Client : ClientModInitializer {
     fun getMinecraft(): Minecraft = Minecraft.getInstance()
     //#endif
 
+    //#if MC>=12109
+    @JvmStatic
+    fun getSettings(): Options = getMinecraft().options
+
+    @JvmStatic
+    fun getTime(): Long {
+        return System.nanoTime() / 1_000_000
+    }
+
+    private var guiScaleValue: Int
+        get() = getSettings().guiScale().get()
+        set(value) { getSettings().guiScale().set(value) }
+
+    @JvmStatic
+    var guiScale: Int
+        get() = guiScaleValue
+        set(value) {
+            guiScaleValue = value
+        }
+    //#endif
+
     @JvmStatic
     @JvmOverloads
     fun scheduleTask(delay: Int = 0, callback: () -> Unit) {
@@ -103,4 +124,22 @@ object Client : ClientModInitializer {
     }
     //#endif
 }
+
+//#if MC>=12109
+data class KeyModifiers(
+    val ctrl: Boolean = false,
+    val shift: Boolean = false,
+    val alt: Boolean = false,
+)
+internal fun KeyModifiers?.toInt() = listOf(
+    this?.ctrl to GLFW.GLFW_MOD_CONTROL,
+    this?.shift to GLFW.GLFW_MOD_SHIFT,
+    this?.alt to GLFW.GLFW_MOD_ALT,
+).sumOf { (modifier, value) -> if (modifier == true) value else 0 }
+internal fun Int.toModifiers() = KeyModifiers(
+    ctrl = (this and GLFW.GLFW_MOD_CONTROL) != 0,
+    shift = (this and GLFW.GLFW_MOD_SHIFT) != 0,
+    alt = (this and GLFW.GLFW_MOD_ALT) != 0,
+)
+//#endif
 //#endif
