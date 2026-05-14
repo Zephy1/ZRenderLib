@@ -51,10 +51,6 @@ preprocess {
     vars.put("!FABRIC", if (project.platform.isFabric) 0 else 1)
 }
 
-java {
-    withSourcesJar()
-}
-
 afterEvaluate {
     val hasRemapJar = tasks.findByName("remapJar") != null
     val outputTaskName = if (hasRemapJar) "remapJar" else "shadowJar"
