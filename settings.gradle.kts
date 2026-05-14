@@ -20,17 +20,16 @@ includeBuild("../essential-gradle-toolkit")
 rootProject.name = "ZRenderLib"
 rootProject.buildFileName = "root.gradle.kts"
 
-listOf(
-    "1.8.9-forge",
-    "1.12.2-forge",
-    "1.12.2-fabric",
-    "1.16.2-fabric",
-    "1.21.5-fabric",
-    "1.21.8-fabric",
+val versionList = listOf(
     "1.21.10-fabric",
     "1.21.11-fabric",
-    "26.1-fabric",
-).forEach { version ->
+    "26.1.2-fabric",
+)
+versionList.forEach { version ->
+    file("versions/$version").mkdirs()
+}
+
+versionList.forEach { version ->
     include(":$version")
     project(":$version").apply {
         projectDir = file("versions/$version")

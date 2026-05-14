@@ -344,7 +344,7 @@ object RenderUtils {
     }
 
     @JvmStatic
-    fun draw() = apply {
+    fun draw(): RenderUtils = apply {
         if (!began) return this
         began = false
 
@@ -1210,9 +1210,7 @@ object RenderUtils {
         val textLines = wrappedLines.map { visitable ->
             val builder = Component.empty()
             visitable.visit({ style, content ->
-                if (content != null) {
-                    builder.append(Component.literal(content).setStyle(style))
-                }
+                builder.append(Component.literal(content).setStyle(style))
                 Optional.empty<Unit>()
             }, Style.EMPTY)
             builder
