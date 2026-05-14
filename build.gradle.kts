@@ -95,15 +95,4 @@ afterEvaluate {
     artifacts {
         add("default", tasks.named(outputTaskName))
     }
-
-    publishing {
-        publications {
-            create<MavenPublication>("mavenJava") {
-                artifact(tasks.named(outputTaskName).get())
-                groupId = "org.zephy.zrenderlib"
-                artifactId = project.platform.toString()
-                version = "1.0.0"
-            }
-        }
-    }
 }
