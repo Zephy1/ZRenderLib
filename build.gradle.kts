@@ -32,29 +32,6 @@ dependencies {
     if (project.platform.mcVersion <= 12100) {
         modCompileOnly("gg.essential:essential-$platform:4167+g4594ad6e6")
         embed("gg.essential:loader-launchwrapper:1.2.3")
-    } else {
-        when (project.platform.mcVersion) {
-            12105 -> {
-                modImplementation("net.fabricmc.fabric-api:fabric-api:0.128.2+1.21.5")
-            }
-            12108 -> {
-                modImplementation("net.fabricmc.fabric-api:fabric-api:0.136.1+1.21.8")
-            }
-            12110 -> {
-                modImplementation("net.fabricmc.fabric-api:fabric-api:0.138.4+1.21.10")
-            }
-            12111 -> {
-                modImplementation("net.fabricmc.fabric-api:fabric-api:0.141.3+1.21.11") {
-                    exclude(group = "net.fabricmc.fabric-api", module = "fabric-content-registries-v0")
-                }
-            }
-            260100 -> {
-                modImplementation("net.fabricmc.fabric-api:fabric-api:0.145.0+26.1")
-            }
-            else -> throw IllegalStateException("Unsupported MC version: ${project.platform.mcVersion}")
-        }
-        modImplementation("net.fabricmc:fabric-loader:0.18.5")
-        modImplementation("net.fabricmc:fabric-language-kotlin:1.13.9+kotlin.2.3.10")
     }
 }
 
