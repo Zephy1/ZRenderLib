@@ -1008,7 +1008,8 @@ object RenderUtils {
         //$$GL11.glEnable(GL11.GL_SCISSOR_TEST)
         //$$GL11.glScissor(scissorX, scissorY, scissorWidth, scissorHeight)
         //#else
-        drawContext.scissorStack.push(ScreenRectangle(scissorX, scissorY, scissorWidth, scissorHeight))
+        drawContext.scissorStack.push(ScreenRectangle(scissorX / 2, scissorY / 2, scissorWidth / 2, scissorHeight / 2))
+        //#
         //#endif
     }
 
