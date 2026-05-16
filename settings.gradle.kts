@@ -36,3 +36,11 @@ versionList.forEach { version ->
         buildFileName = "../../build.gradle.kts"
     }
 }
+
+includeBuild("../ZKeys") {
+    dependencySubstitution {
+        versionList.forEach { version ->
+            substitute(module("org.zephy.zkeys:$version")).using(project(":$version"))
+        }
+    }
+}

@@ -33,6 +33,8 @@ dependencies {
         modCompileOnly("gg.essential:essential-$platform:4167+g4594ad6e6")
         embed("gg.essential:loader-launchwrapper:1.2.3")
     }
+
+    modCompileOnly("org.zephy.zkeys:${project.platform}:1.0.0") { isTransitive = false }
 }
 
 tasks {

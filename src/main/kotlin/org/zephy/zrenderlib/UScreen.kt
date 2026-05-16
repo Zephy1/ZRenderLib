@@ -8,6 +8,9 @@ import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.input.MouseButtonInfo
 import net.minecraft.network.chat.Component
+import org.zephy.zkeys.KeyModifiers
+import org.zephy.zkeys.toInt
+import org.zephy.zkeys.toModifiers
 
 //#if MC<=12111
 //$$import net.minecraft.client.gui.GuiGraphics
