@@ -33,6 +33,16 @@ import com.mojang.blaze3d.textures.AddressMode
 import com.mojang.blaze3d.textures.FilterMode
 //#endif
 
+//#if MC>=12110
+import net.minecraft.client.renderer.entity.EntityRenderer
+import net.minecraft.client.renderer.entity.state.EntityRenderState
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
+import net.minecraft.world.entity.Entity
+import org.joml.Quaternionf
+import org.joml.Vector2f
+import org.joml.Vector3f
+//#endif
+
 object GUIRenderer : BaseGUIRenderer() {
     override fun drawString(
         //#if MC>=26.1
@@ -547,5 +557,152 @@ object GUIRenderer : BaseGUIRenderer() {
         )
         //#endif
     }
+
+    //#if MC>=12110
+    val cachedEntityRenderStateResultsMap: LRUCacheMap<String, EntityRenderStateResult> = LRUCacheMap(64)
+    data class EntityRenderStateResult(
+        val rotation: Quaternionf,
+        val xRotation: Quaternionf,
+        val scale: Float,
+        val translation: Vector3f,
+        val bodyRot: Float,
+        val yRot: Float,
+        val xRot: Float,
+        val boundingBoxWidth: Float,
+        val boundingBoxHeight: Float,
+    )
+
+    fun <T : Entity, R : EntityRenderState> getBaseEntityRenderState(entity: Entity): R {
+        val mc = Client.getMinecraft()
+        val partialTicks = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
+        @Suppress("UNCHECKED_CAST")
+        val entityRenderer = mc.entityRenderDispatcher.getRenderer(entity) as EntityRenderer<T, R>
+        val renderState = entityRenderer.createRenderState()
+        @Suppress("UNCHECKED_CAST")
+        entityRenderer.extractRenderState(entity as T, renderState, partialTicks)
+        return renderState
+    }
+
+    fun applyEntityRenderStateResult(
+        renderState: LivingEntityRenderState,
+        entityRenderStateResult: EntityRenderStateResult,
+    ) {
+        renderState.bodyRot = entityRenderStateResult.bodyRot
+        renderState.yRot = entityRenderStateResult.yRot
+        renderState.xRot = entityRenderStateResult.xRot
+        renderState.boundingBoxWidth = entityRenderStateResult.boundingBoxWidth
+        renderState.boundingBoxHeight = entityRenderStateResult.boundingBoxHeight
+    }
+
+    fun getEntityRenderStateResult(
+        renderState: LivingEntityRenderState,
+        scale: Float,
+        yawDegrees: Float = -30f,
+        pitchDegrees: Float = 5f,
+        cacheTag: String? = null,
+    ) : EntityRenderStateResult {
+        cacheTag?.let {
+            if (cachedEntityRenderStateResultsMap.has(cacheTag)) {
+                val cacheValue = cachedEntityRenderStateResultsMap.get(it)!!
+                applyEntityRenderStateResult(renderState, cacheValue)
+                return cacheValue
+            }
+        }
+
+        val xAngle = Math.toRadians(yawDegrees.toDouble()).toFloat()
+        val yAngle = Math.toRadians(pitchDegrees.toDouble()).toFloat()
+
+        val rotation = Quaternionf().rotateZ(Math.PI.toFloat())
+        val xRotation = Quaternionf().rotateX(yAngle)
+        rotation.mul(xRotation)
+
+        val bodyRot = 180.0f + xAngle * 20.0f
+        val yRot = xAngle * 20.0f
+        val xRot = -yAngle * 20.0f
+        val boundingBoxWidth = renderState.boundingBoxWidth / renderState.scale
+        val boundingBoxHeight = renderState.boundingBoxHeight / renderState.scale
+        val translation = Vector3f(0f, renderState.boundingBoxHeight / 2f, 0f)
+        val entityRenderStateResult = EntityRenderStateResult(
+            rotation,
+            xRotation,
+            scale,
+            translation,
+            bodyRot,
+            yRot,
+            xRot,
+            boundingBoxWidth,
+            boundingBoxHeight,
+        )
+        applyEntityRenderStateResult(renderState, entityRenderStateResult)
+        cacheTag?.let {
+            cachedEntityRenderStateResultsMap.put(it, entityRenderStateResult)
+        }
+        return entityRenderStateResult
+    }
+
+    fun <R : EntityRenderState> drawEntity(
+        //#if MC<=12111
+        //$$drawContext: GuiGraphics,
+        //#else
+        drawContext: GuiGraphicsExtractor,
+        //#endif
+        renderState: R,
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        entityRenderStateResult: EntityRenderStateResult,
+    ) {
+        drawEntity(
+            drawContext,
+            renderState,
+            x,
+            y,
+            width,
+            height,
+            entityRenderStateResult.scale,
+            entityRenderStateResult.translation,
+            entityRenderStateResult.rotation,
+            entityRenderStateResult.xRotation,
+        )
+    }
+
+    fun <R : EntityRenderState> drawEntity(
+        //#if MC<=12111
+        //$$drawContext: GuiGraphics,
+        //#else
+        drawContext: GuiGraphicsExtractor,
+        //#endif
+        renderState: R,
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        scale: Float,
+        translation: Vector3f,
+        rotation: Quaternionf,
+        xRotation: Quaternionf,
+    ) {
+        val pose = drawContext.pose()
+        val topLeft = pose.transformPosition(x, y, Vector2f())
+        val bottomRight = pose.transformPosition(x + width, y + height, Vector2f())
+
+        //#if MC<=12111
+        //$$drawContext.submitEntityRenderState(
+        //#else
+        drawContext.entity(
+        //#endif
+            renderState,
+            scale / RenderUtils.screen.getScale().toFloat(),
+            translation,
+            rotation,
+            xRotation,
+            topLeft.x.toInt(),
+            topLeft.y.toInt(),
+            bottomRight.x.toInt(),
+            bottomRight.y.toInt(),
+        )
+    }
+    //#endif
 }
 //#endif
