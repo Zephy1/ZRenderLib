@@ -1483,8 +1483,31 @@ object RenderUtils {
         TOP_LEFT,
         TOP_RIGHT,
         BOTTOM_LEFT,
-        BOTTOM_RIGHT;
+        BOTTOM_RIGHT,
+        ;
     }
+    val TOP_FLAT_CORNERS = mutableListOf(
+        FlattenRoundedRectCorner.TOP_LEFT,
+        FlattenRoundedRectCorner.TOP_RIGHT,
+    )
+    val BOTTOM_FLAT_CORNERS = mutableListOf(
+        FlattenRoundedRectCorner.BOTTOM_LEFT,
+        FlattenRoundedRectCorner.BOTTOM_RIGHT,
+    )
+    val LEFT_FLAT_CORNERS = mutableListOf(
+        FlattenRoundedRectCorner.TOP_LEFT,
+        FlattenRoundedRectCorner.BOTTOM_LEFT,
+    )
+    val RIGHT_FLAT_CORNERS = mutableListOf(
+        FlattenRoundedRectCorner.TOP_RIGHT,
+        FlattenRoundedRectCorner.BOTTOM_RIGHT,
+    )
+    val ALL_FLAT_CORNERS = mutableListOf(
+        FlattenRoundedRectCorner.TOP_LEFT,
+        FlattenRoundedRectCorner.TOP_RIGHT,
+        FlattenRoundedRectCorner.BOTTOM_LEFT,
+        FlattenRoundedRectCorner.BOTTOM_RIGHT,
+    )
 
     fun getGradientColors(gradientDirection: GradientDirection, startColor: Long, endColor: Long): GradientColors {
         val startRGBA = RGBAColor.fromLongRGBA(startColor).getLong()
