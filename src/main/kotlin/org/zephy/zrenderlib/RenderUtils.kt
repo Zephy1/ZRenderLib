@@ -1348,6 +1348,8 @@ object RenderUtils {
             }
         }
     }
+    fun Long.toIntRGBA(): Int = RGBAColor.fromLongRGBA(this).getIntRGBA()
+    fun Long.toIntARGB(): Int = RGBAColor.fromLongRGBA(this).getIntARGB()
 
     class ARGBColor(
         override val r: Int,
@@ -1569,6 +1571,8 @@ object RenderUtils {
         //#else
         fun getWidth(): Int = Client.getMinecraft().window.guiScaledWidth
         fun getHeight(): Int = Client.getMinecraft().window.guiScaledHeight
+        fun getFullWidth(): Int = Client.getMinecraft().window.width
+        fun getFullHeight(): Int = Client.getMinecraft().window.height
         fun getScale(): Double = Client.getMinecraft().window.guiScale.toDouble()
         //#endif
     }
