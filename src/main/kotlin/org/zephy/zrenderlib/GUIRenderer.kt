@@ -181,7 +181,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //#else
         val backgroundColorLong = backgroundColor.getLongRGBA()
         lines.forEach { line ->
-            val matrix = Matrix3x2f()
+            val matrix = Matrix3x2f(drawContext.pose())
             matrix.translate(xPosition, yPosition + currentY)
             matrix.scale(textScale, textScale)
 
@@ -256,7 +256,7 @@ object GUIRenderer : BaseGUIRenderer() {
         drawContext.guiRenderState.addGuiElement(
         //#endif
             GUIRenderState(
-                drawContext.pose(),
+                RenderUtils.matrixStack.to3x2Joml(),
                 vertexList,
                 boundsList,
                 zOffset,
@@ -299,7 +299,7 @@ object GUIRenderer : BaseGUIRenderer() {
         drawContext.guiRenderState.addGuiElement(
         //#endif
             GUIRenderState(
-                drawContext.pose(),
+                RenderUtils.matrixStack.to3x2Joml(),
                 vertexList,
                 boundsList,
                 zOffset,
@@ -352,7 +352,7 @@ object GUIRenderer : BaseGUIRenderer() {
         drawContext.guiRenderState.addGuiElement(
         //#endif
             GUIRenderState(
-                drawContext.pose(),
+                RenderUtils.matrixStack.to3x2Joml(),
                 vertexList,
                 boundsList,
                 zOffset,
@@ -402,7 +402,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //#endif
             GradientGUIRenderState(
                 GUIRenderState(
-                    drawContext.pose(),
+                    RenderUtils.matrixStack.to3x2Joml(),
                     listOf(),
                     boundsList,
                     zOffset,
@@ -459,7 +459,7 @@ object GUIRenderer : BaseGUIRenderer() {
         drawContext.guiRenderState.addGuiElement(
         //#endif
             GUIRenderState(
-                drawContext.pose(),
+                RenderUtils.matrixStack.to3x2Joml(),
                 vertexList,
                 boundsList,
                 zOffset,
@@ -529,7 +529,7 @@ object GUIRenderer : BaseGUIRenderer() {
         //#endif
             TexturedGUIRenderState(
                 GUIRenderState(
-                    drawContext.pose(),
+                    RenderUtils.matrixStack.to3x2Joml(),
                     vertexList,
                     boundsList,
                     zOffset,
