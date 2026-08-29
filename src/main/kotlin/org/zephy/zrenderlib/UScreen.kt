@@ -111,7 +111,7 @@ abstract class UScreen(
     final override fun mouseClicked(click: MouseButtonEvent, doubled: Boolean): Boolean {
         lastMouseInput = click.buttonInfo
         lastDoubled = doubled
-        if (click.button() == 1) lastClick = Client.getTime()
+        if (click.button() == 1) lastClick = ZRenderLib.getTime()
         onMouseClicked(click.x, click.y, click.button())
         lastMouseInput = null
         lastDoubled = null
@@ -129,7 +129,7 @@ abstract class UScreen(
         lastMouseInput = click.buttonInfo
         lastDraggedDx = offsetX
         lastDraggedDy = offsetY
-        onMouseDragged(click.x, click.y, click.button(), Client.getTime() - lastClick)
+        onMouseDragged(click.x, click.y, click.button(), ZRenderLib.getTime() - lastClick)
         lastMouseInput = null
         return false
     }
@@ -179,18 +179,18 @@ abstract class UScreen(
     open fun updateGuiScale() {
         if (newGuiScale != -1 && !restoringGuiScale) {
             if (guiScaleToRestore == -1) {
-                guiScaleToRestore = Client.guiScale
+                guiScaleToRestore = ZRenderLib.guiScale
             }
-            Client.guiScale = newGuiScale
-            width = Client.getMinecraft().window.width
-            height = Client.getMinecraft().window.height
+            ZRenderLib.guiScale = newGuiScale
+            width = ZRenderLib.getMinecraft().window.width
+            height = ZRenderLib.getMinecraft().window.height
         }
     }
 
     private fun restoreGuiScale() {
         if (guiScaleToRestore != -1) {
             restoringGuiScale = true
-            Client.guiScale = guiScaleToRestore
+            ZRenderLib.guiScale = guiScaleToRestore
             restoringGuiScale = false
             guiScaleToRestore = -1
         }
@@ -231,7 +231,7 @@ abstract class UScreen(
 
     open fun onMouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int) {
         if (mouseButton == 1) {
-            lastClick = Client.getTime()
+            lastClick = ZRenderLib.getTime()
         }
         super.mouseClicked(MouseButtonEvent(mouseX, mouseY, MouseButtonInfo(mouseButton, lastMouseInput?.modifiers ?: 0)), lastDoubled ?: false)
     }

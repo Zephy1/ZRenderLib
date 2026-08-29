@@ -50,7 +50,8 @@ enum class HudRenderLayer(val mcValue: Identifier) {
     TITLE_AND_SUBTITLE(VanillaHudElements.TITLE_AND_SUBTITLE),
     CHAT(VanillaHudElements.CHAT),
     PLAYER_LIST(VanillaHudElements.PLAYER_LIST),
-    SUBTITLES(VanillaHudElements.SUBTITLES);
+    SUBTITLES(VanillaHudElements.SUBTITLES),
+    ;
     //#endif
     fun toMC() = mcValue
 }

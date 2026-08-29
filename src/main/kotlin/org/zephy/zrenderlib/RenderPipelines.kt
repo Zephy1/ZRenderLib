@@ -5,7 +5,6 @@ package org.zephy.zrenderlib
 //$$import net.minecraft.client.renderer.RenderType
 //#else
 import net.minecraft.client.renderer.rendertype.LayeringTransform
-
 //#endif
 
 object RenderPipelines {

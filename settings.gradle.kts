@@ -1,6 +1,5 @@
 pluginManagement {
     repositories {
-        gradlePluginPortal()
         mavenCentral()
         maven("https://maven.fabricmc.net")
         maven("https://maven.architectury.dev")
@@ -9,20 +8,15 @@ pluginManagement {
         maven("https://repo.spongepowered.org/maven/")
         maven("https://repo.legacyfabric.net/repository/legacyfabric/")
     }
-
-    plugins {
-        id("com.gradleup.shadow") version "9.4.1"
-    }
 }
 
-// !! This uses my own fork of the toolkit, I couldn't get 1.21.9+ to build on the maven build (I couldn't update past Loom 1.9.x due to depreciated methods) !!
 includeBuild("../essential-gradle-toolkit")
+
 rootProject.name = "ZRenderLib"
 rootProject.buildFileName = "root.gradle.kts"
 
 val versionList = listOf(
-    "1.21.10-fabric",
-    "1.21.11-fabric",
+    "26.2-fabric",
     "26.1.2-fabric",
 )
 versionList.forEach { version ->

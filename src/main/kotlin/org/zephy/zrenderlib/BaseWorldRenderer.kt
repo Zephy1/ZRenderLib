@@ -2041,7 +2041,7 @@ abstract class BaseWorldRenderer {
         lineThickness: Float = 1f,
     ) {
         //#if MC<=12100
-        //$$val mc = Client.getMinecraft()
+        //$$val mc = ZRenderLib.getMinecraft()
         //$$mc.thePlayer?.let { player ->
         //$$    val x1: Double = player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTicks
         //$$    val y1: Double = player.getEyeHeight() + player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTicks

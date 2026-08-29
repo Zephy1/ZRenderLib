@@ -1,7 +1,6 @@
 plugins {
     kotlin("jvm")
     id("maven-publish")
-    id("com.gradleup.shadow")
     id("gg.essential.multi-version")
     id("gg.essential.defaults")
 }
@@ -39,13 +38,11 @@ dependencies {
 }
 
 tasks {
-    shadowJar {
-        configurations.set(listOf(embed))
-        exclude("gg/essential/**")
-    }
     withType<net.fabricmc.loom.task.RemapJarTask>().configureEach {
-        dependsOn(shadowJar)
-        inputFile.set(shadowJar.flatMap { it.archiveFile })
+        dependsOn(jar)
+        inputFile.set(jar.flatMap { it.archiveFile })
+    }
+
     }
 }
 
@@ -56,7 +53,7 @@ preprocess {
 
 afterEvaluate {
     val hasRemapJar = tasks.findByName("remapJar") != null
-    val outputTaskName = if (hasRemapJar) "remapJar" else "shadowJar"
+    val outputTaskName = if (hasRemapJar) "remapJar" else "jar"
 
     tasks.register<Copy>("collectJars") {
         group = "build"
@@ -68,15 +65,8 @@ afterEvaluate {
         from(tasks.named(outputTaskName)) {
             include("*.jar")
             exclude { it.name.contains(" 1.2") && it.name.contains("-all") }
-            exclude { it.name.contains(" 1.1") }
-            rename { fileName ->
-                fileName
-                    .replace(".jar", ".unloaded")
-                    .replace("-forge", "")
-                    .replace("-fabric", "")
-                    .replace("-all", "")
-                    .replace(" ", "-")
-                    .replace("-$version", "")
+            rename {
+                "${rootProject.name}-${version}+${project.platform.mcVersionStr}.jar"
             }
         }
         into(outputDir)

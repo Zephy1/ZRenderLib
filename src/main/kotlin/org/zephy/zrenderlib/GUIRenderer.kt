@@ -176,7 +176,7 @@ object GUIRenderer : BaseGUIRenderer() {
         val lines = RenderUtils.splitText(text, maxWidth).lines
 
         //#if MC<=12105
-        //$$val vertexConsumers = Client.getMinecraft().renderBuffers().bufferSource()
+        //$$val vertexConsumers = ZRenderLib.getMinecraft().renderBuffers().bufferSource()
         //$$RenderUtils
         //$$    .pushMatrix()
         //$$    .translate(xPosition, yPosition, zOffset)
@@ -585,7 +585,7 @@ object GUIRenderer : BaseGUIRenderer() {
     )
 
     fun <T : Entity, R : EntityRenderState> getBaseEntityRenderState(entity: Entity): R {
-        val mc = Client.getMinecraft()
+        val mc = ZRenderLib.getMinecraft()
         val partialTicks = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
         @Suppress("UNCHECKED_CAST")
         val entityRenderer = mc.entityRenderDispatcher.getRenderer(entity) as EntityRenderer<T, R>

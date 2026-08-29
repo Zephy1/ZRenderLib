@@ -5,6 +5,8 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
+import org.zephy.zrenderlib.RenderUtils.RGBAColor
+import org.zephy.zrenderlib.RenderUtils.RenderColor
 
 //#if MC<12100
 //$$import net.minecraft.client.renderer.texture.DynamicTexture
@@ -16,8 +18,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 //#endif
 import net.minecraft.client.renderer.texture.DynamicTexture
 //#endif
-import org.zephy.zrenderlib.RenderUtils.RGBAColor
-import org.zephy.zrenderlib.RenderUtils.RenderColor
 
 abstract class BaseGUIRenderer {
     @JvmOverloads

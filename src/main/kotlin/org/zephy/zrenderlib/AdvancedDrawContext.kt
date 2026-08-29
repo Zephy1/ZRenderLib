@@ -106,9 +106,9 @@ class AdvancedDrawContext : AutoCloseable {
     //#endif
         val width = texture.width
         val height = texture.height
-        val scaleFactor = Client.getMinecraft().window.guiScale.toFloat()
+        val scaleFactor = ZRenderLib.getMinecraft().window.guiScale.toFloat()
 
-        val textureManager = Client.getMinecraft().textureManager
+        val textureManager = ZRenderLib.getMinecraft().textureManager
         val identifier = Identifier.fromNamespaceAndPath("universalcraft", "__tmp_texture__")
         textureManager.register(identifier, object : AbstractTexture() {
             init { textureView = texture.textureView }

@@ -35,6 +35,7 @@ object PipelineBuilder {
     private val layerList = mutableMapOf<String, RenderType>()
     private val pipelineList = mutableMapOf<String, RenderPipeline>()
     private var cull: Boolean? = null
+
     //#if MC<=12111
     //$$private var depthTestFunction: DepthTestFunction? = null
     //$$private var blendFunction: BlendFunction? = null
@@ -42,6 +43,7 @@ object PipelineBuilder {
     private var depthTestFunction: Optional<DepthStencilState> = Optional.empty()
     private var blendFunction: Optional<BlendFunction> = Optional.empty()
     //#endif
+
     //#if MC<=12110
     //$$private var lineWidth: Float? = null
     //$$private var layering: RenderStateShard.LayeringStateShard? = null
@@ -49,6 +51,7 @@ object PipelineBuilder {
     private var layering: LayeringTransform? = null
     private var texture: GpuTexture? = null
     //#endif
+
     private var textureIdentifier: Identifier? = null
     private var drawMode = DrawMode.QUADS
     private var vertexFormat = VertexFormat.POSITION_COLOR
@@ -223,7 +226,7 @@ object PipelineBuilder {
                 //#elseif MC<=12110
                 //$$layerBuilder.setTextureState(RenderStateShard.TextureStateShard(textureIdentifier!!, false))
                 //#else
-                layerBuilder.withTexture("zrenderlib/custom/textures/${location ?: hashCode()}", textureIdentifier!!)
+                layerBuilder.withTexture("${ZRenderLib.MOD_ID}/custom/textures/${location ?: hashCode()}", textureIdentifier!!)
                 //#endif
             }
 
@@ -260,7 +263,7 @@ object PipelineBuilder {
             //$$)
             //#else
             val layer = createRenderLayer(
-                "zrenderlib/custom/layers/${location ?: hashCode()}",
+                "${ZRenderLib.MOD_ID}/custom/layers/${location ?: hashCode()}",
                 layerBuilder.createRenderSetup(),
             )
             //#endif

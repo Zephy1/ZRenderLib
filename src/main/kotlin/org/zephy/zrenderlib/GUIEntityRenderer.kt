@@ -4,7 +4,7 @@ package org.zephy.zrenderlib
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.client.renderer.entity.state.AvatarRenderState
 
-//#if MC>=12110
+//#if MC<=12111
 //$$import net.minecraft.client.gui.GuiGraphics
 //#else
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -32,7 +32,7 @@ object GUIEntityRenderer {
         entity: AbstractClientPlayer? = null,
         cacheTag: String? = null,
     ) {
-        val playerEntity = entity ?: Client.getMinecraft().player ?: return
+        val playerEntity = entity ?: ZRenderLib.getMinecraft().player ?: return
         val renderState = GUIRenderer.getBaseEntityRenderState<AbstractClientPlayer, AvatarRenderState>(playerEntity)
         val renderStateResult = GUIRenderer.getEntityRenderStateResult(renderState, height * 0.5f * scale, cacheTag = cacheTag)
         renderState.scale = 0.95f
@@ -49,7 +49,7 @@ object GUIEntityRenderer {
         wornItems: Map<EquipmentSlot, ItemStack> = emptyMap(),
         cacheTag: String? = null,
     ) {
-        val mc = Client.getMinecraft()
+        val mc = ZRenderLib.getMinecraft()
         val playerEntity = mc.player ?: return
         val renderState = GUIRenderer.getBaseEntityRenderState<AbstractClientPlayer, AvatarRenderState>(playerEntity)
         val renderStateResult = GUIRenderer.getEntityRenderStateResult(renderState, height * 0.5f * scale, cacheTag = cacheTag)

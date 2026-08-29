@@ -25,7 +25,7 @@ object WorldRenderer : BaseWorldRenderer() {
         //$$val x = xPosition - renderManager.viewerPosX
         //$$val y = yPosition - renderManager.viewerPosY
         //$$val z = zPosition - renderManager.viewerPosZ
-        //$$val xMultiplier = if (Client.getMinecraft().gameSettings.thirdPersonView == 2) -1 else 1
+        //$$val xMultiplier = if (ZRenderLib.getMinecraft().gameSettings.thirdPersonView == 2) -1 else 1
         //$$val adjustedScale = (scale * 0.05).toFloat()
         //$$val textWidth = fontRenderer.getStringWidth(text)
         //$$val j = textWidth / 2f

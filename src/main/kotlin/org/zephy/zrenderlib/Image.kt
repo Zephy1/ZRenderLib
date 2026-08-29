@@ -50,7 +50,9 @@ class Image(var image: BufferedImage?) {
     private var identifier: Identifier? = null
 
     init {
-        Client.scheduleTask {
+        ZRenderLib.images.add(this)
+
+        ZRenderLib.scheduleTask {
             setTexture(bufferedImageToNativeTexture(image!!))
         }
     }
@@ -76,8 +78,10 @@ class Image(var image: BufferedImage?) {
         texture = tex
         //#if MC>=12100
         if (texture == null) return
-        identifier = Identifier.fromNamespaceAndPath("zrenderlib", texture!!.uniqueName)
-        Client.getMinecraft().textureManager.register(identifier!!, texture!!.texture)
+        if (identifier == null) {
+            identifier = Identifier.fromNamespaceAndPath(ZRenderLib.MOD_ID, texture!!.uniqueName)
+        }
+        ZRenderLib.getMinecraft().textureManager.register(identifier!!, texture!!.texture)
         //#endif
     }
 
@@ -86,7 +90,7 @@ class Image(var image: BufferedImage?) {
         //$$texture.deleteGlTexture()
         //#else
         if (identifier != null) {
-            Client.getMinecraft().textureManager.release(identifier!!)
+            ZRenderLib.getMinecraft().textureManager.release(identifier!!)
         }
         texture?.texture?.close()
         texture?.buffer?.let(MemoryUtil::memFree)
@@ -94,6 +98,16 @@ class Image(var image: BufferedImage?) {
         texture = null
         //#endif
         image = null
+    }
+
+    internal fun getIdOrRegister(): Identifier {
+        if (identifier == null) {
+            identifier = Identifier.fromNamespaceAndPath(ZRenderLib.MOD_ID, "image${nextIdentifierIndex++}")
+            texture?.let {
+                ZRenderLib.getMinecraft().textureManager.register(identifier!!, it.texture)
+            }
+        }
+        return identifier!!
     }
 
     fun getImageSize(
@@ -162,6 +176,8 @@ class Image(var image: BufferedImage?) {
     //#endif
 
     companion object {
+        private var nextIdentifierIndex = 0
+
         @JvmStatic
         fun fromFile(file: File): Image {
             val bufferedImage = ImageIO.read(file) ?: throw IllegalArgumentException("Could not read image file.")
@@ -170,7 +186,6 @@ class Image(var image: BufferedImage?) {
         }
         @JvmStatic
         fun fromFile(file: String) = fromFile(File(file))
-
 
         //#if MC>=12100
         @JvmStatic
@@ -183,9 +198,9 @@ class Image(var image: BufferedImage?) {
 
                 val uniqueName = "image-${UUID.randomUUID()}"
                 Texture(
-                    DynamicTexture({ "zrenderlib:$uniqueName" }, NativeImage.read(buffer)),
+                    DynamicTexture({ "${ZRenderLib.MOD_ID}:$uniqueName" }, NativeImage.read(buffer)),
                     buffer,
-                    uniqueName
+                    uniqueName,
                 )
             }
         }

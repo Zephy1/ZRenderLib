@@ -40,9 +40,12 @@ import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.minecraft.client.Minecraft
 import net.minecraft.client.Options
-import org.lwjgl.glfw.GLFW
 
-object Client : ClientModInitializer {
+object ZRenderLib : ClientModInitializer {
+    const val MOD_ID = "zrenderlib"
+
+    internal val images = mutableListOf<Image>()
+
     override fun onInitializeClient() {
         ClientTickEvents.START_CLIENT_TICK.register {
             synchronized(tasks) {
@@ -90,6 +93,14 @@ object Client : ClientModInitializer {
             guiScaleValue = value
         }
     //#endif
+
+    fun getImages(): List<Image> = images
+    fun destroyImages() {
+        images.forEach(Image::destroy)
+    }
+    fun clearImages() {
+        images.clear()
+    }
 
     @JvmStatic
     @JvmOverloads

@@ -19,9 +19,6 @@ import org.zephy.zrenderlib.VertexFormat as ZVertexFormat
 //$$import javax.vecmath.Vector3f
 //#else
 import com.mojang.blaze3d.pipeline.BlendFunction
-import com.mojang.blaze3d.platform.DestFactor
-import com.mojang.blaze3d.platform.SourceFactor
-import com.mojang.blaze3d.vertex.Tesselator
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.network.chat.Component
@@ -29,7 +26,6 @@ import org.joml.Quaternionf
 import org.joml.Vector3f
 import java.util.Optional
 import net.minecraft.network.chat.Style
-import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.minecraft.client.Camera
 import net.minecraft.world.phys.Vec3
@@ -93,9 +89,9 @@ object RenderUtils {
 
     @JvmStatic
     //#if MC<12100
-    //$$fun getTextRenderer(): net.minecraft.client.gui.FontRenderer = Client.getMinecraft().fontRendererObj
+    //$$fun getTextRenderer(): net.minecraft.client.gui.FontRenderer = ZRenderLib.getMinecraft().fontRendererObj
     //#else
-    fun getTextRenderer(): net.minecraft.client.gui.Font = Client.getMinecraft().font
+    fun getTextRenderer(): net.minecraft.client.gui.Font = ZRenderLib.getMinecraft().font
     //#endif
 
     @JvmField
@@ -108,7 +104,7 @@ object RenderUtils {
     private var began = false
 
     //#if MC<12100
-    //$$@JvmStatic val renderManager: RenderManager = Client.getMinecraft().renderManager
+    //$$@JvmStatic val renderManager: RenderManager = ZRenderLib.getMinecraft().renderManager
     //$$@JvmStatic val tessellator: Tessellator = Tessellator.getInstance()
     //$$@JvmStatic val worldRenderer: net.minecraft.client.renderer.WorldRenderer? = tessellator.worldRenderer
     //$$@JvmStatic fun getCameraPos(): Vector3d {
@@ -127,7 +123,6 @@ object RenderUtils {
     fun setMatrixStack(stack: UMatrixStack) = apply {
         matrixStack = stack
     }
-
     @JvmStatic
     fun setMatrixStack(stack: PoseStack) = apply {
         matrixStack = UMatrixStack(stack)
@@ -144,6 +139,7 @@ object RenderUtils {
         //#endif
     }
     //#if MC>=12106
+    @JvmStatic
     fun setMatrixStack(stack: Matrix3x2fStack) = apply {
         matrixStack = UMatrixStack(stack)
     }
@@ -310,6 +306,9 @@ object RenderUtils {
     }
 
     @JvmStatic
+    fun colorInt(color: Long): Int = color.toInt()
+
+    @JvmStatic
     //#if MC<12100
     //$$fun getStringWidth(text: String): Int = getTextRenderer().getStringWidth(addColor(text))
     //#else
@@ -321,7 +320,7 @@ object RenderUtils {
     @JvmStatic
     fun getStringWidth(text: String): Int {
         //#if MC>=12109
-        return Client.synchronizedTask {
+        return ZRenderLib.synchronizedTask {
         //#endif
             getStringWidth(getFormattedTextFromString(text))
         //#if MC>=12109
@@ -1245,6 +1244,85 @@ object RenderUtils {
     }
 
     @JvmStatic
+    fun fixAlpha(color: Long): Long {
+        val alpha = color ushr 24 and 255
+        return if (alpha < 10) {
+            (color and 0xFF_FF_FF) or 0xA_FF_FF_FF
+        } else {
+            color
+        }
+    }
+    @JvmStatic
+    @JvmOverloads
+    fun getColor(r: Int, g: Int, b: Int, a: Int = 255): Long {
+        return RGBAColor(r, g, b, a).getLong()
+    }
+    @JvmStatic
+    @JvmOverloads
+    fun getColor(r: Float, g: Float, b: Float, a: Float = 255f): Long = getColor(
+        r.toInt(), g.toInt(), b.toInt(), a.toInt()
+    )
+
+    @JvmStatic
+    @JvmOverloads
+    fun getColor0_1(r: Float, g: Float, b: Float, a: Float = 1f): Long {
+        val ri = (r.coerceIn(0f, 1f) * 255).toInt()
+        val gi = (g.coerceIn(0f, 1f) * 255).toInt()
+        val bi = (b.coerceIn(0f, 1f) * 255).toInt()
+        val ai = (a.coerceIn(0f, 1f) * 255).toInt()
+
+        val colorInt =
+            ((ai and 0xFF) shl 24) or
+            ((ri and 0xFF) shl 16) or
+            ((gi and 0xFF) shl 8) or
+            (bi and 0xFF)
+
+        return colorInt.toLong() and 0xFFFFFFFFL
+    }
+
+    @JvmStatic
+    fun getColorRGBA(color: Long): FloatArray {
+        val intColor = color.toInt()
+        val r = ((intColor shr 24) and 0xFF).toFloat() / 255f
+        val g = ((intColor shr 16) and 0xFF).toFloat() / 255f
+        val b = ((intColor shr 8) and 0xFF).toFloat() / 255f
+        val a = (intColor and 0xFF).toFloat() / 255f
+
+        return floatArrayOf(
+            r.coerceIn(0f, 1f),
+            g.coerceIn(0f, 1f),
+            b.coerceIn(0f, 1f),
+            a.coerceIn(0f, 1f),
+        )
+    }
+
+    @JvmStatic
+    fun getARGBColorFromRGBAColor(color: Long): Long {
+        val (r, g, b, a) = getColorRGBA(color)
+        return getColor0_1(a, r, g, b)
+    }
+
+    //#if MC>=12106
+    fun Matrix3x2f.toMatrix4f(): Matrix4f = Matrix4f(
+        m00(), m01(), 0f, 0f,
+        m10(), m11(), 0f, 0f,
+        0f, 0f, 1f, 0f,
+        m20(), m21(), 0f, 1f
+    )
+
+    @JvmStatic
+    //#if MC<12110
+    //$$fun getGUIMatrix(matrix: Matrix3x2f): Matrix3x2f {
+    //$$    val newMatrix = matrix
+    //#else
+    fun getGUIMatrix(matrix: Matrix3x2f): Matrix4f {
+        val newMatrix = matrix.toMatrix4f()
+        //#endif
+        return newMatrix
+    }
+    //#endif
+
+    @JvmStatic
     fun calculateCenter(
         x1: Float,
         y1: Float,
@@ -1355,7 +1433,7 @@ object RenderUtils {
     }
     @JvmStatic
     fun isVisible(targetX: Double, targetY: Double, targetZ: Double): Boolean {
-        val world = Client.getMinecraft().level ?: return false
+        val world = ZRenderLib.getMinecraft().level ?: return false
         val cameraEntity = getCamera().entity() ?: return false
         val result = world.clip(
             ClipContext(
@@ -1662,7 +1740,8 @@ object RenderUtils {
         TOP_LEFT_TO_BOTTOM_RIGHT,
         TOP_RIGHT_TO_BOTTOM_LEFT,
         BOTTOM_LEFT_TO_TOP_RIGHT,
-        BOTTOM_RIGHT_TO_TOP_LEFT;
+        BOTTOM_RIGHT_TO_TOP_LEFT,
+        ;
     }
     data class GradientColors(
         val topLeft: Long,
@@ -1673,16 +1752,34 @@ object RenderUtils {
 
     class ScreenWrapper {
         //#if MC<12100
-        //$$fun getWidth(): Int = ScaledResolution(Client.getMinecraft()).scaledWidth
-        //$$fun getHeight(): Int = ScaledResolution(Client.getMinecraft()).scaledHeight
-        //$$fun getScale(): Double = ScaledResolution(Client.getMinecraft()).scaleFactor.toDouble()
+        //$$fun getWidth(): Int = ScaledResolution(ZRenderLib.getMinecraft()).scaledWidth
+        //$$fun getHeight(): Int = ScaledResolution(ZRenderLib.getMinecraft()).scaledHeight
+        //$$fun getScale(): Double = ScaledResolution(ZRenderLib.getMinecraft()).scaleFactor.toDouble()
         //#else
-        fun getWidth(): Int = Client.getMinecraft().window.guiScaledWidth
-        fun getHeight(): Int = Client.getMinecraft().window.guiScaledHeight
-        fun getFullWidth(): Int = Client.getMinecraft().window.width
-        fun getFullHeight(): Int = Client.getMinecraft().window.height
-        fun getScale(): Double = Client.getMinecraft().window.guiScale.toDouble()
+        fun getWidth(): Int = ZRenderLib.getMinecraft().window.guiScaledWidth
+        fun getHeight(): Int = ZRenderLib.getMinecraft().window.guiScaledHeight
+        fun getFullWidth(): Int = ZRenderLib.getMinecraft().window.width
+        fun getFullHeight(): Int = ZRenderLib.getMinecraft().window.height
+        fun getScale(): Double = ZRenderLib.getMinecraft().window.guiScale.toDouble()
         //#endif
+    }
+
+    fun withMatrix(stack: PoseStack?, _partialTicks: Float = partialTicks, block: () -> Unit) {
+        partialTicks = _partialTicks
+        matrixPushCounter = 0
+
+        try {
+            if (stack != null) pushMatrix(UMatrixStack(stack))
+            block()
+        } finally {
+            if (stack != null) popMatrix()
+        }
+
+        if (matrixPushCounter > 0) {
+            println("Warning: Render function missing a call to RenderUtils.popMatrix()")
+        } else if (matrixPushCounter < 0) {
+            println("Warning: Render function has too many calls to RenderUtils.popMatrix()")
+        }
     }
 }
 //#endif

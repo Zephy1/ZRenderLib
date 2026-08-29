@@ -28,7 +28,8 @@ enum class RenderSnippet(val mcValue: RenderPipeline.Snippet) {
     GUI_SNIPPET(RenderPipelines.GUI_SNIPPET),
     POSITION_TEX_COLOR_SNIPPET(RenderPipelines.GUI_TEXTURED_SNIPPET),
     OUTLINE_SNIPPET(RenderPipelines.OUTLINE_SNIPPET),
-    POST_EFFECT_PROCESSOR_SNIPPET(RenderPipelines.POST_PROCESSING_SNIPPET);
+    POST_EFFECT_PROCESSOR_SNIPPET(RenderPipelines.POST_PROCESSING_SNIPPET),
+    ;
 
     fun toMC() = mcValue
 
