@@ -43,6 +43,20 @@ tasks {
         inputFile.set(jar.flatMap { it.archiveFile })
     }
 
+    processResources {
+        val version = project.version
+        inputs.property("version", version)
+        filesMatching("fabric.mod.json") {
+            expand(mapOf(
+                "version" to version,
+            ))
+        }
+
+        val javaVersion = project.java.toolchain.languageVersion.get().asInt()
+        inputs.property("compatibilityLevel", javaVersion)
+        filesMatching("zrenderlib.mixins.json") {
+            filter { line -> line.replace("\$compatibilityLevel", "JAVA_${javaVersion}") }
+        }
     }
 }
 

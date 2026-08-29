@@ -1,0 +1,16 @@
+{
+    "required": true,
+    "minVersion": "0.8",
+    "package": "org.zephy.zrenderlib.mixins",
+    "compatibilityLevel": "$compatibilityLevel",
+    "mixins": [
+        //#if MC>=26.2
+        "LevelRendererMixin"
+        //#endif
+    ],
+    "client": [],
+    "server": [],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}
