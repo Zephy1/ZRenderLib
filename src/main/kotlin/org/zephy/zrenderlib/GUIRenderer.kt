@@ -132,6 +132,18 @@ object GUIRenderer : BaseGUIRenderer() {
 
     @JvmStatic
     @JvmOverloads
+    fun drawTextRGBAArray(
+        //#if MC>=26.1
+        drawContext: GuiGraphicsExtractor,
+        //#elseif MC>=12000
+        //$$drawContext: GuiGraphics,
+        //#endif
+        text: Component, xPosition: Float, yPosition: Float, colorArray: IntArray = intArrayOf(255, 255, 255, 255), textScale: Float = 1f, renderBackground: Boolean = false, textShadow: Boolean = false, maxWidth: Int = 512, zOffset: Float = 0f) {
+        drawText(drawContext, text, xPosition, yPosition, RenderUtils.RGBAColor.fromIntArray(colorArray).getLongRGBA(), textScale, renderBackground, textShadow, maxWidth, zOffset)
+    }
+
+    @JvmStatic
+    @JvmOverloads
     fun drawText(
         //#if MC>=26.1
         drawContext: GuiGraphicsExtractor,

@@ -3,10 +3,15 @@ package org.zephy.zrenderlib
 //#if MC>=12109
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTexture
-import com.mojang.blaze3d.textures.TextureFormat
 
 //#if MC<=12110
 //$$import com.mojang.blaze3d.textures.FilterMode
+//#endif
+
+//#if MC<26.2
+//$$import com.mojang.blaze3d.textures.TextureFormat
+//#else
+import com.mojang.blaze3d.GpuFormat
 //#endif
 
 /**
@@ -33,7 +38,12 @@ class TemporaryTextureAllocator(
         }
 
         val device = RenderSystem.getDevice()
-        device.createCommandEncoder().clearColorAndDepthTextures(texture.texture, 0, texture.depthTexture, 1.0)
+        //#if MC<26.2
+        //$$val clearColor = 0
+        //#else
+        val clearColor = org.joml.Vector4f(0f)
+        //#endif
+        device.createCommandEncoder().clearColorAndDepthTextures(texture.texture, clearColor, texture.depthTexture, 1.0)
 
         usedAllocations.add(texture)
 
@@ -73,7 +83,11 @@ class TemporaryTextureAllocator(
         var texture = gpuDevice.createTexture(
             { "Pre-rendered texture" },
             GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_COPY_SRC or GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_TEXTURE_BINDING,
-            TextureFormat.RGBA8,
+            //#if MC<26.2
+            //$$TextureFormat.RGBA8,
+            //#else
+            GpuFormat.RGBA8_UNORM,
+            //#endif
             width,
             height,
             1,
@@ -86,7 +100,11 @@ class TemporaryTextureAllocator(
         var depthTexture = gpuDevice.createTexture(
             { "Pre-rendered depth texture" },
             GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_COPY_SRC or GpuTexture.USAGE_RENDER_ATTACHMENT,
-            TextureFormat.DEPTH32,
+            //#if MC<26.2
+            //$$TextureFormat.DEPTH32,
+            //#else
+            GpuFormat.D32_FLOAT,
+            //#endif
             width,
             height,
             1,

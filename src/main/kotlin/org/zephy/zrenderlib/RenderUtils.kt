@@ -47,6 +47,11 @@ import net.minecraft.world.phys.HitResult
     //#endif
 
     //#if MC<=12111
+        //#if MC<=12110
+        //$$import com.mojang.blaze3d.opengl.GlTexture
+        //$$import com.mojang.blaze3d.textures.TextureFormat
+        //$$import com.mojang.blaze3d.systems.RenderSystem
+        //#endif
     //$$import net.minecraft.client.gui.GuiGraphics
     //$$import com.mojang.blaze3d.platform.DepthTestFunction
     //#else
@@ -55,14 +60,34 @@ import net.minecraft.world.phys.HitResult
     import com.mojang.blaze3d.platform.CompareOp
     //#endif
 
-    //#if MC<=12110
-        //$$import com.mojang.blaze3d.opengl.GlTexture
-        //$$import com.mojang.blaze3d.textures.TextureFormat
-        //$$import com.mojang.blaze3d.systems.RenderSystem
+    //#if MC<26.2
+    //$$import com.mojang.blaze3d.platform.DestFactor
+    //$$import com.mojang.blaze3d.platform.SourceFactor
+    //$$import com.mojang.blaze3d.vertex.Tesselator
+    //$$import com.mojang.blaze3d.vertex.BufferBuilder
+    //#else
+    import com.mojang.blaze3d.platform.BlendFactor
+    import com.mojang.blaze3d.PrimitiveTopology
+    import com.mojang.blaze3d.vertex.VertexConsumer
+    import net.minecraft.client.renderer.StagedVertexBuffer
+    import com.mojang.blaze3d.systems.RenderSystem
     //#endif
 //#endif
 
 object RenderUtils {
+    @JvmStatic
+    var partialTicks = 0f
+
+    //#if MC>=26.2
+    var viewMatrix: Matrix4f = Matrix4f()
+        private set
+    //#endif
+
+    @JvmStatic
+    fun getRenderManager() = ZRenderLib.getMinecraft().levelRenderer
+
+    private val NEWLINE_REGEX = """\n|\r\n?""".toRegex()
+
     @JvmField
     val screen = ScreenWrapper()
 
@@ -94,7 +119,7 @@ object RenderUtils {
     //$$    )
     //$$}
     //#else
-    internal lateinit var matrixStack: UMatrixStack
+    lateinit var matrixStack: UMatrixStack
     private val matrixStackStack = ArrayDeque<UMatrixStack>()
     internal var matrixPushCounter = 0
 
@@ -107,6 +132,17 @@ object RenderUtils {
     fun setMatrixStack(stack: PoseStack) = apply {
         matrixStack = UMatrixStack(stack)
     }
+    @JvmStatic
+    fun setMatrixStackInternal(stack: PoseStack) = apply {
+        //#if MC<26.2
+        //$$matrixStack = UMatrixStack(stack)
+        //#else
+        viewMatrix = Matrix4f(RenderSystem.getModelViewStack())
+        val copy = PoseStack()
+        copy.mulPose(viewMatrix)
+        matrixStack = UMatrixStack(copy)
+        //#endif
+    }
     //#if MC>=12106
     fun setMatrixStack(stack: Matrix3x2fStack) = apply {
         matrixStack = UMatrixStack(stack)
@@ -115,7 +151,11 @@ object RenderUtils {
 
     @JvmStatic
     fun getCamera(): Camera {
-        return Client.getMinecraft().gameRenderer.mainCamera
+        //#if MC<26.2
+        //$$return ZRenderLib.getMinecraft().gameRenderer.mainCamera
+        //#else
+        return ZRenderLib.getMinecraft().gameRenderer.mainCamera()
+        //#endif
     }
 
     @JvmStatic
@@ -133,18 +173,51 @@ object RenderUtils {
 
     private var renderLayer: RenderType? = null
     private var vertexFormat: VertexFormat? = null
-    private var instance: BufferBuilder? = null
+    //#if MC<26.2
+    //$$private var instance: BufferBuilder? = null
+    //#else
+    private var instance: VertexConsumer? = null
+    private var activeDraw: StagedVertexBuffer.Draw? = null
+    //#endif
     fun beginRenderLayer(renderLayer: RenderType) = apply {
         this.renderLayer = renderLayer
-        beginInternal(renderLayer.mode(), renderLayer.format())
+        //#if MC<26.2
+        //$$beginInternal(renderLayer.mode(), renderLayer.format())
+        //#else
+        beginInternal(renderLayer.primitiveTopology(), renderLayer.format())
+        //#endif
     }
-    private fun beginInternal(mode: VertexFormat.Mode, format: VertexFormat) = apply {
+    //#if MC<26.2
+    //$$private fun beginInternal(mode: VertexFormat.Mode, format: VertexFormat) = apply {
+    //#else
+    private fun beginInternal(mode: PrimitiveTopology, format: VertexFormat) = apply {
+    //#endif
         vertexFormat = format
-        instance = Tesselator.getInstance().begin(mode, format)
+        //#if MC<26.2
+        //$$instance = Tesselator.getInstance().begin(mode, format)
+        //#else
+        val stagedVertexBuffer = ZRenderLib.getMinecraft().gameRenderer.renderBuffers().stagedVertexBuffer()
+        val draw = stagedVertexBuffer.appendDraw(format, mode)
+        activeDraw = draw
+        instance = stagedVertexBuffer.getVertexBuilder(draw)
+        //#endif
     }
     private fun drawDirect() = apply {
-        val builtBuffer = instance?.build() ?: return@apply
-        renderLayer?.draw(builtBuffer)
+        //#if MC<26.2
+        //$$val builtBuffer = instance?.build() ?: return@apply
+        //$$renderLayer?.draw(builtBuffer)
+        //#else
+        val draw = activeDraw ?: return@apply
+        val layer = renderLayer ?: return@apply
+        val stagedVertexBuffer = ZRenderLib.getMinecraft().gameRenderer.renderBuffers().stagedVertexBuffer()
+        stagedVertexBuffer.upload()
+        val executeInfo = stagedVertexBuffer.getExecuteInfo(draw)
+        if (executeInfo != null) {
+            layer.prepare().drawFromBuffer(executeInfo)
+        }
+        stagedVertexBuffer.endDraw()
+        activeDraw = null
+        //#endif
     }
     private fun posInternal(stack: UMatrixStack, x: Float, y: Float, z: Float) = apply {
         instance?.addVertex(stack.peek().model, x, y, z)
@@ -638,10 +711,10 @@ object RenderUtils {
 
     @JvmStatic
     fun blendFunc(srcFactor: Int, dstFactor: Int) = apply {
-        //#if MC<12100
-        //$$GlStateManager.blendFunc(srcFactor, dstFactor)
+        //#if MC<26.2
+        //$$blendFunc(getSourceFactorFromInt(srcFactor), getDestFactorFromInt(dstFactor))
         //#else
-        blendFunc(getSourceFactorFromInt(srcFactor), getDestFactorFromInt(dstFactor))
+        blendFunc(getBlendFactorFromInt(srcFactor), getBlendFactorFromInt(dstFactor))
         //#endif
     }
 
@@ -658,58 +731,92 @@ object RenderUtils {
         PipelineBuilder.setBlendFunction(function)
     }
     @JvmStatic
-    fun blendFunc(srcFactor: SourceFactor, dstFactor: DestFactor) = apply {
+    //#if MC<26.2
+    //$$fun blendFunc(srcFactor: SourceFactor, dstFactor: DestFactor) = apply {
+    //#else
+    fun blendFunc(srcFactor: BlendFactor, dstFactor: BlendFactor) = apply {
+    //#endif
         PipelineBuilder.setBlendFunction(BlendFunction(srcFactor, dstFactor))
     }
 
     @JvmStatic
-    fun getSourceFactorFromInt(value: Int): SourceFactor {
+    //#if MC<26.2
+    //$$fun getSourceFactorFromInt(value: Int): SourceFactor {
+    //$$    return when (value) {
+    //$$        0 -> SourceFactor.ZERO
+    //$$        1 -> SourceFactor.ONE
+    //$$        768 -> SourceFactor.SRC_COLOR
+    //$$        769 -> SourceFactor.ONE_MINUS_SRC_COLOR
+    //$$        774 -> SourceFactor.DST_COLOR
+    //$$        775 -> SourceFactor.ONE_MINUS_DST_COLOR
+    //$$        32769 -> SourceFactor.CONSTANT_COLOR
+    //$$        32770 -> SourceFactor.ONE_MINUS_CONSTANT_COLOR
+    //$$        770 -> SourceFactor.SRC_ALPHA
+    //$$        771 -> SourceFactor.ONE_MINUS_SRC_ALPHA
+    //$$        772 -> SourceFactor.DST_ALPHA
+    //$$        773 -> SourceFactor.ONE_MINUS_DST_ALPHA
+    //$$        32771 -> SourceFactor.CONSTANT_ALPHA
+    //$$        32772 -> SourceFactor.ONE_MINUS_CONSTANT_ALPHA
+    //$$        776 -> SourceFactor.SRC_ALPHA_SATURATE
+    //$$        else -> throw IllegalArgumentException("Invalid source factor value: $value")
+    //$$    }
+    //$$}
+    //$$@JvmStatic
+    //$$fun getDestFactorFromInt(value: Int): DestFactor {
+    //$$    return when (value) {
+    //$$        0 -> DestFactor.ZERO
+    //$$        1 -> DestFactor.ONE
+    //$$        768 -> DestFactor.SRC_COLOR
+    //$$        769 -> DestFactor.ONE_MINUS_SRC_COLOR
+    //$$        774 -> DestFactor.DST_COLOR
+    //$$        775 -> DestFactor.ONE_MINUS_DST_COLOR
+    //$$        32769 -> DestFactor.CONSTANT_COLOR
+    //$$        32770 -> DestFactor.ONE_MINUS_CONSTANT_COLOR
+    //$$        770 -> DestFactor.SRC_ALPHA
+    //$$        771 -> DestFactor.ONE_MINUS_SRC_ALPHA
+    //$$        772 -> DestFactor.DST_ALPHA
+    //$$        773 -> DestFactor.ONE_MINUS_DST_ALPHA
+    //$$        32771 -> DestFactor.CONSTANT_ALPHA
+    //$$        32772 -> DestFactor.ONE_MINUS_CONSTANT_ALPHA
+    //$$        else -> throw IllegalArgumentException("Invalid source factor value: $value")
+    //$$    }
+    //$$}
+    //#else
+    fun getBlendFactorFromInt(value: Int): BlendFactor {
         return when (value) {
-            0 -> SourceFactor.ZERO
-            1 -> SourceFactor.ONE
-            768 -> SourceFactor.SRC_COLOR
-            769 -> SourceFactor.ONE_MINUS_SRC_COLOR
-            774 -> SourceFactor.DST_COLOR
-            775 -> SourceFactor.ONE_MINUS_DST_COLOR
-            32769 -> SourceFactor.CONSTANT_COLOR
-            32770 -> SourceFactor.ONE_MINUS_CONSTANT_COLOR
-            770 -> SourceFactor.SRC_ALPHA
-            771 -> SourceFactor.ONE_MINUS_SRC_ALPHA
-            772 -> SourceFactor.DST_ALPHA
-            773 -> SourceFactor.ONE_MINUS_DST_ALPHA
-            32771 -> SourceFactor.CONSTANT_ALPHA
-            32772 -> SourceFactor.ONE_MINUS_CONSTANT_ALPHA
-            776 -> SourceFactor.SRC_ALPHA_SATURATE
-            else -> throw IllegalArgumentException("Invalid source factor value: $value")
+            0 -> BlendFactor.ZERO
+            1 -> BlendFactor.ONE
+            768 -> BlendFactor.SRC_COLOR
+            769 -> BlendFactor.ONE_MINUS_SRC_COLOR
+            774 -> BlendFactor.DST_COLOR
+            775 -> BlendFactor.ONE_MINUS_DST_COLOR
+            32769 -> BlendFactor.CONSTANT_COLOR
+            32770 -> BlendFactor.ONE_MINUS_CONSTANT_COLOR
+            770 -> BlendFactor.SRC_ALPHA
+            771 -> BlendFactor.ONE_MINUS_SRC_ALPHA
+            772 -> BlendFactor.DST_ALPHA
+            773 -> BlendFactor.ONE_MINUS_DST_ALPHA
+            32771 -> BlendFactor.CONSTANT_ALPHA
+            32772 -> BlendFactor.ONE_MINUS_CONSTANT_ALPHA
+            776 -> BlendFactor.SRC_ALPHA_SATURATE
+            else -> throw IllegalArgumentException("Invalid blend factor value: $value")
         }
     }
-    @JvmStatic
-    fun getDestFactorFromInt(value: Int): DestFactor {
-        return when (value) {
-            0 -> DestFactor.ZERO
-            1 -> DestFactor.ONE
-            768 -> DestFactor.SRC_COLOR
-            769 -> DestFactor.ONE_MINUS_SRC_COLOR
-            774 -> DestFactor.DST_COLOR
-            775 -> DestFactor.ONE_MINUS_DST_COLOR
-            32769 -> DestFactor.CONSTANT_COLOR
-            32770 -> DestFactor.ONE_MINUS_CONSTANT_COLOR
-            770 -> DestFactor.SRC_ALPHA
-            771 -> DestFactor.ONE_MINUS_SRC_ALPHA
-            772 -> DestFactor.DST_ALPHA
-            773 -> DestFactor.ONE_MINUS_DST_ALPHA
-            32771 -> DestFactor.CONSTANT_ALPHA
-            32772 -> DestFactor.ONE_MINUS_CONSTANT_ALPHA
-//            776 -> DestFactor.SRC_ALPHA_SATURATE
-            else -> throw IllegalArgumentException("Invalid source factor value: $value")
-        }
-    }
+    //#endif
+
     @JvmStatic
     fun tryBlendFuncSeparate(
-        sourceFactor: SourceFactor,
-        destFactor: DestFactor,
-        sourceFactorAlpha: SourceFactor,
-        destFactorAlpha: DestFactor,
+        //#if MC<26.2
+        //$$sourceFactor: SourceFactor,
+        //$$destFactor: DestFactor,
+        //$$sourceFactorAlpha: SourceFactor,
+        //$$destFactorAlpha: DestFactor,
+        //#else
+        sourceFactor: BlendFactor,
+        destFactor: BlendFactor,
+        sourceFactorAlpha: BlendFactor,
+        destFactorAlpha: BlendFactor,
+        //#endif
     ) = apply {
         blendFunc(BlendFunction(sourceFactor, destFactor, sourceFactorAlpha, destFactorAlpha))
     }
@@ -726,10 +833,17 @@ object RenderUtils {
         //$$GlStateManager.tryBlendFuncSeparate(sourceFactor, destFactor, sourceFactorAlpha, destFactorAlpha)
         //#else
         tryBlendFuncSeparate(
-            getSourceFactorFromInt(sourceFactor),
-            getDestFactorFromInt(destFactor),
-            getSourceFactorFromInt(sourceFactorAlpha),
-            getDestFactorFromInt(destFactorAlpha)
+            //#if MC<26.2
+            //$$getSourceFactorFromInt(sourceFactor),
+            //$$getDestFactorFromInt(destFactor),
+            //$$getSourceFactorFromInt(sourceFactorAlpha),
+            //$$getDestFactorFromInt(destFactorAlpha),
+            //#else
+            getBlendFactorFromInt(sourceFactor),
+            getBlendFactorFromInt(destFactor),
+            getBlendFactorFromInt(sourceFactorAlpha),
+            getBlendFactorFromInt(destFactorAlpha),
+            //#endif
         )
         //#endif
     }
@@ -1108,26 +1222,7 @@ object RenderUtils {
         color_255(r, g, b, a)
     }
 
-    //#if MC>=12106
-    fun Matrix3x2f.toMatrix4f(): Matrix4f = Matrix4f(
-        m00(), m01(), 0f, 0f,
-        m10(), m11(), 0f, 0f,
-        0f, 0f, 1f, 0f,
-        m20(), m21(), 0f, 1f
-    )
-
-    @JvmStatic
-    //#if MC<12110
-    //$$fun getGUIMatrix(matrix: Matrix3x2f): Matrix3x2f {
-    //$$    val newMatrix = matrix
-    //#else
-    fun getGUIMatrix(matrix: Matrix3x2f): Matrix4f {
-        val newMatrix = matrix.toMatrix4f()
-    //#endif
-        return newMatrix
-    }
-    //#endif
-
+    // Color Compat
     @JvmStatic
     fun resetColor() = apply {
         colorize_01(1f, 1f, 1f, 1f)
@@ -1208,6 +1303,16 @@ object RenderUtils {
     //$$    val height = (textRenderer.FONT_HEIGHT * textLines.size).toFloat()
     //#else
     fun splitText(text: Component, maxWidth: Int): TextLines {
+        //#if MC>=26.1
+        return ZRenderLib.synchronizedTask {
+        //#endif
+            computeSplitText(text, maxWidth)
+        //#if MC>=26.1
+        }
+        //#endif
+    }
+
+    private fun computeSplitText(text: Component, maxWidth: Int): TextLines {
         val textRenderer = getTextRenderer()
         val wrappedLines = textRenderer.splitter.splitLines(text, maxWidth, Style.EMPTY)
 

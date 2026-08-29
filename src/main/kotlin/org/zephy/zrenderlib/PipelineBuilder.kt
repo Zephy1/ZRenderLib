@@ -27,6 +27,10 @@ import com.mojang.blaze3d.pipeline.DepthStencilState
 import java.util.Optional
 //#endif
 
+//#if MC>=26.2
+import com.mojang.blaze3d.GpuFormat
+//#endif
+
 object PipelineBuilder {
     private val layerList = mutableMapOf<String, RenderType>()
     private val pipelineList = mutableMapOf<String, RenderPipeline>()
@@ -160,15 +164,24 @@ object PipelineBuilder {
 
         val basePipeline = RenderPipeline
             .builder(snippet.toMC())
-            .withLocation("zrenderlib/custom/pipelines/${location ?: hashCode()}")
-            .withVertexFormat(vertexFormat.toMC(), drawMode.toMC())
+            .withLocation("${ZRenderLib.MOD_ID}/custom/pipelines/${location ?: hashCode()}")
+            //#if MC<26.2
+            //$$.withVertexFormat(vertexFormat.toMC(), drawMode.toMC())
+            //#else
+            .withVertexBinding(0, vertexFormat.toMC())
+            .withPrimitiveTopology(drawMode.toMC())
+            //#endif
 
         //#if MC<=12111
         //$$blendFunction?.let {
         //$$    basePipeline.withBlend(it)
         //$$} ?: basePipeline.withoutBlend()
         //#else
-        basePipeline.withColorTargetState(ColorTargetState(blendFunction, 15))
+        //#if MC<26.2
+        //$$basePipeline.withColorTargetState(ColorTargetState(blendFunction, 15))
+        //#else
+        basePipeline.withColorTargetState(0, ColorTargetState(blendFunction, GpuFormat.RGBA8_UNORM, 15))
+        //#endif
         //#endif
 
         cull?.let {

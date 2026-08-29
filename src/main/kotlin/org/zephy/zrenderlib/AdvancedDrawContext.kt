@@ -11,8 +11,12 @@ import net.minecraft.resources.Identifier
 //$$import net.minecraft.client.gui.GuiGraphics
 //$$import net.minecraft.client.renderer.CachedOrthoProjectionMatrixBuffer
 //#else
+//#if MC<26.2
+//$$import net.minecraft.client.renderer.Projection
+//#else
+import org.joml.Matrix4f
+//#endif
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.renderer.Projection
 import net.minecraft.client.renderer.ProjectionMatrixBuffer
 //#endif
 
@@ -31,7 +35,11 @@ class AdvancedDrawContext : AutoCloseable {
     //#if MC<=12111
     //$$private var allocatedProjectionMatrix: CachedOrthoProjectionMatrixBuffer? = null
     //#else
-    private val projection = Projection()
+    //#if MC<26.2
+    //$$private val projection = Projection()
+    //#else
+    private val projection = Matrix4f()
+    //#endif
     private var allocatedProjectionMatrix: ProjectionMatrixBuffer? = null
     //#endif
 
@@ -45,9 +53,9 @@ class AdvancedDrawContext : AutoCloseable {
     //#else
     fun drawImmediate(context: GuiGraphicsExtractor, block: (UMatrixStack) -> Unit) {
     //#endif
-        val scaleFactor = Client.getMinecraft().window.guiScale
-        val width = Client.getMinecraft().window.width
-        val height = Client.getMinecraft().window.height
+        val scaleFactor = ZRenderLib.getMinecraft().window.guiScale
+        val width = ZRenderLib.getMinecraft().window.width
+        val height = ZRenderLib.getMinecraft().window.height
 
         val texture = textureAllocator.allocate(width, height)
 
@@ -63,7 +71,16 @@ class AdvancedDrawContext : AutoCloseable {
         //#if MC<=12111
         //$$val projectionMatrixBuffer = projectionMatrix.getBuffer(width.toFloat() / scaleFactor, height.toFloat() / scaleFactor)
         //#else
-        projection.setupOrtho(1000f, 21000f, width.toFloat() / scaleFactor, height.toFloat() / scaleFactor, true)
+        //#if MC<26.2
+        //$$projection.setupOrtho(1000f, 21000f, width.toFloat() / scaleFactor, height.toFloat() / scaleFactor, true)
+        //#else
+        projection.setOrtho(
+            0f, width.toFloat() / scaleFactor,
+            height.toFloat() / scaleFactor, 0f,
+            1000f, 21000f,
+            RenderSystem.getDevice().deviceInfo.isZZeroToOne,
+        )
+        //#endif
         val projectionMatrixBuffer = projectionMatrix.getBuffer(projection)
         //#endif
         RenderSystem.setProjectionMatrix(projectionMatrixBuffer, ProjectionType.ORTHOGRAPHIC)

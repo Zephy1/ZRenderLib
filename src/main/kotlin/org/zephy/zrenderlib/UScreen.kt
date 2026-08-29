@@ -279,11 +279,26 @@ abstract class UScreen(
     companion object {
         @JvmStatic
         val currentScreen: Screen?
-            get() = Client.getMinecraft().screen
+            //#if MC<=26.2
+            //$$get() = ZRenderLib.getMinecraft().screen
+            //#else
+            get() = ZRenderLib.getMinecraft().gui.screen()
+            //#endif
 
         @JvmStatic
         fun displayScreen(screen: Screen?) {
-            Client.getMinecraft().setScreen(screen)
+            val mc = ZRenderLib.getMinecraft()
+            //#if MC>=12110
+            mc.execute {
+            //#endif
+                //#if MC<26.2
+                //$$mc.setScreen(screen)
+                //#else
+                mc.gui.setScreen(screen)
+                //#endif
+            //#if MC>=12110
+            }
+            //#endif
         }
     }
 }

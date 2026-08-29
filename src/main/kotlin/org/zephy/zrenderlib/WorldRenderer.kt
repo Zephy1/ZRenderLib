@@ -8,6 +8,13 @@ import java.awt.Color
 import org.joml.Matrix4f
 import net.minecraft.network.chat.Component
 import net.minecraft.client.gui.Font
+import net.minecraft.client.gui.font.TextRenderable
+//#endif
+
+//#if MC>=26.2
+import net.minecraft.client.renderer.rendertype.RenderType
+import net.minecraft.client.renderer.StagedVertexBuffer
+import net.minecraft.client.renderer.rendertype.PreparedRenderType
 //#endif
 
 object WorldRenderer : BaseWorldRenderer() {
@@ -105,9 +112,10 @@ object WorldRenderer : BaseWorldRenderer() {
         val fontRenderer = RenderUtils.getTextRenderer()
         val camera = RenderUtils.getCamera()
         val cameraPos = RenderUtils.getCameraPos()
-        val vertexConsumers = Client.getMinecraft().renderBuffers().bufferSource()
+        //#if MC<26.2
+        //$$val vertexConsumers = ZRenderLib.getMinecraft().renderBuffers().bufferSource()
+        //#endif
 
-        val matrix = Matrix4f()
         val adjustedScale = (scale * 0.05).toFloat()
         val xShift = -width / 2
         val yShift = -height / 2
@@ -118,9 +126,19 @@ object WorldRenderer : BaseWorldRenderer() {
             Color(0, 0, 0, 0).rgb
         }
 
+        //#if MC>=26.2
+        val displayMode = if (disableDepth) Font.DisplayMode.SEE_THROUGH else Font.DisplayMode.NORMAL
+        val stagedVertexBuffer = ZRenderLib.getMinecraft().gameRenderer.renderBuffers().stagedVertexBuffer()
+        val draws = mutableMapOf<RenderType, Pair<StagedVertexBuffer.Draw, PreparedRenderType>>()
+        //#endif
+
         RenderUtils.baseStartDraw()
         for (line in lines) {
-            matrix
+            //#if MC<26.2
+            //$$val matrix = Matrix4f()
+            //#else
+            val matrix = Matrix4f(RenderUtils.viewMatrix)
+            //#endif
                 .translate(
                     (xPosition - cameraPos.x).toFloat(),
                     (yPosition - cameraPos.y + yOffset * adjustedScale).toFloat(),
@@ -135,21 +153,55 @@ object WorldRenderer : BaseWorldRenderer() {
                 0f
             }
 
-            fontRenderer.drawInBatch(
-                line,
+            //#if MC<26.2
+            //$$fontRenderer.drawInBatch(
+            //$$    line,
+            //$$    xShift - centerShift,
+            //$$    yShift + yOffset,
+            //$$    RenderUtils.ARGBColor.fromLongRGBA(color).getLong().toInt(),
+            //$$    textShadow,
+            //$$    matrix,
+            //$$    vertexConsumers,
+            //$$    if (disableDepth) Font.DisplayMode.SEE_THROUGH else Font.DisplayMode.NORMAL,
+            //$$    backgroundColorInt,
+            //$$    15728880, // FULL_BRIGHT
+            //$$)
+            //#else
+            val prepared = fontRenderer.prepareText(
+                line.visualOrderText,
                 xShift - centerShift,
                 yShift + yOffset,
                 RenderUtils.ARGBColor.fromLongRGBA(color).getLong().toInt(),
                 textShadow,
-                matrix,
-                vertexConsumers,
-                if (disableDepth) Font.DisplayMode.SEE_THROUGH else Font.DisplayMode.NORMAL,
+                false,
                 backgroundColorInt,
-                15728880, // FULL_BRIGHT
             )
+            prepared.visit(object : Font.GlyphVisitor {
+                override fun acceptRenderable(renderable: TextRenderable) {
+                    val renderType = renderable.renderType(displayMode)
+                    val (draw, _) = draws.getOrPut(renderType) {
+                        val draw = stagedVertexBuffer.appendDraw(renderType.format(), renderType.primitiveTopology())
+                        draw to renderType.prepare()
+                    }
+                    renderable.render(matrix, stagedVertexBuffer.getVertexBuilder(draw), 15728880, false)
+                }
+            })
+            //#endif
 
             yOffset += fontRenderer.lineHeight + 1
         }
+
+        //#if MC<26.2
+        //$$vertexConsumers.endBatch()
+        //#else
+        stagedVertexBuffer.upload()
+        for ((draw, preparedRenderType) in draws.values) {
+            val executeInfo = stagedVertexBuffer.getExecuteInfo(draw) ?: continue
+            preparedRenderType.drawFromBuffer(executeInfo)
+        }
+        stagedVertexBuffer.endDraw()
+        //#endif
+
         RenderUtils.worldEndDraw()
     }
     //#endif
