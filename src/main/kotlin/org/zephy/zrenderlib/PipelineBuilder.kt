@@ -163,50 +163,54 @@ object PipelineBuilder {
 
     @JvmStatic
     fun build(): RenderPipeline {
-        if (pipelineList.containsKey(state())) return pipelineList[state()]!!
+        try {
+            if (pipelineList.containsKey(state())) return pipelineList[state()]!!
 
-        val basePipeline = RenderPipeline
-            .builder(snippet.toMC())
-            .withLocation("${ZRenderLib.MOD_ID}/custom/pipelines/${location ?: hashCode()}")
-            //#if MC<26.2
-            //$$.withVertexFormat(vertexFormat.toMC(), drawMode.toMC())
+            val basePipeline = RenderPipeline
+                .builder(snippet.toMC())
+                .withLocation("${ZRenderLib.MOD_ID}/custom/pipelines/${location ?: hashCode()}")
+                //#if MC<26.2
+                //$$.withVertexFormat(vertexFormat.toMC(), drawMode.toMC())
+                //#else
+                .withVertexBinding(0, vertexFormat.toMC())
+                .withPrimitiveTopology(drawMode.toMC())
+                //#endif
+
+            //#if MC<=12111
+            //$$blendFunction?.let {
+            //$$    basePipeline.withBlend(it)
+            //$$} ?: basePipeline.withoutBlend()
             //#else
-            .withVertexBinding(0, vertexFormat.toMC())
-            .withPrimitiveTopology(drawMode.toMC())
+            //#if MC<26.2
+            //$$basePipeline.withColorTargetState(ColorTargetState(blendFunction, 15))
+            //#else
+            basePipeline.withColorTargetState(0, ColorTargetState(blendFunction, GpuFormat.RGBA8_UNORM, 15))
+            //#endif
             //#endif
 
-        //#if MC<=12111
-        //$$blendFunction?.let {
-        //$$    basePipeline.withBlend(it)
-        //$$} ?: basePipeline.withoutBlend()
-        //#else
-        //#if MC<26.2
-        //$$basePipeline.withColorTargetState(ColorTargetState(blendFunction, 15))
-        //#else
-        basePipeline.withColorTargetState(0, ColorTargetState(blendFunction, GpuFormat.RGBA8_UNORM, 15))
-        //#endif
-        //#endif
+            cull?.let {
+                basePipeline.withCull(cull!!)
+            }
 
-        cull?.let {
-            basePipeline.withCull(cull!!)
+            //#if MC<=12111
+            //$$depthTestFunction?.let {
+            //$$    when (it) {
+            //$$        DepthTestFunction.NO_DEPTH_TEST -> basePipeline.withDepthWrite(false)
+            //$$        else -> basePipeline.withDepthWrite(true)
+            //$$    }
+            //$$    basePipeline.withDepthTestFunction(it)
+            //$$}
+            //#else
+            basePipeline.withDepthStencilState(depthTestFunction)
+            //#endif
+
+            val pipeline = basePipeline.build()
+            pipelineList[state()] = pipeline
+
+            return pipeline
+        } finally {
+            reset()
         }
-
-        //#if MC<=12111
-        //$$depthTestFunction?.let {
-        //$$    when (it) {
-        //$$        DepthTestFunction.NO_DEPTH_TEST -> basePipeline.withDepthWrite(false)
-        //$$        else -> basePipeline.withDepthWrite(true)
-        //$$    }
-        //$$    basePipeline.withDepthTestFunction(it)
-        //$$}
-        //#else
-        basePipeline.withDepthStencilState(depthTestFunction)
-        //#endif
-
-        val pipeline = basePipeline.build()
-        pipelineList[state()] = pipeline
-
-        return pipeline
     }
 
     @JvmStatic
