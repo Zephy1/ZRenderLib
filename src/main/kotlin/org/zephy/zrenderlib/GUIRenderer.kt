@@ -29,8 +29,13 @@ import net.minecraft.client.renderer.texture.DynamicTexture
 
 //#if MC>=12111
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.AddressMode
-import com.mojang.blaze3d.textures.FilterMode
+//#if MC<26.3
+//$$import com.mojang.blaze3d.textures.AddressMode
+//$$import com.mojang.blaze3d.textures.FilterMode
+//#else
+import com.mojang.renderpearl.api.textures.AddressMode
+import com.mojang.renderpearl.api.textures.FilterMode
+//#endif
 //#endif
 
 //#if MC>=12110

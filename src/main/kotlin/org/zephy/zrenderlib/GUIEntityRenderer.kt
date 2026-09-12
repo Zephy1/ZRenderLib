@@ -57,7 +57,6 @@ object GUIEntityRenderer {
         renderState.walkAnimationPos = 0f
         renderState.isAutoSpinAttack = false
         renderState.pose = Pose.STANDING
-        renderState.attackTime = 0f
         renderState.isFallFlying = false
         renderState.isVisuallySwimming = false
         renderState.isCrouching = false
@@ -77,6 +76,12 @@ object GUIEntityRenderer {
         renderState.leftHandItemState.clear()
         renderState.rightHandItemState.clear()
         renderState.scale = 0.95f
+
+        //#if MC<26.3
+        //$$renderState.attackTime = 0f
+        //#else
+        renderState.swingAnimation = 0f
+        //#endif
 
         renderState.wornHeadType = null
         val headItem = wornItems[EquipmentSlot.HEAD] ?: ItemStack.EMPTY

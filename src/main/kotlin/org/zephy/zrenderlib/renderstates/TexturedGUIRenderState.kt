@@ -1,7 +1,6 @@
 package org.zephy.zrenderlib.renderstates
 
 //#if MC>=12106
-import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.vertex.VertexConsumer
 import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.client.gui.render.TextureSetup
@@ -11,6 +10,12 @@ import org.zephy.zrenderlib.RenderUtils
 //$$import net.minecraft.client.gui.render.state.GuiElementRenderState
 //#else
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState
+//#endif
+
+//#if MC<26.3
+//$$import com.mojang.blaze3d.pipeline.RenderPipeline
+//#else
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 //#endif
 
 class TexturedGUIRenderState(

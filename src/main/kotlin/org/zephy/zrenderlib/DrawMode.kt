@@ -15,7 +15,11 @@ package org.zephy.zrenderlib
 //$$TRIANGLE_FAN(VertexFormat.Mode.TRIANGLE_FAN),
 //$$QUADS(VertexFormat.Mode.QUADS),
 //#else
-import com.mojang.blaze3d.PrimitiveTopology
+//#if MC<26.3
+//$$import com.mojang.blaze3d.PrimitiveTopology
+//#else
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology
+//#endif
 enum class DrawMode(private val mcValue: PrimitiveTopology) {
     LINES(PrimitiveTopology.LINES),
     LINE_STRIP(PrimitiveTopology.DEBUG_LINE_STRIP),

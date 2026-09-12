@@ -18,7 +18,6 @@ import org.zephy.zrenderlib.VertexFormat as ZVertexFormat
 //$$import net.minecraft.client.gui.ScaledResolution
 //$$import javax.vecmath.Vector3f
 //#else
-import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.network.chat.Component
@@ -26,20 +25,22 @@ import org.joml.Quaternionf
 import org.joml.Vector3f
 import java.util.Optional
 import net.minecraft.network.chat.Style
-import com.mojang.blaze3d.vertex.VertexFormat
 import net.minecraft.client.Camera
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.phys.HitResult
-
     //#if MC<=12105
     //$$import com.mojang.blaze3d.textures.GpuTexture
     //#else
-    import com.mojang.blaze3d.textures.GpuTextureView
     import net.minecraft.client.gui.navigation.ScreenRectangle
     import org.joml.Matrix3x2fStack
     import org.joml.Matrix3x2f
     import org.joml.Matrix4f
+        //#if MC<26.3
+        //$$import com.mojang.blaze3d.textures.GpuTextureView
+        //#else
+        import com.mojang.renderpearl.api.textures.GpuTextureView
+        //#endif
     //#endif
 
     //#if MC<=12111
@@ -52,8 +53,13 @@ import net.minecraft.world.phys.HitResult
     //$$import com.mojang.blaze3d.platform.DepthTestFunction
     //#else
     import net.minecraft.client.gui.GuiGraphicsExtractor
-    import com.mojang.blaze3d.pipeline.DepthStencilState
-    import com.mojang.blaze3d.platform.CompareOp
+        //#if MC<26.3
+        //$$import com.mojang.blaze3d.pipeline.DepthStencilState
+        //$$import com.mojang.blaze3d.platform.CompareOp
+        //#else
+        import com.mojang.renderpearl.api.pipeline.DepthStencilState
+        import com.mojang.renderpearl.api.pipeline.CompareOp
+        //#endif
     //#endif
 
     //#if MC<26.2
@@ -62,11 +68,34 @@ import net.minecraft.world.phys.HitResult
     //$$import com.mojang.blaze3d.vertex.Tesselator
     //$$import com.mojang.blaze3d.vertex.BufferBuilder
     //#else
-    import com.mojang.blaze3d.platform.BlendFactor
-    import com.mojang.blaze3d.PrimitiveTopology
     import com.mojang.blaze3d.vertex.VertexConsumer
     import net.minecraft.client.renderer.StagedVertexBuffer
     import com.mojang.blaze3d.systems.RenderSystem
+        //#if MC<26.3
+        //$$import com.mojang.blaze3d.platform.BlendFactor
+        //$$import com.mojang.blaze3d.PrimitiveTopology
+        //#else
+        import com.mojang.renderpearl.api.pipeline.BlendFactor
+        import com.mojang.renderpearl.api.pipeline.PrimitiveTopology
+        //#endif
+    //#endif
+
+    //#if MC>=12109
+    import net.minecraft.client.renderer.RenderPipelines
+    import net.minecraft.client.renderer.texture.AbstractTexture
+    import net.minecraft.resources.Identifier
+    //#endif
+
+    //#if MC<26.3
+    //$$import com.mojang.blaze3d.vertex.VertexFormat
+    //$$import com.mojang.blaze3d.pipeline.BlendFunction
+    //#else
+    import com.mojang.renderpearl.api.vertex.VertexFormat
+    import com.mojang.renderpearl.api.pipeline.BlendFunction
+    import com.mojang.renderpearl.api.commands.RenderPass
+    import org.joml.Vector4fc
+    import java.util.OptionalDouble
+    import com.mojang.renderpearl.api.commands.CommandEncoder
     //#endif
 //#endif
 
@@ -175,6 +204,11 @@ object RenderUtils {
     private var instance: VertexConsumer? = null
     private var activeDraw: StagedVertexBuffer.Draw? = null
     //#endif
+    //#if MC>=26.3
+    var activeRenderPass: RenderPass? = null
+        private set
+    private var activePassState: ActivePass? = null
+    //#endif
     fun beginRenderLayer(renderLayer: RenderType) = apply {
         this.renderLayer = renderLayer
         //#if MC<26.2
@@ -209,7 +243,23 @@ object RenderUtils {
         stagedVertexBuffer.upload()
         val executeInfo = stagedVertexBuffer.getExecuteInfo(draw)
         if (executeInfo != null) {
-            layer.prepare().drawFromBuffer(executeInfo)
+            //#if MC<26.3
+            //$$layer.prepare().drawFromBuffer(executeInfo)
+            //#else
+            val mainTarget = ZRenderLib.getMinecraft().gameRenderer.mainRenderTarget()
+            val colorTextureView = mainTarget.colorTextureView
+            val depthTextureView = mainTarget.depthTextureView
+            if (colorTextureView != null) {
+                RenderUtils.withRenderPass(
+                    "${ZRenderLib.MOD_ID} immediate draw",
+                    colorTextureView,
+                    depthTextureView,
+                ) { renderPass ->
+                    RenderSystem.bindDefaultUniforms(renderPass)
+                    layer.prepare().drawFromBuffer(executeInfo, renderPass)
+                }
+            }
+            //#endif
         }
         stagedVertexBuffer.endDraw()
         activeDraw = null
@@ -252,6 +302,37 @@ object RenderUtils {
         //#endif
     }
     //#endif
+
+    //#if MC<=12111
+    //$$fun drawTexture(context: GuiGraphics, texture: TemporaryTextureAllocator.TextureAllocation) {
+    //#else
+    fun drawTexture(context: GuiGraphicsExtractor, texture: TemporaryTextureAllocator.TextureAllocation) {
+    //#endif
+        val width = texture.width
+        val height = texture.height
+        val scaleFactor = ZRenderLib.getMinecraft().window.guiScale.toFloat()
+
+        val textureManager = ZRenderLib.getMinecraft().textureManager
+        val identifier = Identifier.fromNamespaceAndPath(ZRenderLib.MOD_ID, "__tmp_texture__")
+        textureManager.register(identifier, object : AbstractTexture() {
+            init { textureView = texture.textureView }
+            override fun close() {}
+        })
+
+        context.pose().pushMatrix()
+        context.pose().scale(1 / scaleFactor, 1 / scaleFactor)
+        context.blit(
+            RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA,
+            identifier,
+            0, 0,
+            0f, height.toFloat(),
+            width, height,
+            width, -height,
+            width, height,
+        )
+        context.pose().popMatrix()
+        textureManager.release(identifier)
+    }
 
     @JvmField val BLACK = RGBAColor(0, 0, 0, 255).getLong()
 
@@ -315,18 +396,24 @@ object RenderUtils {
     fun getFormattedTextFromString(text: String): Component = Component.literal(addColor(text))
 
     @JvmStatic
-    fun getStringWidth(text: Component): Int = getTextRenderer().width(text)
-
-    @JvmStatic
-    fun getStringWidth(text: String): Int {
+    fun getStringWidth(text: Component): Int {
         //#if MC>=12109
         return ZRenderLib.synchronizedTask {
         //#endif
-            getStringWidth(getFormattedTextFromString(text))
+            //#if MC<26.3
+            //$$getTextRenderer().width(text)
+            //#else
+            suspendRenderPass {
+                getTextRenderer().width(text)
+            }
+            //#endif
         //#if MC>=12109
         }
         //#endif
     }
+
+    @JvmStatic
+    fun getStringWidth(text: String): Int = getStringWidth(getFormattedTextFromString(text))
     //#endif
 
     @JvmStatic
@@ -1392,7 +1479,13 @@ object RenderUtils {
 
     private fun computeSplitText(text: Component, maxWidth: Int): TextLines {
         val textRenderer = getTextRenderer()
-        val wrappedLines = textRenderer.splitter.splitLines(text, maxWidth, Style.EMPTY)
+        //#if MC<26.3
+        //$$ val wrappedLines = getTextRenderer().splitter.splitLines(text, maxWidth, Style.EMPTY)
+        //#else
+        val wrappedLines = suspendRenderPass {
+            getTextRenderer().splitter.splitLines(text, maxWidth, Style.EMPTY)
+        }
+        //#endif
 
         val textLines = wrappedLines.map { visitable ->
             val builder = Component.empty()
@@ -1781,5 +1874,64 @@ object RenderUtils {
             println("Warning: Render function has too many calls to RenderUtils.popMatrix()")
         }
     }
+
+    //#if MC>=26.3
+    data class ActivePass(
+        val pass: RenderPass,
+        val encoder: CommandEncoder,
+        val label: String,
+        val colorTextureView: GpuTextureView,
+        val depthTextureView: GpuTextureView?,
+    )
+
+    fun withRenderPass(
+        label: String,
+        colorTextureView: GpuTextureView,
+        depthTextureView: GpuTextureView?,
+        clearColor: Optional<Vector4fc> = Optional.empty(),
+        clearDepth: OptionalDouble = OptionalDouble.empty(),
+        block: (RenderPass) -> Unit,
+    ) {
+        activeRenderPass?.let {
+            block(it)
+            return
+        }
+
+        val encoder = RenderSystem.getDevice().createCommandEncoder()
+        val pass = encoder.createRenderPass({ label }, colorTextureView, clearColor, depthTextureView, clearDepth)
+        activeRenderPass = pass
+        activePassState = ActivePass(pass, encoder, label, colorTextureView, depthTextureView)
+        try {
+            block(pass)
+        } finally {
+            activePassState?.let { current ->
+                current.pass.close()
+                current.encoder.submit()
+            }
+            activeRenderPass = null
+            activePassState = null
+        }
+    }
+
+    fun <T> suspendRenderPass(block: () -> T): T {
+        val state = activePassState ?: return block()
+
+        state.pass.close()
+        state.encoder.submit()
+        activeRenderPass = null
+        activePassState = null
+
+        val result = block()
+
+        val encoder = RenderSystem.getDevice().createCommandEncoder()
+        val pass = encoder.createRenderPass(
+            { state.label }, state.colorTextureView, Optional.empty(), state.depthTextureView, OptionalDouble.empty(),
+        )
+        activeRenderPass = pass
+        activePassState = state.copy(pass = pass, encoder = encoder)
+
+        return result
+    }
+    //#endif
 }
 //#endif

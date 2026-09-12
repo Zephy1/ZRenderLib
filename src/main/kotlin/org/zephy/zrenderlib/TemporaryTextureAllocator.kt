@@ -2,7 +2,6 @@ package org.zephy.zrenderlib
 
 //#if MC>=12109
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.GpuTexture
 
 //#if MC<=12110
 //$$import com.mojang.blaze3d.textures.FilterMode
@@ -10,8 +9,15 @@ import com.mojang.blaze3d.textures.GpuTexture
 
 //#if MC<26.2
 //$$import com.mojang.blaze3d.textures.TextureFormat
+//#elseif MC<26.3
+//$$import com.mojang.blaze3d.GpuFormat
+//#endif
+
+//#if MC<26.3
+//$$import com.mojang.blaze3d.textures.GpuTexture
 //#else
-import com.mojang.blaze3d.GpuFormat
+import com.mojang.renderpearl.api.textures.GpuTexture
+import com.mojang.renderpearl.api.GpuFormat
 //#endif
 
 /**

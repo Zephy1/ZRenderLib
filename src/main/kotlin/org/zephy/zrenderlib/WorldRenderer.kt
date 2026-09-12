@@ -15,6 +15,9 @@ import net.minecraft.client.gui.font.TextRenderable
 import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.client.renderer.StagedVertexBuffer
 import net.minecraft.client.renderer.rendertype.PreparedRenderType
+import com.mojang.blaze3d.systems.RenderSystem
+import java.util.Optional
+import java.util.OptionalDouble
 //#endif
 
 object WorldRenderer : BaseWorldRenderer() {
@@ -195,13 +198,31 @@ object WorldRenderer : BaseWorldRenderer() {
         //$$vertexConsumers.endBatch()
         //#else
         stagedVertexBuffer.upload()
-        for ((draw, preparedRenderType) in draws.values) {
-            val executeInfo = stagedVertexBuffer.getExecuteInfo(draw) ?: continue
-            preparedRenderType.drawFromBuffer(executeInfo)
+        //#if MC<26.3
+        //$$for ((draw, preparedRenderType) in draws.values) {
+        //$$    val executeInfo = stagedVertexBuffer.getExecuteInfo(draw) ?: continue
+        //$$    preparedRenderType.drawFromBuffer(executeInfo)
+        //$$}
+        //#else
+        val mainTarget = ZRenderLib.getMinecraft().gameRenderer.mainRenderTarget()
+        val colorTextureView = mainTarget.colorTextureView
+        val depthTextureView = mainTarget.depthTextureView
+        if (colorTextureView != null) {
+            RenderUtils.withRenderPass(
+                "${ZRenderLib.MOD_ID} drawText",
+                colorTextureView,
+                depthTextureView,
+            ) { renderPass ->
+                RenderSystem.bindDefaultUniforms(renderPass)
+                for ((draw, preparedRenderType) in draws.values) {
+                    val executeInfo = stagedVertexBuffer.getExecuteInfo(draw) ?: continue
+                    preparedRenderType.drawFromBuffer(executeInfo, renderPass)
+                }
+            }
         }
+        //#endif
         stagedVertexBuffer.endDraw()
         //#endif
-
         RenderUtils.worldEndDraw()
     }
     //#endif

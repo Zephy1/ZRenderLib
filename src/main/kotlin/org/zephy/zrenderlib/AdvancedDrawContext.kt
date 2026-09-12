@@ -3,9 +3,6 @@ package org.zephy.zrenderlib
 //#if MC>=12109
 import com.mojang.blaze3d.ProjectionType
 import com.mojang.blaze3d.systems.RenderSystem
-import net.minecraft.client.renderer.RenderPipelines
-import net.minecraft.client.renderer.texture.AbstractTexture
-import net.minecraft.resources.Identifier
 
 //#if MC<=12111
 //$$import net.minecraft.client.gui.GuiGraphics
@@ -18,6 +15,13 @@ import org.joml.Matrix4f
 //#endif
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.renderer.ProjectionMatrixBuffer
+//#endif
+
+//#if MC>26.3
+import com.mojang.renderpearl.api.commands.RenderPass
+import org.joml.Vector4f
+import java.util.Optional
+import java.util.OptionalDouble
 //#endif
 
 /**
@@ -50,8 +54,10 @@ class AdvancedDrawContext : AutoCloseable {
 
     //#if MC<=12111
     //$$fun drawImmediate(context: GuiGraphics, block: (UMatrixStack) -> Unit) {
+    //#elseif MC<=26.2
+    //$$fun drawImmediate(context: GuiGraphicsExtractor, block: (UMatrixStack) -> Unit) {
     //#else
-    fun drawImmediate(context: GuiGraphicsExtractor, block: (UMatrixStack) -> Unit) {
+    fun drawImmediate(context: GuiGraphicsExtractor, block: (UMatrixStack, RenderPass) -> Unit) {
     //#endif
         val scaleFactor = ZRenderLib.getMinecraft().window.guiScale
         val width = ZRenderLib.getMinecraft().window.width
@@ -85,55 +91,28 @@ class AdvancedDrawContext : AutoCloseable {
         //#endif
         RenderSystem.setProjectionMatrix(projectionMatrixBuffer, ProjectionType.ORTHOGRAPHIC)
 
-        val orgOutputColorTextureOverride = RenderSystem.outputColorTextureOverride
-        val orgOutputDepthTextureOverride = RenderSystem.outputDepthTextureOverride
-        RenderSystem.outputColorTextureOverride = texture.textureView
-        RenderSystem.outputDepthTextureOverride = texture.depthTextureView
-
         val matrixStack = UMatrixStack()
         matrixStack.translate(0f, 0f, -10000f)
-        block(matrixStack)
-
-        RenderSystem.outputColorTextureOverride = orgOutputColorTextureOverride
-        RenderSystem.outputDepthTextureOverride = orgOutputDepthTextureOverride
-
-        draw(context, texture)
-    }
-    //#if MC<=12111
-    //$$fun draw(context: GuiGraphics, texture: TemporaryTextureAllocator.TextureAllocation) {
-    //#else
-    fun draw(context: GuiGraphicsExtractor, texture: TemporaryTextureAllocator.TextureAllocation) {
-    //#endif
-        val width = texture.width
-        val height = texture.height
-        val scaleFactor = ZRenderLib.getMinecraft().window.guiScale.toFloat()
-
-        val textureManager = ZRenderLib.getMinecraft().textureManager
-        val identifier = Identifier.fromNamespaceAndPath("universalcraft", "__tmp_texture__")
-        textureManager.register(identifier, object : AbstractTexture() {
-            init { textureView = texture.textureView }
-            override fun close() {} // we don't want the later `destroyTexture` to close our texture
-        })
-
-        context.pose().pushMatrix()
-        context.pose().scale(1 / scaleFactor, 1 / scaleFactor) // drawTexture only accepts `int`s
-        context.blit(
-            RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA,
-            identifier,
-            // x, y
-            0, 0,
-            // u, v
-            0f, height.toFloat(),
-            // width, height
-            width, height,
-            // uWidth, vHeight
-            width, -height,
-            // textureWidth, textureHeight
-            width, height,
-        )
-        context.pose().popMatrix()
-
-        textureManager.release(identifier)
+        //#if MC<26.3
+        //$$val orgOutputColorTextureOverride = RenderSystem.outputColorTextureOverride
+        //$$val orgOutputDepthTextureOverride = RenderSystem.outputDepthTextureOverride
+        //$$RenderSystem.outputColorTextureOverride = texture.textureView
+        //$$RenderSystem.outputDepthTextureOverride = texture.depthTextureView
+        //$$block(matrixStack)
+        //$$RenderSystem.outputColorTextureOverride = orgOutputColorTextureOverride
+        //$$RenderSystem.outputDepthTextureOverride = orgOutputDepthTextureOverride
+        //#else
+        RenderUtils.withRenderPass(
+            "Advanced draw context",
+            texture.textureView,
+            texture.depthTextureView,
+            Optional.of(Vector4f(0f, 0f, 0f, 0f)),
+            OptionalDouble.of(1.0),
+        ) { renderPass ->
+            block(matrixStack, renderPass)
+        }
+        //#endif
+        RenderUtils.drawTexture(context, texture)
     }
 
     fun nextFrame() {

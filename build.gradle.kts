@@ -33,8 +33,8 @@ dependencies {
         embed("gg.essential:loader-launchwrapper:1.2.3")
     }
 
-    modCompileOnly("org.zephy.zkeys:${project.platform}:1.0.0") { isTransitive = false }
-    include("org.zephy.zkeys:${project.platform}:1.0.0") { isTransitive = false }
+    modCompileOnly("org.zephy.zkeys:${project.name}:1.0.0") { isTransitive = false }
+    include("org.zephy.zkeys:${project.name}:1.0.0") { isTransitive = false }
 }
 
 tasks {

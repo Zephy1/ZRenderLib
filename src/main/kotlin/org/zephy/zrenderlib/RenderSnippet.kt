@@ -1,8 +1,13 @@
 package org.zephy.zrenderlib
 
 //#if MC>=12100
-import com.mojang.blaze3d.pipeline.RenderPipeline
 import net.minecraft.client.renderer.RenderPipelines
+
+//#if MC<26.3
+//$$import com.mojang.blaze3d.pipeline.RenderPipeline
+//#else
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
+//#endif
 
 enum class RenderSnippet(val mcValue: RenderPipeline.Snippet) {
     //#if MC<=12105

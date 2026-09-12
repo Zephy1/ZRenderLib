@@ -18,7 +18,11 @@ package org.zephy.zrenderlib
 //$$    POSITION_TEX_LMAP_COLOR(DefaultVertexFormats.POSITION_TEX_LMAP_COLOR),
 //$$    POSITION_TEX_COLOR_NORMAL(DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
 //#else
-import com.mojang.blaze3d.vertex.VertexFormat
+//#if MC<26.3
+//$$import com.mojang.blaze3d.vertex.VertexFormat
+//#else
+import com.mojang.renderpearl.api.vertex.VertexFormat
+//#endif
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 enum class VertexFormat(private val mcValue: VertexFormat) {
     //#if MC<=12108

@@ -1,8 +1,6 @@
 package org.zephy.zrenderlib
 
 //#if MC>=12100
-import com.mojang.blaze3d.pipeline.BlendFunction
-import com.mojang.blaze3d.pipeline.RenderPipeline
 import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.resources.Identifier
 
@@ -16,19 +14,40 @@ import net.minecraft.resources.Identifier
 //#else
 import net.minecraft.client.renderer.rendertype.LayeringTransform
 import net.minecraft.client.renderer.rendertype.RenderSetup
-import com.mojang.blaze3d.textures.GpuTexture
+//#if MC<26.3
+//$$import com.mojang.blaze3d.textures.GpuTexture
+//#else
+import com.mojang.renderpearl.api.textures.GpuTexture
+//#endif
 //#endif
 
 //#if MC<=12111
 //$$import com.mojang.blaze3d.platform.DepthTestFunction
 //#else
-import com.mojang.blaze3d.pipeline.ColorTargetState
-import com.mojang.blaze3d.pipeline.DepthStencilState
 import java.util.Optional
+//#if MC<26.3
+//$$import com.mojang.blaze3d.pipeline.ColorTargetState
+//$$import com.mojang.blaze3d.pipeline.DepthStencilState
+//#else
+import com.mojang.renderpearl.api.pipeline.ColorTargetState
+import com.mojang.renderpearl.api.pipeline.DepthStencilState
+//#endif
 //#endif
 
 //#if MC>=26.2
-import com.mojang.blaze3d.GpuFormat
+//#if MC<26.3
+//$$import com.mojang.blaze3d.GpuFormat
+//#else
+import com.mojang.renderpearl.api.GpuFormat
+//#endif
+//#endif
+
+//#if MC<26.3
+//$$import com.mojang.blaze3d.pipeline.RenderPipeline
+//$$import com.mojang.blaze3d.pipeline.BlendFunction
+//#else
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.pipeline.BlendFunction
 //#endif
 
 object PipelineBuilder {

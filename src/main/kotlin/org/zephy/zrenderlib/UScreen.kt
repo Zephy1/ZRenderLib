@@ -36,6 +36,8 @@ abstract class UScreen(
 
     private val advancedDrawContext = AdvancedDrawContext()
 
+    private var renderer: Renderer? = null
+
     //#if MC<=12111
     //$$private var drawContexts = mutableListOf<GuiGraphics>()
     //$$private inline fun <R> withDrawContext(matrixStack: UMatrixStack, block: (GuiGraphics) -> R) {
@@ -69,9 +71,42 @@ abstract class UScreen(
     //#else
     final override fun extractRenderState(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
     //#endif
+        val renderer = renderer ?: uCreateRenderer().also { renderer = it }
+        if (renderer != null) {
+            val renderState = uExtractRenderState(mouseX, mouseY, delta)
+
+            drawContexts.add(context)
+            advancedDrawContext.nextFrame()
+            //#if MC<=26.2
+            //$$advancedDrawContext.drawImmediate(context) { stack ->
+            //#else
+            advancedDrawContext.drawImmediate(context) { stack, _ ->
+            //#endif
+                suppressBackground = false
+                onDrawScreen(stack, mouseX, mouseY, delta)
+                if (renderState.background) {
+                    onDrawBackground(stack, 0)
+                }
+                suppressBackground = true
+            }
+            drawContexts.removeLast()
+
+            val textureView = renderer.render(renderState)
+            RenderUtils.drawTexture(context, textureView)
+            return
+        }
+
+        if (isRendererRequired) {
+            throw NullPointerException("uCreateRenderer() returned null, but immediate rendering is no longer supported on this version. Implement uCreateRenderer()/uExtractRenderState().")
+        }
+
         drawContexts.add(context)
         advancedDrawContext.nextFrame()
-        advancedDrawContext.drawImmediate(context) { stack ->
+        //#if MC<=26.2
+        //$$advancedDrawContext.drawImmediate(context) { stack ->
+        //#else
+        advancedDrawContext.drawImmediate(context) { stack, _ ->
+        //#endif
             suppressBackground = false
             onDrawScreen(stack, mouseX, mouseY, delta)
             suppressBackground = true
@@ -146,6 +181,8 @@ abstract class UScreen(
     final override fun tick(): Unit = onTick()
 
     final override fun onClose() {
+        renderer?.close()
+        renderer = null
         advancedDrawContext.close()
         onScreenClose()
         restoreGuiScale()
@@ -276,10 +313,29 @@ abstract class UScreen(
         }
     }
 
+    interface Renderer : AutoCloseable {
+        fun render(state: RenderState): TemporaryTextureAllocator.TextureAllocation
+    }
+
+    interface RenderState {
+        val background: Boolean
+    }
+
+    open fun uCreateRenderer(): Renderer? = null
+
+    open fun uExtractRenderState(mouseX: Int, mouseY: Int, partialTicks: Float): RenderState = throw NotImplementedError()
+
+    val isRendererRequired: Boolean
+        //#if MC >= 26.3
+        //$$get() = true
+        //#else
+        get() = false
+        //#endif
+
     companion object {
         @JvmStatic
         val currentScreen: Screen?
-            //#if MC<=26.2
+            //#if MC<26.2
             //$$get() = ZRenderLib.getMinecraft().screen
             //#else
             get() = ZRenderLib.getMinecraft().gui.screen()
