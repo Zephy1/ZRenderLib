@@ -3,6 +3,8 @@ package org.zephy.zrenderlib
 //#if MC>=12110
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.client.renderer.entity.state.AvatarRenderState
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.item.ItemStack
 
 //#if MC<=12111
 //$$import net.minecraft.client.gui.GuiGraphics
@@ -10,10 +12,8 @@ import net.minecraft.client.renderer.entity.state.AvatarRenderState
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.model.HumanoidModel
 import net.minecraft.core.component.DataComponents
-import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemDisplayContext
-import net.minecraft.world.item.ItemStack
 //#endif
 
 object GUIEntityRenderer {
@@ -40,7 +40,11 @@ object GUIEntityRenderer {
     }
 
     fun drawStaticPlayerWithArmor(
+        //#if MC<=12111
+        //$$drawContext: GuiGraphics,
+        //#else
         drawContext: GuiGraphicsExtractor,
+        //#endif
         x: Float,
         y: Float,
         width: Float,
